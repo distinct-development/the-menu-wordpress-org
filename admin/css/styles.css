@@ -146,7 +146,7 @@ ul#adminmenu a.wp-has-current-submenu:after, ul#adminmenu>li.current>a.current:a
     justify-content: start;
 }
 .rss-title .rss-icon{
-    background: rgba(255,255,255,0.2) url(../assets/menu.svg) 50% 50% no-repeat;
+    background: rgba(255,255,255,0.2) url(../assets/menu-logo.svg) 50% 50% no-repeat;
     background-size: 70%;
     color: #fff;
     height: 100px;
@@ -278,6 +278,7 @@ input[type=checkbox]:checked{
 .tm-wrap input.button, .tm-wrap .button.select-image, .tm-wrap .button.clear-image, .tm-wrap .tm-upload-button{
     background: var(--tm-secondary-color)!important;
     width: max-content!important;
+    border-radius: 30px!important;
     padding: 3px 20px!important;
     font-size: 1em!important;
     transition: all .3s;
@@ -286,6 +287,7 @@ input[type=checkbox]:checked{
 }
 .tm-wrap input.button:hover, .button.select-image:hover, .tm-wrap .button.clear-image:hover, .tm-wrap .tm-upload-button:hover{
     background: var(--tm-secondary-color-hover)!important;
+    color: #fff!;
 }
 .tm-wrap input.default-image{
     width: 80%!important;

@@ -1,41 +1,74 @@
 <?php
-function distinct_themenu_custom_colors() {
-    $options = get_option('distinct_themenu_settings', array());
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Enqueue the plugin styles
+function distm_enqueue_styles() {
+    // Check if we're on the front-end
+    if (!is_admin()) {
+        wp_enqueue_style('distm-style', plugin_dir_url(__FILE__) . '../css/style.css', array(), '1.0.0');
+    }
+}
+add_action('wp_enqueue_scripts', 'distm_enqueue_styles');
+
+// Add custom colors to the plugin
+function distm_custom_colors() {
+    $options = get_option('distm_settings', array());
     
-    // If the option doesn't exist or is empty, use default values
-    if (empty($options)) {
-        $options = array(
-            'tm_background_color' => '#333333',
-            'tm_icon_color' => '#777777',
-            'tm_label_color' => '#FFFFFF',
-            'tm_featured_background_color' => '#446084',
-            'tm_featured_icon_color' => '#FFFFFF',
-            'tm_addon_bg_color' => '#FFFFFF',
-            'tm_addon_label_color' => '#333333',
-            'tm_addon_icon_color' => '#446084',
-            'tm_addon_icon_bg' => '#333333'
-        );
+    // Default values
+    $defaults = array(
+        'distm_background_color' => '#333333',
+        'distm_icon_color' => '#777777',
+        'distm_label_color' => '#FFFFFF',
+        'distm_featured_background_color' => '#446084',
+        'distm_featured_icon_color' => '#FFFFFF',
+        'distm_addon_bg_color' => 'rgba(255,255,255,0.6)',
+        'distm_addon_label_color' => '#333333',
+        'distm_addon_icon_color' => '#446084',
+        'distm_addon_icon_bg' => '#333333'
+    );
+
+    // Merge and sanitize options
+    $options = wp_parse_args($options, $defaults);
+    foreach ($options as $key => $value) {
+        if (strpos($key, 'color') !== false) {
+            $options[$key] = sanitize_hex_color($value);
+        }
     }
 
-    $custom_css = ":root {
-        --tm-background-color: " . esc_attr($options['tm_background_color']) . ";
-        --tm-icon-color: " . esc_attr($options['tm_icon_color']) . ";
-        --tm-label-color: " . esc_attr($options['tm_label_color']) . ";
-        --tm-featured-background-color: " . esc_attr($options['tm_featured_background_color']) . ";
-        --tm-featured-icon-color: " . esc_attr($options['tm_featured_icon_color']) . ";
-        --tm-addon-bg-color: " . esc_attr(distinct_themenu_hex_to_rgba($options['tm_addon_bg_color'], 0.6)) . ";
-        --tm-addon-label-color: " . esc_attr($options['tm_addon_label_color']) . ";
-        --tm-addon-icon-color: " . esc_attr($options['tm_addon_icon_color']) . ";
-        --tm-addon-icon-bg: " . esc_attr($options['tm_addon_icon_bg']) . ";
-    }";
+    $custom_css = "
+    .the-menu {
+        --distm-background-color: " . esc_attr($options['distm_background_color']) . ";
+        --distm-icon-color: " . esc_attr($options['distm_icon_color']) . ";
+        --distm-label-color: " . esc_attr($options['distm_label_color']) . ";
+        --distm-featured-background-color: " . esc_attr($options['distm_featured_background_color']) . ";
+        --distm-featured-icon-color: " . esc_attr($options['distm_featured_icon_color']) . ";
+        --distm-addon-bg-color: " . esc_attr(distm_hex_to_rgba($options['distm_addon_bg_color'], '0.6')) . ";
+        --distm-addon-label-color: " . esc_attr($options['distm_addon_label_color']) . ";
+        --distm-addon-icon-color: " . esc_attr($options['distm_addon_icon_color']) . ";
+        --distm-addon-icon-bg: " . esc_attr($options['distm_addon_icon_bg']) . ";
+    }
+    #tm-pageLoader .custom-loader { background-color: " . esc_attr($options['distm_featured_background_color']) . "!important; }
+    
+    /* Apply colors directly to elements */
+    #tm-fixed-mobile-menu { background-color: var(--distm-background-color); }
+    .the-menu .tm-icon-wrapper svg path { fill: var(--distm-icon-color); }
+    .the-menu a { color: var(--distm-label-color); }
+    .tm-featured .tm-menu-item .tm-icon-wrapper, .custom-loader { background-color: var(--distm-featured-background-color)!important; }
+    .tm-featured svg path { fill: var(--distm-featured-icon-color); }
+    .tm-addon-menu-wrapper { background-color: var(--distm-addon-bg-color); }
+    #tm-addon-menu a { color: var(--distm-addon-label-color); }
+    #tm-addon-menu svg path { fill: var(--distm-addon-icon-color); }
+    #tm-addon-menu svg, #tm-addon-menu img { background-color: var(--distm-addon-icon-bg); }
+    ";
 
-    wp_add_inline_style('distinct-themenu-style', $custom_css);
+    wp_add_inline_style('distm-style', $custom_css);
 }
-add_action('wp_enqueue_scripts', 'distinct_themenu_custom_colors');
+add_action('wp_enqueue_scripts', 'distm_custom_colors', 20);
 
-// Add this function if it doesn't exist
-if (!function_exists('distinct_themenu_hex_to_rgba')) {
-    function distinct_themenu_hex_to_rgba($color, $opacity = 1) {
+// Function to convert hex color to rgba
+if (!function_exists('distm_hex_to_rgba')) {
+    function distm_hex_to_rgba($color, $opacity = 1) {
         $default = 'rgb(0,0,0)';
 
         //Return default if no color provided
@@ -73,42 +106,47 @@ if (!function_exists('distinct_themenu_hex_to_rgba')) {
     }
 }
 
-function tm_add_fixed_menu() {
-    $options = get_option('tm_settings');
-    if (empty($options['tm_enable_mobile_menu'])) {
+// Add the fixed mobile menu to the front-end
+function distm_add_fixed_menu() {
+    $options = get_option('distm_settings', array());
+    if (empty($options['distm_enable_mobile_menu'])) {
         return;
     }
 
-    $excluded_pages = isset($options['tm_exclude_pages']) ? $options['tm_exclude_pages'] : array();
-    
-    // Ensure $excluded_pages is an array
-    if (!is_array($excluded_pages)) {
-        $excluded_pages = array($excluded_pages);
-    }
+    $excluded_pages = isset($options['distm_exclude_pages']) ? array_map('absint', (array)$options['distm_exclude_pages']) : array();
 
     if (is_page() && in_array(get_queried_object_id(), $excluded_pages)) {
         return;
     }
 
-    if (!empty($options['tm_only_on_mobile']) && !wp_is_mobile()) {
+    if (!empty($options['distm_only_on_mobile']) && !wp_is_mobile()) {
         return;
     }
 
-    $additional_classes = '';
-    if (!empty($options['tm_enable_transparency'])) {
-        $additional_classes .= ' tm-scrolling';
+    $additional_classes = array();
+    if (!empty($options['distm_enable_transparency'])) {
+        $additional_classes[] = 'tm-scrolling';
     }
-    if (!empty($options['tm_disable_menu_text'])) {
-        $additional_classes .= ' icon-only';
+    if (!empty($options['distm_disable_menu_text'])) {
+        $additional_classes[] = 'icon-only';
     }
-    $menu_style = $options['tm_menu_style'] ?? 'pill';
-    $addon_menu_style = $options['tm_addon_menu_style'] ?? 'app-icon';
-    $featured_icon_url = $options['tm_featured_icon'] ?? ''; 
+
+    $valid_menu_styles = array('pill', 'rounded', 'flat');
+    $menu_style = isset($options['distm_menu_style']) && in_array($options['distm_menu_style'], $valid_menu_styles) 
+                ? $options['distm_menu_style'] 
+                : 'pill';
+
+    $valid_addon_menu_styles = array('app-icon', 'icon', 'list');
+    $addon_menu_style = isset($options['distm_addon_menu_style']) && in_array($options['distm_addon_menu_style'], $valid_addon_menu_styles) 
+                        ? $options['distm_addon_menu_style'] 
+                        : 'app-icon';
+
+    $featured_icon_url = isset($options['distm_featured_icon']) ? esc_url($options['distm_featured_icon']) : '';
     $is_svg = substr($featured_icon_url, -4) === '.svg';
-    $link_url = !empty($options['tm_enable_addon_menu']) ? '#' : home_url('/');
+    $link_url = !empty($options['distm_enable_addon_menu']) ? '#' : home_url('/');
     ?>
 
-    <?php if (!empty($options['tm_enable_loader_animation'])) : ?>
+    <?php if (!empty($options['distm_enable_loader_animation'])) : ?>
     <div id="tm-pageLoader">
         <div>
             <span class="custom-loader"></span>
@@ -116,11 +154,11 @@ function tm_add_fixed_menu() {
     </div>
     <?php endif; ?>
 
-    <div class="the-menu <?php echo esc_attr($additional_classes); ?>">
+    <div class="the-menu <?php echo esc_attr(implode(' ', $additional_classes)); ?>">
         <div class="tm-fixed-mobile-menu-wrapper <?php echo esc_attr($menu_style); ?>">
             <div id="tm-fixed-mobile-menu">
                 <div class="tm-left-menu">
-                <?php wp_nav_menu(array( 'theme_location' => 'left-menu', 'walker' => new TM_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
+                <?php wp_nav_menu(array( 'theme_location' => 'left-menu', 'walker' => new distm_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
                 </div>
                 <div class="tm-featured-bg">
                 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 140 60" preserveAspectRatio="none">
@@ -129,14 +167,14 @@ function tm_add_fixed_menu() {
                     <div class="tm-filler"></div>
                 </div>
                 <div class="tm-right-menu">
-                    <?php wp_nav_menu(array( 'theme_location' => 'right-menu', 'walker' => new TM_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
+                    <?php wp_nav_menu(array( 'theme_location' => 'right-menu', 'walker' => new distm_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
                 </div>
             </div>
         </div>
-        <?php if (!empty($options['tm_enable_addon_menu'])): ?>
+        <?php if (!empty($options['distm_enable_addon_menu'])): ?>
         <div class="tm-addon-menu-wrapper <?php echo esc_attr($addon_menu_style); ?> ">
             <div id="tm-addon-menu">
-            <?php wp_nav_menu(array( 'theme_location' => 'addon-menu', 'walker' => new TM_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
+            <?php wp_nav_menu(array( 'theme_location' => 'addon-menu', 'walker' => new distm_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
             </div>
         </div>
         <?php endif; ?>
@@ -146,10 +184,14 @@ function tm_add_fixed_menu() {
                     <?php if (!empty($featured_icon_url)) : ?>
                         <div class="tm-featured-icon">
                             <?php if ($is_svg) : ?>
-                                <?php echo wp_kses(tm_get_svg_content($featured_icon_url), tm_get_allowed_svg_tags()); ?>
+                                <?php echo wp_kses(distm_get_svg_content($featured_icon_url), distm_get_allowed_svg_tags()); ?>
                             <?php else : ?>
-                                <img src="<?php echo esc_url($featured_icon_url); ?>" alt="<?php esc_attr_e('Featured Icon', 'tm-custom-menu'); ?>" />
+                                <img src="<?php echo esc_url($featured_icon_url); ?>" alt="<?php esc_attr_e('Featured Icon', 'the-menu'); ?>" />
                             <?php endif; ?>
+                        </div>
+                    <?php else : ?>
+                        <div class="tm-featured-icon">
+                            <?php echo wp_kses(distm_get_svg_content(plugin_dir_url(__FILE__) . '../admin/assets/menu.svg'), distm_get_allowed_svg_tags()); ?>
                         </div>
                     <?php endif; ?>
                     <svg class="tm-menu-close" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50 50">
@@ -161,10 +203,10 @@ function tm_add_fixed_menu() {
     </div>
     <?php
 }
-add_action('wp_footer', 'tm_add_fixed_menu');
+add_action('wp_footer', 'distm_add_fixed_menu');
 
-// Function to get allowed SVG tags (implement this according to your needs)
-function tm_get_allowed_svg_tags() {
+// Function to get allowed SVG tags for wp_kses
+function distm_get_allowed_svg_tags() {
     return array(
         'svg' => array(
             'class' => true,

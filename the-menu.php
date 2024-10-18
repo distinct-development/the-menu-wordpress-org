@@ -6,7 +6,7 @@ namespace Distinct\TheMenu;
 Plugin Name: The Menu
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Enhance your WordPress site with The Menu plugin. This tool offers customizable navigation options with mobile support, SVG icons, and extensive color choices. Perfect for creating a visually appealing and user-friendly menu system.
-Version: 1.2.2
+Version: 1.2.3
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://distinct.africa
@@ -16,45 +16,39 @@ Stable tag: 4.3
 Requires PHP: 7.0
 */
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Include the plugin files
 include_once('admin/tm-settings.php');
 include_once('include/tm-menu.php');
 
-function tm_enqueue_frontend_scripts() {
-    $options = get_option('tm_settings');
-    $excluded_pages = isset($options['tm_exclude_pages']) ? $options['tm_exclude_pages'] : array();
+// Enqueue the plugin styles
+function distm_enqueue_frontend_scripts() {
+    $options = get_option('distm_settings', array());
+    $excluded_pages = isset($options['distm_exclude_pages']) ? array_map('absint', (array)$options['distm_exclude_pages']) : array();
 
-    // Ensure $excluded_pages is an array
-    if (!is_array($excluded_pages)) {
-        $excluded_pages = array($excluded_pages);
-    }
+    if (!is_admin()) {
+        $current_page_id = get_queried_object_id();
+        if (!in_array($current_page_id, $excluded_pages)) {
+            $mobile_menu_enabled = !empty($options['distm_enable_mobile_menu']);
+            $only_on_mobile = !empty($options['distm_only_on_mobile']);
 
-    // Check if the current page is not in the excluded pages list
-    $current_page_id = get_queried_object_id();
-    if (!in_array($current_page_id, $excluded_pages)) {
-        // Check if mobile menu is enabled
-        $mobile_menu_enabled = isset($options['tm_enable_mobile_menu']) ? $options['tm_enable_mobile_menu'] : false;
-        
-        // Check if it should only be shown on mobile
-        $only_on_mobile = isset($options['tm_only_on_mobile']) ? $options['tm_only_on_mobile'] : false;
+            $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
 
-        // Determine if we should load the assets
-        $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
-
-        if ($should_load) {
-            // Enqueue styles
-            wp_enqueue_style('the-menu', plugins_url('css/style.css', __FILE__), array(), '1.0.0', 'all');
-
-            // Enqueue scripts
-            wp_enqueue_script('tm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.0', true);
+            if ($should_load) {
+                wp_enqueue_style('distm', plugins_url('css/style.css', __FILE__), array(), '1.0.0', 'all');
+                wp_enqueue_script('distm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.0', true);
+            }
         }
     }
 }
-add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\tm_enqueue_frontend_scripts');
+add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\distm_enqueue_frontend_scripts');
 
 if (!function_exists('get_plugin_data')) {
     require_once(ABSPATH . 'wp-admin/includes/plugin.php');
 }
 
+// License validator class
 class Plugin_License_Validator {
     private static $instance = null;
     private $plugin_slug;
@@ -76,10 +70,11 @@ class Plugin_License_Validator {
         add_action('admin_menu', array($this, 'add_license_submenu'));
         add_action('admin_init', array($this, 'register_license_settings'));
         
-        // Add this line to hook the license check handler
+        // Hook the license check handler
         add_action('admin_post_the_menu_check_license', array($this, 'handle_license_check'));
     }
 
+    // Get the instance
     public static function get_instance($plugin_slug, $plugin_name, $text_domain) {
         if (self::$instance === null) {
             self::$instance = new self($plugin_slug, $plugin_name, $text_domain);
@@ -87,6 +82,7 @@ class Plugin_License_Validator {
         return self::$instance;
     }
 
+    // Validate the license
     public function validate_license() {
         $cache_key = $this->plugin_slug . '_license_status';
         $cached = get_transient($cache_key);
@@ -94,21 +90,23 @@ class Plugin_License_Validator {
             return $cached === 'valid';
         }
     
-        $license_key = get_option($this->license_option_key);
-        $site_url = get_site_url();
+        $license_key = sanitize_text_field(get_option($this->license_option_key, ''));
+        $site_url = esc_url_raw(get_site_url());
         $plugin_data = get_plugin_data(__DIR__ . '/' . $this->plugin_slug . '.php');
-        $version = $plugin_data['Version'];
+        $version = sanitize_text_field($plugin_data['Version']);
     
-        $response = wp_remote_post($this->api_endpoint, array(
+        $response = wp_safe_remote_post($this->api_endpoint, array(
             'body' => wp_json_encode(array(
                 'license_key' => $license_key,
                 'site_url' => $site_url,
                 'version' => $version,
-                'plugin_id' => 3            )),
+                'plugin_id' => 3
+            )),
             'headers' => array(
                 'Content-Type' => 'application/json',
                 'Authorization' => 'Bearer ' . $license_key
-            )
+            ),
+            'timeout' => 15, 
         ));
     
         if (is_wp_error($response)) {
@@ -122,14 +120,15 @@ class Plugin_License_Validator {
         return $is_valid;
     }
 
+    // License status notice
     public function license_status_notice() {
         $screen = get_current_screen();
         if ($screen->id !== 'the-menu_page_the-menu-license-settings') {
             return;
         }
 
-        if (isset($_GET['license_check_result']) && isset($_GET['_wpnonce']) && wp_verify_nonce($_GET['_wpnonce'], 'the_menu_license_check')) {
-            $status = sanitize_text_field($_GET['license_check_result']) === 'valid' ? 'valid' : 'invalid';
+        if (isset($_GET['license_check_result']) && isset($_GET['_wpnonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'the_menu_license_check')) {
+            $status = sanitize_text_field(wp_unslash($_GET['license_check_result'])) === 'valid' ? 'valid' : 'invalid';
             $class = $status === 'valid' ? 'notice notice-success' : 'notice notice-error';
             $message = $status === 'valid' 
                 ? __('License validated successfully.', 'the-menu')
@@ -138,6 +137,7 @@ class Plugin_License_Validator {
         }
     }
 
+    // Handle the license check
     public function handle_license_check() {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'the-menu'));
@@ -158,23 +158,40 @@ class Plugin_License_Validator {
         exit;
     }
 
+    // Clear the license cache
     public function clear_license_cache() {
-        if (isset($_GET['license_check_result']) && isset($_GET['_wpnonce']) && wp_verify_nonce($_GET['_wpnonce'], 'the_menu_license_check') && current_user_can('manage_options')) {
-            delete_transient($this->plugin_slug . '_license_status');
+        if (
+            isset($_GET['license_check_result']) &&
+            isset($_GET['_wpnonce']) &&
+            wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'the_menu_license_check') &&
+            current_user_can('manage_options')
+        ) {
+            $license_check_result = sanitize_text_field(wp_unslash($_GET['license_check_result']));
+            if ($license_check_result === 'valid' || $license_check_result === 'invalid') {
+                delete_transient($this->plugin_slug . '_license_status');
+            }
         }
     }
 
+    // License key field callback
     public function license_key_field_callback() {
-        $license_key = get_option($this->license_option_key);
+        $license_key = get_option($this->license_option_key, '');
         $status = $this->validate_license() ? 'valid' : 'invalid';
         $status_text = $status === 'valid' ? __('Active', 'the-menu') : __('Unlicensed', 'the-menu');
         $status_class = $status === 'valid' ? 'tm-status-pill-active' : 'tm-status-pill-inactive';
         
-        echo '<input type="text" id="' . esc_attr($this->license_option_key) . '" name="' . esc_attr($this->license_option_key) . '" value="' . esc_attr($license_key) . '" class="regular-text" />';
-        echo ' <div class="tm-license-zone"><span class="tm-status-pill ' . esc_attr($status_class) . '">' . esc_html($status_text) . '</span>';
-        echo ' <a href="' . esc_url(wp_nonce_url(admin_url('admin-post.php?action=the_menu_check_license'), 'the_menu_check_license_nonce')) . '" style="text-decoration:none;"><span class="dashicons dashicons-image-rotate"></span></a></div>';
+        ?>
+        <input type="text" id="<?php echo esc_attr($this->license_option_key); ?>" name="<?php echo esc_attr($this->license_option_key); ?>" value="<?php echo esc_attr($license_key); ?>" class="regular-text" />
+        <div class="tm-license-zone">
+            <span class="tm-status-pill <?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_text); ?></span>
+            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=the_menu_check_license'), 'the_menu_check_license_nonce')); ?>" style="text-decoration:none;">
+                <span class="dashicons dashicons-image-rotate"></span>
+            </a>
+        </div>
+        <?php
     }
 
+    // Modify the plugin meta
     public function modify_plugin_meta($plugin_meta, $plugin_file) {
         if ($plugin_file == plugin_basename(__FILE__)) {
             $is_registered = $this->validate_license();
@@ -190,6 +207,7 @@ class Plugin_License_Validator {
         return $plugin_meta;
     }
 
+    // Add license submenu
     public function add_license_submenu() {
         add_submenu_page(
             $this->plugin_slug,
@@ -201,6 +219,7 @@ class Plugin_License_Validator {
         );
     }
 
+    // License settings page
     public function license_settings_page() {
         ?>
         <div class="rss-title">
@@ -225,6 +244,7 @@ class Plugin_License_Validator {
         include_once 'admin/assets/logo-wrapper.php';
     }
 
+    // Handle the license settings
     public function register_license_settings() {
         register_setting($this->plugin_slug . '_license_settings', $this->license_option_key);
         add_settings_section(
@@ -243,7 +263,8 @@ class Plugin_License_Validator {
     }
 }
 
-function load_the_menu() {
+// Load the license validator
+function distm_load_the_menu() {
     Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
 }
-add_action('plugins_loaded', __NAMESPACE__ . '\\load_the_menu');
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_load_the_menu');

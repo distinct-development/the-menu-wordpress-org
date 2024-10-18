@@ -3,7 +3,7 @@ Contributors: distinct-development, ryan-wiggill
 Tags: menu, navigation, custom menu, mobile menu, responsive menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -56,7 +56,8 @@ Yes, The Menu is designed to be fully responsive and mobile-friendly. You can ev
 
 == Changelog ==
 
-== Changelog ==
+= 1.2.2 =
+This version fixes a security related bug. Upgrade immediately.
 
 = 1.2.1 - 04/08/2024 =
 
@@ -67,61 +68,57 @@ Yes, The Menu is designed to be fully responsive and mobile-friendly. You can ev
 
 - Added the ability to select who can see certain menu items (Everyone, Logged out users, or Logged in users) and if Logged in users is selected you are able to chose which roles can see the menu item.
 
-= 1.1.19 - 02/07/2024 =
+== Terms of Use ==
 
-- WP version check
+By installing and activating The Menu plugin, you agree to the following terms:
 
-= 1.1.18 - 12/06/2024 =
+1. License and Usage
 
-- WP version check
+   The Menu is licensed under GPL-2.0-or-later. You are free to use, modify, and distribute this plugin in accordance with the terms of this license.
 
-= 1.1.17 - 27/05/2024 =
+2. Third-Party Services
 
-- API overhaul
-- Tweaks to list option
+   This plugin communicates with https://plugins.distinct.africa for the following purposes:
 
-= 1.1.15 - 15/05/2024 =
+   a. License Validation: To verify the authenticity of your license key.
+   b. Usage Statistics: To count the number of active installations of our plugin.
+   c. Version Checking: To ensure your plugin is up-to-date.
 
-- Validation update
+   Data transmitted:
+   - Your website's domain name
+   - The plugin version you're using
+   - Your license key
 
-= 1.1.14 - 14/05/2024 =
+   No personal data (such as email addresses or user information) is collected or transmitted.
 
-- Update checker validation
-- API connection security update
+   This check occurs once every 12 hours to minimize server load.
 
-= 1.1.11 - 11/05/2024 =
+3. Future Use
 
-- Updated license code
+   In upcoming versions, this service may be used to unlock premium features for licensed users.
 
-= 1.1.9 - 10/05/2024 =
+4. Data Usage and Privacy
 
-- Add on menu styles
-- Adding licensing and install tracking
+   We are committed to protecting your privacy. The data collected is used solely for the purposes stated above and is not shared with any third parties.
 
-= 1.1.7 - 03/05/2024 =
+5. Disclaimer of Warranty
 
-- Hot fix: page loader was on wrong z-index level
-- Rounded css class
-- iOS and Safari fix for featured icon it was not behaving as expected on deeper URLs and not opening the addon menu
-- Renaming style classes to prevent future conflicts
+   The Menu plugin is provided "as is" without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose.
 
-= 1.1.4 - 27/04/2024 =
+6. Limitation of Liability
 
-- Admin backend overhaul
+   In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the plugin or the use or other dealings in the plugin.
 
-= 1.1.2 - 26/04/2024 =
+7. Support and Updates
 
-- Changed repository update URL
+   While we strive to provide regular updates and support, we reserve the right to discontinue or modify any part of the service at any time.
 
-= 1.1.1 - 26/04/2024 =
+8. Changes to Terms
 
-- Changed repositories organisation
+   We reserve the right to modify these terms at any time. Continued use of the plugin after any such changes shall constitute your consent to such changes.
 
-= 1.1.0 (Release) - 25/04/2024 =
+By using The Menu plugin, you acknowledge that you have read, understood, and agree to be bound by these Terms of Use. If you do not agree to these terms, please uninstall and stop using the plugin.
 
-- Finalised update repositories allowing Distinct to push updates for the plugin to installed versions of the plugin
+For any questions or concerns regarding these terms, please contact us at hello@distinct.africa.
 
-== Upgrade Notice ==
-
-= 1.2.2 =
-This version fixes a security related bug. Upgrade immediately.
+Last updated: 18/10/2024

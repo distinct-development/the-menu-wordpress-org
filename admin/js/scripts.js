@@ -1,29 +1,40 @@
 // Initialize the WP color picker on .color-field inputs
 jQuery(document).ready(function($) {
+    // Color picker initialization
     $('.color-field').wpColorPicker();
-});
 
-// Initialize the WP image library on .upload-button inputs
-jQuery(document).ready(function($){
-    $(document).on('click', '.upload-button', function(e) {
+    // Media uploader for both featured icon and menu item icons
+    $(document).on('click', '.upload-icon-button', function(e) {
         e.preventDefault();
-        var $button = $(this);
+        e.stopPropagation(); // Stop event propagation
+        
+        var button = $(this);
+        var inputField = button.prev('input');
+        
+        // Check if we already have a media frame
+        if (button.data('media-frame')) {
+            button.data('media-frame').open();
+            return;
+        }
 
-        // Create the media frame.
-        var file_frame = wp.media.frames.file_frame = wp.media({
-            title: 'Select or upload icon',
-            library: { type: 'image' }, // only allow images
-            button: { text: 'Select' },
-            multiple: false  // Set to true to allow multiple files to be selected
+        // Create a new media frame
+        var custom_uploader = wp.media({
+            title: 'Select or Upload an Icon',
+            library: { type: ['image', 'image/svg+xml'] },
+            button: { text: 'Use this icon' },
+            multiple: false
         });
 
         // When an image is selected, run a callback.
-        file_frame.on('select', function() {
-            var attachment = file_frame.state().get('selection').first().toJSON();
-            $button.prev('.widefat').val(attachment.url);
+        custom_uploader.on('select', function() {
+            var attachment = custom_uploader.state().get('selection').first().toJSON();
+            inputField.val(attachment.url);
         });
 
-        // Finally, open the modal
-        file_frame.open();
+        // Open the uploader dialog
+        custom_uploader.open();
+
+        // Store the media frame for future use
+        button.data('media-frame', custom_uploader);
     });
 });

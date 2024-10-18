@@ -1,62 +1,44 @@
 <?php
-function distinct_themenu_enqueue_admin_scripts($hook_suffix) {
-    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings') {
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Enqueue the plugin styles
+function distm_enqueue_admin_scripts($hook_suffix) {
+    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'nav-menus.php') {
+        wp_enqueue_media();
         wp_enqueue_style('wp-color-picker');
-        wp_enqueue_style('distinct-themenu-admin-style', plugin_dir_url(__FILE__) . 'css/styles.css', array(), '1.0.0');
-        wp_enqueue_script('distinct-themenu-admin-script', plugin_dir_url(__FILE__) . 'js/scripts.js', array('jquery', 'wp-color-picker'), '1.0.0', true);
-        
-        // Add inline script for media uploader
-        wp_add_inline_script('distinct-themenu-admin-script', "
-            jQuery(document).ready(function($) {
-                $('.upload-icon-button').click(function(e) {
-                    e.preventDefault();
-                    var button = $(this);
-                    var inputField = button.prev('input');
-                    var custom_uploader = wp.media({
-                        title: '" . esc_js(__('Select or Upload an Icon', 'the-menu')) . "',
-                        library : {
-                            type: 'image'
-                        },
-                        button: {
-                            text: '" . esc_js(__('Use this image', 'the-menu')) . "'
-                        },
-                        multiple: false
-                    }).on('select', function() {
-                        var attachment = custom_uploader.state().get('selection').first().toJSON();
-                        inputField.val(attachment.url);
-                    })
-                    .open();
-                });
-            });
-        ");
+        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/scripts.js', array('jquery', 'wp-color-picker', 'media-upload'), '1.0.0', true);
+    }
+    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings'){
+        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/styles.css', array(), '1.0.0');
     }
 }
-add_action('admin_enqueue_scripts', 'distinct_themenu_enqueue_admin_scripts');
+add_action('admin_enqueue_scripts', 'distm_enqueue_admin_scripts');
 
-function tm_add_admin_menu() {
+// Add the plugin settings page
+function distm_add_admin_menu() {
     add_menu_page(
         __('The Menu', 'the-menu'),
         __('The Menu', 'the-menu'),
         'manage_options',
         'the-menu',
-        'the_menu_page',
-        'data:image/svg+xml;base64,' . base64_encode(file_get_contents(plugin_dir_path(__FILE__) . 'assets/menu.svg')),
+        'distm_the_menu_page',
+        'data:image/svg+xml;base64,' . base64_encode(file_get_contents(plugin_dir_path(__FILE__) . 'assets/menu-logo.svg')),
         90
     );
 }
-add_action('admin_menu', 'tm_add_admin_menu');
+add_action('admin_menu', 'distm_add_admin_menu');
 
-function the_menu_page() {
+// Add the plugin settings page
+function distm_the_menu_page() {
     if (!current_user_can('manage_options')) {
         return;
     }
 
-    // Check if settings were saved
-    if (isset($_POST['submit']) && check_admin_referer('the_menu_settings_nonce', 'the_menu_settings_nonce')) {
-        // Process form submission
-        $settings = $_POST['tm_settings'];
-        $settings = tm_settings_sanitize($settings);
-        update_option('tm_settings', $settings);
+    if (isset($_POST['submit']) && check_admin_referer('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce')) {
+        $settings = isset($_POST['distm_settings']) ? array_map('sanitize_text_field', wp_unslash($_POST['distm_settings'])) : array();
+        $settings = distm_settings_sanitize($settings);
+        update_option('distm_settings', $settings);
         echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'the-menu') . '</p></div>';
     }
 
@@ -107,9 +89,9 @@ function the_menu_page() {
         <div class="tm-left-wrapper">
         <form action="" method="post">
             <?php
-            settings_fields('tmGeneral');
-            do_settings_sections('tmGeneral');
-            wp_nonce_field('the_menu_settings_nonce', 'the_menu_settings_nonce');
+            settings_fields('distmGeneral');
+            do_settings_sections('distmGeneral');
+            wp_nonce_field('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce');
             submit_button(__('Save Settings', 'the-menu'));
             ?>
         </form>
@@ -140,7 +122,8 @@ function the_menu_page() {
     include_once('assets/logo-wrapper.php');
 }
 
-function tm_register_my_menus() {
+// Register the plugin settings
+function distm_register_my_menus() {
     register_nav_menus(
         array(
             'left-menu' => esc_html__('[THE MENU] Left Menu', 'the-menu'),
@@ -149,11 +132,12 @@ function tm_register_my_menus() {
         )
     );
 }
-add_action('after_setup_theme', 'tm_register_my_menus');
+add_action('after_setup_theme', 'distm_register_my_menus');
 
-function tm_add_custom_menu_fields($item_id, $item, $depth, $args) {
+// Sanitize the plugin settings
+function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
     $icon = get_post_meta($item_id, '_menu_item_icon', true);
-    wp_nonce_field('tm_custom_menu_fields', 'tm_custom_menu_nonce');
+    wp_nonce_field('distm_custom_menu_fields', 'distm_custom_menu_nonce');
     ?>
     <p class="field-custom description description-wide">
         <label for="edit-menu-item-icon-<?php echo esc_attr($item_id); ?>">
@@ -167,21 +151,24 @@ function tm_add_custom_menu_fields($item_id, $item, $depth, $args) {
     </p>
     <?php
 }
-add_filter('wp_nav_menu_item_custom_fields', 'tm_add_custom_menu_fields', 10, 4);
+add_filter('wp_nav_menu_item_custom_fields', 'distm_add_custom_menu_fields', 10, 4);
 
-function tm_save_custom_menu_fields($menu_id, $menu_item_db_id, $args) {
-    if (!isset($_POST['tm_custom_menu_nonce']) || !wp_verify_nonce($_POST['tm_custom_menu_nonce'], 'tm_custom_menu_fields')) {
+
+// Save the custom menu fields
+function distm_save_custom_menu_fields($menu_id, $menu_item_db_id, $args) {
+    if (!isset($_POST['distm_custom_menu_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['distm_custom_menu_nonce'])), 'distm_custom_menu_fields')) {
         return;
     }
 
     if (isset($_POST['menu-item-icon'][$menu_item_db_id])) {
-        $icon_url = sanitize_text_field($_POST['menu-item-icon'][$menu_item_db_id]);
+        $icon_url = sanitize_text_field(wp_unslash($_POST['menu-item-icon'][$menu_item_db_id]));
         update_post_meta($menu_item_db_id, '_menu_item_icon', $icon_url);
     }
 }
-add_action('wp_update_nav_menu_item', 'tm_save_custom_menu_fields', 10, 3);
+add_action('wp_update_nav_menu_item', 'distm_save_custom_menu_fields', 10, 3);
 
-function tm_get_svg_content($url) {
+// Sanitize the plugin settings
+function distm_get_svg_content($url) {
     if (substr($url, -4) !== '.svg') {
         return false;
     }
@@ -199,7 +186,8 @@ function tm_get_svg_content($url) {
     return $svg_content;
 }
 
-function tm_add_custom_visibility_field($item_id, $item, $depth, $args) {
+// Add the custom visibility field
+function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
     $visibility = get_post_meta($item_id, '_menu_item_visibility', true);
     if (empty($visibility)) {
         $visibility = 'everyone';
@@ -240,44 +228,45 @@ function tm_add_custom_visibility_field($item_id, $item, $depth, $args) {
             <small><description style="opacity: 0.5;line-height:1em;"><i><?php esc_html_e('Select who can see this menu item. If none are selected, all roles can see it.', 'the-menu'); ?></i></description></small>
         </label>
     </div>
-
-    <script>
-    jQuery(document).ready(function($) {
-        $('#edit-menu-item-visibility-<?php echo esc_js($item_id); ?>').change(function() {
-            if ($(this).val() === 'logged_in') {
-                $(this).closest('.menu-item-settings').find('.field-roles').show();
-            } else {
-                $(this).closest('.menu-item-settings').find('.field-roles').hide();
-            }
-        });
-    });
-    </script>
     <?php
+    wp_add_inline_script('distm-admin-script', "
+        jQuery(document).ready(function($) {
+            $('#edit-menu-item-visibility-<?php echo esc_js($item_id); ?>').change(function() {
+                if ($(this).val() === 'logged_in') {
+                    $(this).closest('.menu-item-settings').find('.field-roles').show();
+                } else {
+                    $(this).closest('.menu-item-settings').find('.field-roles').hide();
+                }
+            });
+        });
+    ");
 }
-add_filter('wp_nav_menu_item_custom_fields', 'tm_add_custom_visibility_field', 10, 4);
+add_filter('wp_nav_menu_item_custom_fields', 'distm_add_custom_visibility_field', 10, 4);
 
-function tm_save_custom_visibility_field($menu_id, $menu_item_db_id, $args) {
-    if (!isset($_POST['tm_custom_menu_nonce']) || !wp_verify_nonce($_POST['tm_custom_menu_nonce'], 'tm_custom_menu_fields')) {
+// Save the custom visibility field
+function distm_save_custom_visibility_field($menu_id, $menu_item_db_id, $args) {
+    if (!isset($_POST['distm_custom_menu_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['distm_custom_menu_nonce'])), 'distm_custom_menu_fields')) {
         return;
     }
 
     if (isset($_POST['menu-item-visibility'][$menu_item_db_id])) {
-        $visibility = sanitize_text_field($_POST['menu-item-visibility'][$menu_item_db_id]);
+        $visibility = sanitize_text_field(wp_unslash($_POST['menu-item-visibility'][$menu_item_db_id]));
         update_post_meta($menu_item_db_id, '_menu_item_visibility', $visibility);
     } else {
         delete_post_meta($menu_item_db_id, '_menu_item_visibility');
     }
-
+    
     if (isset($_POST['menu-item-roles'][$menu_item_db_id])) {
-        $roles = array_map('sanitize_text_field', $_POST['menu-item-roles'][$menu_item_db_id]);
+        $roles = array_map('sanitize_text_field', wp_unslash($_POST['menu-item-roles'][$menu_item_db_id]));
         update_post_meta($menu_item_db_id, '_menu_item_roles', $roles);
     } else {
         delete_post_meta($menu_item_db_id, '_menu_item_roles');
     }
 }
-add_action('wp_update_nav_menu_item', 'tm_save_custom_visibility_field', 10, 3);
+add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 3);
 
-class TM_Icon_Walker extends Walker_Nav_Menu {
+// WordPress Walker for the menu
+class DISTM_Icon_Walker extends Walker_Nav_Menu {
     function start_el(&$output, $item, $depth=0, $args=null, $id=0) {
         $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
         $title = apply_filters('the_title', $item->title, $item->ID);
@@ -286,7 +275,7 @@ class TM_Icon_Walker extends Walker_Nav_Menu {
         $icon_html = '';
         if (!empty($icon_url)) {
             if (substr($icon_url, -4) === '.svg') {
-                $svg_content = tm_get_svg_content($icon_url);
+                $svg_content = distm_get_svg_content($icon_url);
                 if ($svg_content !== false) {
                     $icon_html = $svg_content;
                 }
@@ -305,7 +294,6 @@ class TM_Icon_Walker extends Walker_Nav_Menu {
         }
 
         $show_item = false;
-
         if ($visibility === 'everyone') {
             $show_item = true;
         } elseif ($visibility === 'logged_in' && is_user_logged_in()) {
@@ -318,75 +306,88 @@ class TM_Icon_Walker extends Walker_Nav_Menu {
 
         if ($show_item) {
             $output .= '<li class="tm-menu-item-' . esc_attr($item->ID) . '">';
-            $output .= '<a href="' . esc_url($url) . '">' . $icon_html . '<span class="tm-menu-item-title">' . esc_html($title) . '</span></a>';
+            
+            // Get the 'don't display menu text' setting
+            $options = get_option('distm_settings');
+            $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
+
+            $output .= '<a href="' . esc_url($url) . '">' . $icon_html;
+            
+            // Only add the title span if 'don't display menu text' is not enabled
+            if (!$hide_text) {
+                $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
+            }
+            
+            $output .= '</a>';
         }
     }
 }
 
-function tm_filter_null_values($value) {
+function distm_filter_null_values($value) {
     return $value !== null;
 }
 
-function tm_settings_init() {
-    register_setting('tmGeneral', 'tm_settings', array(
-        'sanitize_callback' => 'tm_settings_sanitize',
+// Initialize the plugin settings
+function distm_settings_init() {
+    register_setting('distmGeneral', 'distm_settings', array(
+        'sanitize_callback' => 'distm_settings_sanitize',
         'default' => array()
     ));
 
     add_settings_section(
-        'tm_general_section', 
+        'distm_general_section', 
         __('General settings', 'the-menu'), 
-        'tm_general_section_callback', 
-        'tmGeneral'
+        'distm_general_section_callback', 
+        'distmGeneral'
     );
 
     add_settings_section(
-        'tm_customization_section', 
+        'distm_customization_section', 
         __('Customise', 'the-menu'), 
-        'tm_customization_section_callback', 
-        'tmGeneral'
+        'distm_customization_section_callback', 
+        'distmGeneral'
     );
 
     $general_fields = [
-        ['id' => 'tm_enable_mobile_menu', 'title' => __('Enable menu', 'the-menu'), 'callback' => 'tm_checkbox_field_callback', 'section' => 'tm_general_section'],
-        ['id' => 'tm_only_on_mobile', 'title' => __('Only on mobile', 'the-menu'), 'callback' => 'tm_checkbox_field_callback', 'section' => 'tm_general_section'],
-        ['id' => 'tm_enable_transparency', 'title' => __('Enable transparency on scroll', 'the-menu'), 'callback' => 'tm_checkbox_field_callback', 'section' => 'tm_general_section', 'args' => ['description' => __('This will make the menu transparent during scroll.', 'the-menu')]],
-        ['id' => 'tm_enable_loader_animation', 'title' => __('Enable loader animation', 'the-menu'), 'callback' => 'tm_checkbox_field_callback', 'section' => 'tm_general_section', 'args' => ['description' => __('Displays a loader animation while the menu is being prepared.', 'the-menu')]],
-        ['id' => 'tm_enable_addon_menu', 'title' => __('Enable addon menu', 'the-menu'), 'callback' => 'tm_checkbox_field_callback', 'section' => 'tm_general_section', 'args' => ['description' => __('Enables an additional menu for more links.', 'the-menu')]],
-        ['id' => 'tm_disable_menu_text', 'title' => __('Disable menu text', 'the-menu'), 'callback' => 'tm_checkbox_field_callback', 'section' => 'tm_general_section', 'args' => ['description' => __('Display only icons in the menu, no text.', 'the-menu')]]
+        ['id' => 'distm_enable_mobile_menu', 'title' => __('Enable menu', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section'],
+        ['id' => 'distm_only_on_mobile', 'title' => __('Only on mobile', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section'],
+        ['id' => 'distm_enable_transparency', 'title' => __('Enable transparency on scroll', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('This will make the menu transparent during scroll.', 'the-menu')]],
+        ['id' => 'distm_enable_loader_animation', 'title' => __('Enable loader animation', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Displays a loader animation while the menu is being prepared.', 'the-menu')]],
+        ['id' => 'distm_enable_addon_menu', 'title' => __('Enable addon menu', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Enables an additional menu for more links.', 'the-menu')]],
+        ['id' => 'distm_disable_menu_text', 'title' => __('Disable menu text', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Display only icons in the menu, no text.', 'the-menu')]]
     ];
 
     $customization_fields = [
-        ['id' => 'tm_menu_style', 'title' => __('Menu style', 'the-menu'), 'callback' => 'tm_dropdown_field_callback', 'section' => 'tm_customization_section', 'args' => ['choices' => ['pill' => __('Pill', 'the-menu'), 'rounded' => __('Rounded', 'the-menu'), 'flat' => __('Flat', 'the-menu')], 'description' => __('Choose the general style for The Menu.', 'the-menu')]],
-        ['id' => 'tm_background_color', 'title' => __('Background colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the background color for the menu.', 'the-menu')]],
-        ['id' => 'tm_icon_color', 'title' => __('Icon colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the color for the menu icons.', 'the-menu')]],
-        ['id' => 'tm_label_color', 'title' => __('Label colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the color for the text labels in the menu.', 'the-menu')]],
-        ['id' => 'tm_featured_icon', 'title' => __('Featured icon', 'the-menu'), 'callback' => 'tm_upload_field_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Upload a custom icon to be used as the featured menu item.', 'the-menu')]],
-        ['id' => 'tm_featured_background_color', 'title' => __('Featured background color', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the background color for the featured menu item.', 'the-menu')]],
-        ['id' => 'tm_featured_icon_color', 'title' => __('Featured icon colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the icon color for the featured menu item.', 'the-menu')]],
-        ['id' => 'tm_addon_menu_style', 'title' => __('Addon menu style', 'the-menu'), 'callback' => 'tm_dropdown_field_callback', 'section' => 'tm_customization_section', 'args' => ['choices' => ['app-icon' => __('App icon', 'the-menu'), 'icon' => __('Icon', 'the-menu'), 'list' => __('List', 'the-menu')], 'description' => __('Choose the general style for the add-on menu items.', 'the-menu')]],
-        ['id' => 'tm_addon_bg_color', 'title' => __('Add-on background colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the background color for the add-on menu.', 'the-menu')]],
-        ['id' => 'tm_addon_label_color', 'title' => __('Add-on label colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the label color for the add-on menu items.', 'the-menu')]],
-        ['id' => 'tm_addon_icon_bg', 'title' => __('Add-on icon colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the icon color for the add-on menu items.', 'the-menu')]],
-        ['id' => 'tm_addon_icon_color', 'title' => __('Add-on icon background colour', 'the-menu'), 'callback' => 'tm_color_picker_callback', 'section' => 'tm_customization_section', 'args' => ['description' => __('Set the icon background color for the add-on menu items.', 'the-menu')]]
+        ['id' => 'distm_menu_style', 'title' => __('Menu style', 'the-menu'), 'callback' => 'distm_dropdown_field_callback', 'section' => 'distm_customization_section', 'args' => ['choices' => ['pill' => __('Pill', 'the-menu'), 'rounded' => __('Rounded', 'the-menu'), 'flat' => __('Flat', 'the-menu')], 'description' => __('Choose the general style for The Menu.', 'the-menu')]],
+        ['id' => 'distm_background_color', 'title' => __('Background colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the background color for the menu.', 'the-menu')]],
+        ['id' => 'distm_icon_color', 'title' => __('Icon colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the color for the menu icons.', 'the-menu')]],
+        ['id' => 'distm_label_color', 'title' => __('Label colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the color for the text labels in the menu.', 'the-menu')]],
+        ['id' => 'distm_featured_icon', 'title' => __('Featured icon', 'the-menu'), 'callback' => 'distm_upload_field_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Upload a custom icon to be used as the featured menu item.', 'the-menu')]],
+        ['id' => 'distm_featured_background_color', 'title' => __('Featured background color', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the background color for the featured menu item.', 'the-menu')]],
+        ['id' => 'distm_featured_icon_color', 'title' => __('Featured icon colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon color for the featured menu item.', 'the-menu')]],
+        ['id' => 'distm_addon_menu_style', 'title' => __('Addon menu style', 'the-menu'), 'callback' => 'distm_dropdown_field_callback', 'section' => 'distm_customization_section', 'args' => ['choices' => ['app-icon' => __('App icon', 'the-menu'), 'icon' => __('Icon', 'the-menu'), 'list' => __('List', 'the-menu')], 'description' => __('Choose the general style for the add-on menu items.', 'the-menu')]],
+        ['id' => 'distm_addon_bg_color', 'title' => __('Add-on background colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the background color for the add-on menu.', 'the-menu')]],
+        ['id' => 'distm_addon_label_color', 'title' => __('Add-on label colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the label color for the add-on menu items.', 'the-menu')]],
+        ['id' => 'distm_addon_icon_bg', 'title' => __('Add-on icon colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon color for the add-on menu items.', 'the-menu')]],
+        ['id' => 'distm_addon_icon_color', 'title' => __('Add-on icon background colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon background color for the add-on menu items.', 'the-menu')]]
     ];
     
     add_settings_section(
-        'tm_page_exclusion_section', 
+        'distm_page_exclusion_section', 
         __('Page exclusion settings', 'the-menu'), 
-        'tm_page_exclusion_section_callback', 
-        'tmGeneral'
+        'distm_page_exclusion_section_callback', 
+        'distmGeneral'
     );
 
     add_settings_field(
-        'tm_exclude_pages',
+        'distm_exclude_pages',
         __('Exclude menu on these pages', 'the-menu'),
-        'tm_pages_field_callback',
-        'tmGeneral',
-        'tm_page_exclusion_section',
+        'distm_pages_field_callback',
+        'distmGeneral',
+        'distm_page_exclusion_section',
         [
-            'label_for' => 'tm_exclude_pages',
-            'class' => 'tm_row'
+            'label_for' => 'distm_exclude_pages',
+            'class' => 'distm_row'
         ]
     );
 
@@ -395,11 +396,11 @@ function tm_settings_init() {
             $field['id'],
             $field['title'],
             $field['callback'],
-            'tmGeneral',
+            'distmGeneral',
             $field['section'], 
             [
                 'label_for' => $field['id'],
-                'class' => 'tm_row',
+                'class' => 'distm_row',
                 'description' => $field['args']['description'] ?? ''
             ]
         );
@@ -410,25 +411,26 @@ function tm_settings_init() {
             $field['id'],
             $field['title'],
             $field['callback'],
-            'tmGeneral',
+            'distmGeneral',
             $field['section'],
             [
                 'label_for' => $field['id'],
-                'class' => 'tm_row',
+                'class' => 'distm_row',
                 'choices' => $field['args']['choices'] ?? [],
                 'description' => $field['args']['description'] ?? ''
             ]
         );
     }
 }
-add_action('admin_init', 'tm_settings_init');
+add_action('admin_init', 'distm_settings_init');
 
-function tm_pages_field_callback($args) {
-    $options = get_option('tm_settings');
-    $selected_pages = isset($options['tm_exclude_pages']) ? (array)$options['tm_exclude_pages'] : array();
+// Add the page exclusion settings
+function distm_pages_field_callback($args) {
+    $options = get_option('distm_settings');
+    $selected_pages = isset($options['distm_exclude_pages']) ? (array)$options['distm_exclude_pages'] : array();
 
     $pages = get_pages();
-    echo "<select id='tm_exclude_pages' name='tm_settings[tm_exclude_pages][]' multiple='multiple' class='widefat' style='height: 150px;'>";
+    echo "<select id='distm_exclude_pages' name='distm_settings[distm_exclude_pages][]' multiple='multiple' class='widefat' style='height: 150px;'>";
     foreach ($pages as $page) {
         $selected = in_array($page->ID, $selected_pages) ? 'selected' : '';
         echo "<option value='" . esc_attr($page->ID) . "' " . esc_attr($selected) . ">" . esc_html($page->post_title) . "</option>";
@@ -437,44 +439,71 @@ function tm_pages_field_callback($args) {
     echo "<p class='description' style='opacity: 0.5;font-style:italic;'><small><span class='dashicons dashicons-info'></span> " . esc_html__('Hold down the Ctrl (windows) / Command (Mac) button to select multiple options.', 'the-menu') . "</small></p>";
 }
 
-function tm_settings_sanitize($input) {
+// Sanitize the plugin settings
+function distm_settings_sanitize($input) {
     $sanitized_input = array();
     foreach ($input as $key => $value) {
-        if ($key === 'tm_exclude_pages') {
-            // Ensure it's always an array of integers
-            $sanitized_input[$key] = !empty($value) ? array_map('absint', (array)$value) : array();
-        } elseif (is_array($value)) {
-            $sanitized_input[$key] = array_map('sanitize_text_field', $value);
-        } else {
-            $sanitized_input[$key] = sanitize_text_field($value);
+        switch ($key) {
+            case 'distm_exclude_pages':
+                $sanitized_input[$key] = !empty($value) ? array_map('absint', (array)$value) : array();
+                break;
+            case 'distm_background_color':
+            case 'distm_icon_color':
+            case 'distm_label_color':
+            case 'distm_featured_background_color':
+            case 'distm_featured_icon_color':
+            case 'distm_addon_bg_color':
+            case 'distm_addon_label_color':
+            case 'distm_addon_icon_bg':
+            case 'distm_addon_icon_color':
+                $sanitized_input[$key] = sanitize_hex_color($value);
+                break;
+            case 'distm_featured_icon':
+                $sanitized_input[$key] = esc_url_raw($value);
+                break;
+            case 'distm_enable_mobile_menu':
+            case 'distm_only_on_mobile':
+            case 'distm_enable_transparency':
+            case 'distm_enable_loader_animation':
+            case 'distm_enable_addon_menu':
+            case 'distm_disable_menu_text':
+                $sanitized_input[$key] = isset($value) ? (bool)$value : false;
+                break;
+            default:
+                if (is_array($value)) {
+                    $sanitized_input[$key] = array_map('sanitize_text_field', $value);
+                } else {
+                    $sanitized_input[$key] = sanitize_text_field($value);
+                }
         }
     }
     return $sanitized_input;
 }
 
-function tm_general_section_callback() {
+// Callback functions
+function distm_general_section_callback() {
     esc_html_e('General settings for The Menu plugin.', 'the-menu');
 }
 
-function tm_customization_section_callback() {
+function distm_customization_section_callback() {
     esc_html_e('Customise the styles and colours for The Menu.', 'the-menu');
 }
 
-function tm_checkbox_field_callback($args) {
-    $options = get_option('tm_settings');
+function distm_checkbox_field_callback($args) {
+    $options = get_option('distm_settings');
     $value = $options[$args['label_for']] ?? '';
     $checked = $value ? 'checked' : '';
-    echo "<input id='" . esc_attr($args['label_for']) . "' name='tm_settings[" . esc_attr($args['label_for']) . "]' type='checkbox' value='1' " . esc_attr($checked) . " class='" . esc_attr($args['class']) . "'>";
+    echo "<input id='" . esc_attr($args['label_for']) . "' name='distm_settings[" . esc_attr($args['label_for']) . "]' type='checkbox' value='1' " . esc_attr($checked) . " class='" . esc_attr($args['class']) . "'>";
     if (!empty($args['description'])) {
         echo "<label for='" . esc_attr($args['label_for']) . "'>" . esc_html($args['description']) . "</label>";
     }
 }
 
-function tm_dropdown_field_callback($args) {
-    $options = get_option('tm_settings');
+function distm_dropdown_field_callback($args) {
+    $options = get_option('distm_settings');
     $selected_value = $options[$args['label_for']] ?? '';
 
-    echo "<select id='" . esc_attr($args['label_for']) . "' name='tm_settings[" . esc_attr($args['label_for']) . "]'>";
+    echo "<select id='" . esc_attr($args['label_for']) . "' name='distm_settings[" . esc_attr($args['label_for']) . "]'>";
     foreach ($args['choices'] as $key => $label) {
         $selected = ($selected_value === $key) ? 'selected' : '';
         echo "<option value='" . esc_attr($key) . "' " . esc_attr($selected) . ">" . esc_html($label) . "</option>";
@@ -486,56 +515,80 @@ function tm_dropdown_field_callback($args) {
     }
 }
 
-function tm_color_picker_callback($args) {
-    $options = get_option('tm_settings');
+function distm_color_picker_callback($args) {
+    $options = get_option('distm_settings');
     $value = $options[$args['label_for']] ?? '';
-    echo "<input type='text' id='" . esc_attr($args['label_for']) . "' name='tm_settings[" . esc_attr($args['label_for']) . "]' value='" . esc_attr($value) . "' class='color-field' />";
+    echo "<input type='text' id='" . esc_attr($args['label_for']) . "' name='distm_settings[" . esc_attr($args['label_for']) . "]' value='" . esc_attr($value) . "' class='color-field' />";
     if (isset($args['description'])) {
         echo "<p class='description' style='opacity: 0.5;font-style:italic;'><small><span class='dashicons dashicons-info'></span> " . esc_html($args['description']) . "</small></p>";
     }
 }
 
-function tm_upload_field_callback($args) {
-    $options = get_option('tm_settings');
+function distm_upload_field_callback($args) {
+    $options = get_option('distm_settings');
     $value = $options[$args['label_for']] ?? '';
 
-    echo "<input type='text' id='" . esc_attr($args['label_for']) . "' name='tm_settings[" . esc_attr($args['label_for']) . "]' style='width:35%;margin-right:5px;' value='" . esc_attr($value) . "' class='widefat tm-url-field' readonly/>";
+    echo "<input type='text' id='" . esc_attr($args['label_for']) . "' name='distm_settings[" . esc_attr($args['label_for']) . "]' style='width:70%;margin-right:5px;' value='" . esc_attr($value) . "' class='widefat code edit-menu-item-custom' readonly/>";
     echo "<button type='button' class='button tm-upload-button'>" . esc_html__('Upload', 'the-menu') . "</button>";
 
     if (!empty($args['description'])) {
         echo "<p class='description' style='opacity: 0.5;font-style:italic;'><small><span class='dashicons dashicons-info'></span> " . esc_html($args['description']) . "</small></p>";
     }
-
-    ?>
-    <script type="text/javascript">
-    jQuery(document).ready(function($) {
-        $('.tm-upload-button').click(function(e) {
-            e.preventDefault();
-            var $button = $(this);
-
-            var file_frame = wp.media.frames.file_frame = wp.media({
-                title: '<?php esc_html_e('Select or upload icon', 'the-menu'); ?>',
-                library: {
-                    type: 'image'
-                },
-                button: {
-                    text: '<?php esc_html_e('Select', 'the-menu'); ?>'
-                },
-                multiple: false
-            });
-
-            file_frame.on('select', function() {
-                var attachment = file_frame.state().get('selection').first().toJSON();
-                $button.prev('.tm-url-field').val(attachment.url);
-            });
-
-            file_frame.open();
-        });
-    });
-    </script>
-    <?php
 }
 
-function tm_page_exclusion_section_callback() {
+function distm_page_exclusion_section_callback() {
     esc_html_e('Select the pages where the menu should not be displayed.', 'the-menu');
 }
+
+function distm_allow_svg_upload($mimes) {
+    $mimes['svg'] = 'image/svg+xml';
+    return $mimes;
+}
+add_filter('upload_mimes', 'distm_allow_svg_upload');
+
+
+// Sanitize SVG uploads
+function distm_sanitize_svg($file) {
+    // Check if the file is an SVG
+    if ($file['type'] === 'image/svg+xml') {
+        $response = wp_remote_get($file['tmp_name']);
+        
+        if (is_wp_error($response)) {
+            return $file; 
+        }
+
+        $file_content = wp_remote_retrieve_body($response);
+
+        $dom = new DOMDocument();
+        $dom->loadXML($file_content);
+
+        // Remove potentially harmful elements and attributes
+        $scripting_elements = array('script', 'use', 'foreignObject');
+        $elements = $dom->getElementsByTagName('*');
+
+        foreach ($elements as $element) {
+            if (in_array($element->tagName, $scripting_elements)) {
+                $element->parentNode->removeChild($element);
+            }
+            // Remove on* attributes
+            $attributes = $element->attributes;
+            for ($i = $attributes->length - 1; $i >= 0; $i--) {
+                $attribute = $attributes->item($i);
+                if (strpos($attribute->name, 'on') === 0) {
+                    $element->removeAttribute($attribute->name);
+                }
+            }
+        }
+
+        // Save sanitized SVG back to the temp file using WP_Filesystem
+        global $wp_filesystem;
+        if (empty($wp_filesystem)) {
+            require_once (ABSPATH . '/wp-admin/includes/file.php');
+            WP_Filesystem();
+        }
+        $wp_filesystem->put_contents($file['tmp_name'], $dom->saveXML());
+    }
+
+    return $file;
+}
+add_filter('wp_handle_upload_prefilter', 'distm_sanitize_svg');
