@@ -1,0 +1,1 @@
+Enhance your WordPress site with The Menu plugin. This tool offers customizable navigation options with mobile support, SVG icons, and extensive color choices. Perfect for creating a visually appealing and user-friendly menu system.
