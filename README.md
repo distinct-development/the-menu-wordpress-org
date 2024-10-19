@@ -65,7 +65,7 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 
 ### 1.2.2 - 07/08/2024
-- This version fixes a security related bug. Upgrade immediately.
+- This version fixes a security related bug.
 
 ### 1.2.1 - 04/08/2024
 - WP version check
