@@ -120,7 +120,7 @@
     margin-bottom: 5px;
 }
 
-#tm-fixed-mobile-menu .menu svg path{
+#tm-fixed-mobile-menu .menu svg :is(path,rect,circle,ellipse,polygon,polyline,line){
     fill:var(--distm-icon-color);
 }
 

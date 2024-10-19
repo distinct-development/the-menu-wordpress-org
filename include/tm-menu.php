@@ -55,7 +55,7 @@ function distm_custom_colors() {
     .the-menu .tm-icon-wrapper svg path { fill: var(--distm-icon-color); }
     .the-menu a { color: var(--distm-label-color); }
     .tm-featured .tm-menu-item .tm-icon-wrapper, .custom-loader { background-color: var(--distm-featured-background-color)!important; }
-    .tm-featured svg path { fill: var(--distm-featured-icon-color); }
+    .tm-featured svg path { fill: var(--distm-featured-icon-color)!important; }
     .tm-addon-menu-wrapper { background-color: var(--distm-addon-bg-color); }
     #tm-addon-menu a { color: var(--distm-addon-label-color); }
     #tm-addon-menu svg path { fill: var(--distm-addon-icon-color); }

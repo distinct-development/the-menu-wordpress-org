@@ -3,10 +3,13 @@ Contributors: ryanwiggilldistinct
 Tags: menu, navigation, custom menu, mobile menu, responsive menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Icon: assets/icon-256x256.png
+Banner: assets/banner-772x250.png
 
 Enhance your WordPress site with customizable navigation options, mobile support, SVG icons, and extensive color choices.
 
@@ -55,6 +58,10 @@ Yes, The Menu is designed to be fully responsive and mobile-friendly. You can ev
 2. This is the second screen shot
 
 == Changelog ==
+
+= 1.2.5 - 19/10/2024 =
+
+- FIXED: Media library wouldn't open when trying to upload a featured icon
 
 = 1.2.4 - 19/10/2024 =
 

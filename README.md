@@ -56,6 +56,10 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.5 - 19/10/2024
+
+- FIXED: Media library wouldn't open when trying to upload a featured icon
+
 ### 1.2.4 - 19/10/2024
 - Improved the overall security and robustness of the plugin.
 - Updated the contributors of the plugin.
