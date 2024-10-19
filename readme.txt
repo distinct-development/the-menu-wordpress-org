@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: menu, navigation, custom menu, mobile menu, responsive menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -56,8 +56,17 @@ Yes, The Menu is designed to be fully responsive and mobile-friendly. You can ev
 
 == Changelog ==
 
-= 1.2.2 =
-This version fixes a security related bug. Upgrade immediately.
+= 1.2.4 - 19/10/2024 =
+
+- Improved the overall security and robustness of the plugin.
+- Updated the contributors of the plugin.
+
+= 1.2.3 - 18/10/2024 =
+
+- Improved the overall security and robustness of the plugin by ensuring proper sanitization of user input and escaping of output. The functionality of the plugin remains the same, but it's now more resilient against potential security issues.
+
+= 1.2.2 - 07/08/2024 =
+This version fixes a security related bug.
 
 = 1.2.1 - 04/08/2024 =
 

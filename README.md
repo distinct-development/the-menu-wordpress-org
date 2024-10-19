@@ -56,7 +56,15 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
-### 1.2.2
+### 1.2.4 - 19/10/2024
+- Improved the overall security and robustness of the plugin.
+- Updated the contributors of the plugin.
+
+### 1.2.3 - 18/10/2024
+- Improved the overall security and robustness of the plugin by ensuring proper sanitization of user input and escaping of output. The functionality of the plugin remains the same, but it's now more resilient against potential security issues.
+
+
+### 1.2.2 - 07/08/2024
 - This version fixes a security related bug. Upgrade immediately.
 
 ### 1.2.1 - 04/08/2024
