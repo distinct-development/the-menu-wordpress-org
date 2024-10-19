@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function distm_enqueue_styles() {
     // Check if we're on the front-end
     if (!is_admin()) {
-        wp_enqueue_style('distm-style', plugin_dir_url(__FILE__) . '../css/style.css', array(), '1.0.0');
+        wp_enqueue_style('distm-style', plugin_dir_url(__FILE__) . '../css/style.css', array(), '1.0.1');
     }
 }
 add_action('wp_enqueue_scripts', 'distm_enqueue_styles');

@@ -1,5 +1,5 @@
 === The Menu ===
-Contributors: distinct-development, ryan-wiggill
+Contributors: ryanwiggilldistinct
 Tags: menu, navigation, custom menu, mobile menu, responsive menu
 Requires at least: 6.0
 Tested up to: 6.6.2

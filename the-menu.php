@@ -6,7 +6,7 @@ namespace Distinct\TheMenu;
 Plugin Name: The Menu
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Enhance your WordPress site with The Menu plugin. This tool offers customizable navigation options with mobile support, SVG icons, and extensive color choices. Perfect for creating a visually appealing and user-friendly menu system.
-Version: 1.2.3
+Version: 1.2.4
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://distinct.africa
@@ -36,8 +36,8 @@ function distm_enqueue_frontend_scripts() {
             $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
 
             if ($should_load) {
-                wp_enqueue_style('distm', plugins_url('css/style.css', __FILE__), array(), '1.0.0', 'all');
-                wp_enqueue_script('distm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.0', true);
+                wp_enqueue_style('distm', plugins_url('css/style.css', __FILE__), array(), '1.0.1', 'all');
+                wp_enqueue_script('distm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.1', true);
             }
         }
     }
@@ -246,13 +246,21 @@ class Plugin_License_Validator {
 
     // Handle the license settings
     public function register_license_settings() {
-        register_setting($this->plugin_slug . '_license_settings', $this->license_option_key);
+        register_setting(
+            $this->plugin_slug . '_license_settings',
+            $this->license_option_key,
+            array(
+                'sanitize_callback' => array($this, 'sanitize_license_key')
+            )
+        );
+
         add_settings_section(
             $this->plugin_slug . '_license_section',
             $this->plugin_name . ': License key settings',
             null,
             $this->plugin_slug . '_license_settings'
         );
+        
         add_settings_field(
             $this->plugin_slug . '_license_key_field',
             'License Key',
@@ -260,6 +268,13 @@ class Plugin_License_Validator {
             $this->plugin_slug . '_license_settings',
             $this->plugin_slug . '_license_section'
         );
+    }
+    // Sanitize the license key
+    public function sanitize_license_key($input) {
+        $sanitized = preg_replace('/\s+/', '', $input);
+        $sanitized = preg_replace('/[^0-9a-fA-F]/', '', $sanitized);
+        $sanitized = strtolower($sanitized);
+        return substr($sanitized, 0, 56);
     }
 }
 
