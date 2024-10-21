@@ -5,8 +5,8 @@ namespace Distinct\TheMenu;
 /*
 Plugin Name: The Menu
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
-Description: Enhance your WordPress site with The Menu plugin. This tool offers customizable navigation options with mobile support, SVG icons, and extensive color choices. Perfect for creating a visually appealing and user-friendly menu system.
-Version: 1.2.5
+Description: Enhance your WordPress site with a customisable, mobile-friendly navigation menu featuring SVG icons and extensive colour options.
+Version: 1.2.6
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://distinct.africa
@@ -36,8 +36,8 @@ function distm_enqueue_frontend_scripts() {
             $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
 
             if ($should_load) {
-                wp_enqueue_style('distm', plugins_url('css/style.css', __FILE__), array(), '1.0.1', 'all');
-                wp_enqueue_script('distm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.1', true);
+                wp_enqueue_style('distm', plugins_url('css/style.css', __FILE__), array(), '1.0.2', 'all');
+                wp_enqueue_script('distm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.2', true);
             }
         }
     }

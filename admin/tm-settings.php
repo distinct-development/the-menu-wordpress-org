@@ -7,10 +7,10 @@ function distm_enqueue_admin_scripts($hook_suffix) {
     if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'nav-menus.php') {
         wp_enqueue_media();
         wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/scripts.js', array('jquery', 'wp-color-picker', 'media-upload'), '1.0.1', true);
+        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/scripts.js', array('jquery', 'wp-color-picker', 'media-upload'), '1.0.2', true);
     }
     if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings'){
-        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/styles.css', array(), '1.0.1');
+        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/styles.css', array(), '1.0.2');
     }
 }
 add_action('admin_enqueue_scripts', 'distm_enqueue_admin_scripts');
@@ -24,7 +24,7 @@ function distm_add_admin_menu() {
         'the-menu',
         'distm_the_menu_page',
         'data:image/svg+xml;base64,' . base64_encode(file_get_contents(plugin_dir_path(__FILE__) . 'assets/menu-logo.svg')),
-        90
+        60
     );
 }
 add_action('admin_menu', 'distm_add_admin_menu');
@@ -36,7 +36,7 @@ function distm_the_menu_page() {
     }
 
     if (isset($_POST['submit']) && check_admin_referer('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce')) {
-        $settings = isset($_POST['distm_settings']) ? array_map('sanitize_text_field', wp_unslash($_POST['distm_settings'])) : array();
+        $settings = isset($_POST['distm_settings']) ? $_POST['distm_settings'] : array();
         $settings = distm_settings_sanitize($settings);
         update_option('distm_settings', $settings);
         echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'the-menu') . '</p></div>';
@@ -73,18 +73,14 @@ function distm_the_menu_page() {
     }
     ?>
     <div class="tm-banner">
-    <video autoplay muted loop playsinline id="myVideo">
-        <source src="<?php echo esc_url(plugins_url('/assets/video.mp4', __FILE__)); ?>" type="video/mp4">
-        <?php esc_html_e('Your browser does not support HTML5 video.', 'the-menu'); ?>
-    </video>
-    <div class="tm-banner-bg">
-        <h1><span><?php echo_plugin_name(); ?></span></h1>
-        <p class="version"><?php esc_html_e('Version', 'the-menu'); ?> <?php echo_plugin_version(); ?></p>
-        <p><?php echo_plugin_description(); ?></p>
-        <br>
-        <a href="<?php echo esc_url(admin_url('nav-menus.php')); ?>" class="btn"><span class="dashicons dashicons-edit-large"></span> <?php esc_html_e('Edit menus', 'the-menu'); ?></a>
+        <div class="tm-banner-bg">
+            <h1><span><?php echo_plugin_name(); ?></span></h1>
+            <p class="version"><?php esc_html_e('Version', 'the-menu'); ?> <?php echo_plugin_version(); ?></p>
+            <p><?php echo_plugin_description(); ?></p>
+            <br>
+            <a href="<?php echo esc_url(admin_url('nav-menus.php')); ?>" class="btn"><span class="dashicons dashicons-edit-large"></span> <?php esc_html_e('Edit menus', 'the-menu'); ?></a>
+        </div>
     </div>
-</div>
     <div class="tm-wrap">
         <div class="tm-left-wrapper">
         <form action="" method="post">
@@ -92,7 +88,7 @@ function distm_the_menu_page() {
             settings_fields('distmGeneral');
             do_settings_sections('distmGeneral');
             wp_nonce_field('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce');
-            submit_button(__('Save Settings', 'the-menu'));
+            submit_button(__('Save settings', 'the-menu'));
             ?>
         </form>
         </div>
@@ -426,6 +422,7 @@ add_action('admin_init', 'distm_settings_init');
 
 // Add the page exclusion settings
 function distm_pages_field_callback($args) {
+
     $options = get_option('distm_settings');
     $selected_pages = isset($options['distm_exclude_pages']) ? (array)$options['distm_exclude_pages'] : array();
 

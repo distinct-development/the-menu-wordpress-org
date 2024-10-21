@@ -1,46 +1,33 @@
-# The Menu - WordPress Navigation Plugin
-
-Enhance your WordPress site with customizable navigation options, mobile support, SVG icons, and extensive color choices.
-
+# The Menu - WordPress navigation plugin
+Enhance your WordPress site with customisable navigation options, mobile support, SVG icons, and extensive colour choices.
 ## Description
+The Menu plugin for WordPress offers a highly customisable, dynamic navigation solution designed to enhance your website's usability and aesthetic appeal. With features like mobile-friendly design, SVG icon integration, and colour customisation, it allows you to create a navigation experience that is both visually stunning and functionally robust.
+### Key features:
 
-The Menu plugin for WordPress offers a highly customizable, dynamic navigation solution designed to enhance your website's usability and aesthetic appeal. With features like mobile-friendly design, SVG icon integration, and color customization, it allows you to create a navigation experience that is both visually stunning and functionally robust.
-
-### Key Features:
-
-* Mobile-friendly design
-* SVG icon support
-* Extensive color customization options
-* Transparent menus that adapt on scroll
-* Option to feature specific menu items with unique icons
-* Ability to exclude menus from certain pages
-* User role-based menu item visibility
-* Additional "add-on" menu for extra navigation items
+Mobile-friendly design
+SVG icon support
+Extensive colour customisation options
+Transparent menus that adapt on scroll
+Option to feature specific menu items with unique icons
+Ability to exclude menus from certain pages
+User role-based menu item visibility
+Additional "add-on" menu for extra navigation items
 
 Whether you're looking to implement transparent menus that adapt on scroll, feature specific menu items with unique icons, or exclude menus from certain pages, The Menu provides all the tools you need.
-
 It's perfect for website owners seeking to elevate their site's navigation with a touch of personal style and professional functionality.
-
 ## Installation
 
-1. Upload the plugin files to the `/wp-content/plugins/the-menu` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Use the Settings -> The Menu screen to configure the plugin.
+Upload the plugin files to the /wp-content/plugins/the-menu directory, or install the plugin through the WordPress plugins screen directly.
+Activate the plugin through the 'Plugins' screen in WordPress.
+Use the Settings -> The Menu screen to configure the plugin.
 
-## Frequently Asked Questions
-
+## Frequently asked questions
 ### How do I add icons to my menu items?
-
 You can add icons to your menu items by editing the menu in the WordPress admin area. Each menu item will have an option to upload an icon.
-
 ### Can I control who sees certain menu items?
-
 Yes, you can set visibility options for each menu item. You can choose to show items to everyone, only logged-in users, or only logged-out users. For logged-in users, you can further specify which user roles can see the item.
-
 ### Is the menu responsive?
-
 Yes, The Menu is designed to be fully responsive and mobile-friendly. You can even set it to only appear on mobile devices if desired.
-
 ## Requirements
 
 - WordPress 6.0 or higher
@@ -55,6 +42,11 @@ This project is licensed under the GPL-2.0-or-later License - see the [LICENSE](
 For support, please visit our [support forum](https://wordpress.org/support/plugin/the-menu/) or contact us at hello@distinct.africa.
 
 ## Changelog
+
+### 1.2.6 - 21/10/2024
+
+- FIXED: There was an issue where ecluded pages weren't being saved, this has been resolved.
+- Updated UI branding to match the wordpress.org plugin page branding
 
 ### 1.2.5 - 19/10/2024
 
