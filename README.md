@@ -43,9 +43,16 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.7 - 23/10/2024
+
+- Added loading of default colours if no settings are set on plugin activation
+- Added delete data on uninstall option. If checked, all plugin data and settings will be removed when deleting the plugin from the plugins page. This will not affect data if you remove files via FTP or deactivate the plugin.
+- Better handling of plugin activation and deactivation
+- FIXED: On some sites when a featured icon was not set it could cause a fatal error.
+
 ### 1.2.6 - 21/10/2024
 
-- FIXED: There was an issue where ecluded pages weren't being saved, this has been resolved.
+- FIXED: There was an issue where excluded pages weren't being saved, this has been resolved.
 - Updated UI branding to match the wordpress.org plugin page branding
 
 ### 1.2.5 - 19/10/2024
