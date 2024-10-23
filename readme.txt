@@ -1,20 +1,16 @@
 === The Menu ===
-
-Enhance your WordPress site with a customisable, mobile-friendly navigation menu featuring SVG icons and extensive colour options.
-
 Contributors: ryanwiggilldistinct
 Tags: navigation, mobile-menu, svg-icons, custom-colors, app-menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-
 Icon: assets/icon-256x256.png
 Banner: assets/banner-1544x500.png
 
-Enhance your WordPress site with customisable navigation options, mobile support, SVG icons, and extensive colour choices.
+Enhance your WordPress site with a customizable, mobile-friendly navigation menu featuring SVG icons and extensive color options.
 
 == Description ==
 
@@ -66,9 +62,16 @@ Yes, The Menu is designed to be fully responsive and mobile-friendly. You can ev
 
 == Changelog ==
 
+= 1.2.7 - 23/10/2024 =
+
+- Added loading of default colours if no settings are set on plugin activation
+- Added delete data on uninstall option. If checked, all plugin data and settings will be removed when deleting the plugin from the plugins page. This will not affect data if you remove files via FTP or deactivate the plugin.
+- Better handling of plugin activation and deactivation
+- FIXED: On some sites when a featured icon was not set it could cause a fatal error.
+
 = 1.2.6 - 21/10/2024 =
 
-- FIXED: There was an issue where ecluded pages weren't being saved, this has been resolved.
+- FIXED: There was an issue where excluded pages weren't being saved, this has been resolved.
 - Updated UI branding to match the wordpress.org plugin page branding
 
 = 1.2.5 - 19/10/2024 =

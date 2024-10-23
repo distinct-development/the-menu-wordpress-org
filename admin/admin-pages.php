@@ -2,19 +2,6 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Enqueue the plugin styles
-function distm_enqueue_admin_scripts($hook_suffix) {
-    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'nav-menus.php') {
-        wp_enqueue_media();
-        wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/scripts.js', array('jquery', 'wp-color-picker', 'media-upload'), '1.0.2', true);
-    }
-    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings'){
-        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/styles.css', array(), '1.0.2');
-    }
-}
-add_action('admin_enqueue_scripts', 'distm_enqueue_admin_scripts');
-
 // Add the plugin settings page
 function distm_add_admin_menu() {
     add_menu_page(
@@ -32,15 +19,36 @@ add_action('admin_menu', 'distm_add_admin_menu');
 // Add the plugin settings page
 function distm_the_menu_page() {
     if (!current_user_can('manage_options')) {
-        return;
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'the-menu'));
     }
 
-    if (isset($_POST['submit']) && check_admin_referer('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce')) {
-        $settings = isset($_POST['distm_settings']) ? $_POST['distm_settings'] : array();
-        $settings = distm_settings_sanitize($settings);
+    if (isset($_POST['submit'])) {
+        check_admin_referer('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce');
+
+        $settings = array();
+        $raw_input = filter_input(
+            INPUT_POST, 
+            'distm_settings', 
+            FILTER_DEFAULT, 
+            FILTER_REQUIRE_ARRAY
+        );
+        
+        if (!empty($raw_input)) {
+            $unslashed = wp_unslash($raw_input);
+            $sanitized = map_deep($unslashed, 'sanitize_text_field');
+            $settings = distm_settings_sanitize($sanitized);
+        }
+        
         update_option('distm_settings', $settings);
-        echo '<div class="notice notice-success"><p>' . esc_html__('Settings saved.', 'the-menu') . '</p></div>';
+        add_settings_error(
+            'distm_messages',
+            'distm_message',
+            __('Settings saved.', 'the-menu'),
+            'updated'
+        );
     }
+
+    settings_errors('distm_messages');
 
     function echo_plugin_name() {
         $plugin_file = plugin_dir_path(__DIR__) . 'the-menu.php';
@@ -118,211 +126,6 @@ function distm_the_menu_page() {
     include_once('assets/logo-wrapper.php');
 }
 
-// Register the plugin settings
-function distm_register_my_menus() {
-    register_nav_menus(
-        array(
-            'left-menu' => esc_html__('[THE MENU] Left Menu', 'the-menu'),
-            'right-menu' => esc_html__('[THE MENU] Right Menu', 'the-menu'),
-            'addon-menu' => esc_html__('[THE MENU] Add-on Menu', 'the-menu')
-        )
-    );
-}
-add_action('after_setup_theme', 'distm_register_my_menus');
-
-// Sanitize the plugin settings
-function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
-    $icon = get_post_meta($item_id, '_menu_item_icon', true);
-    wp_nonce_field('distm_custom_menu_fields', 'distm_custom_menu_nonce');
-    ?>
-    <p class="field-custom description description-wide">
-        <label for="edit-menu-item-icon-<?php echo esc_attr($item_id); ?>">
-            <h3 style="clear:both;"><span class="dashicons dashicons-align-full-width"></span> <?php esc_html_e('The Menu icon', 'the-menu'); ?></h3>
-            <input type="text" id="edit-menu-item-icon-<?php echo esc_attr($item_id); ?>" class="widefat code edit-menu-item-custom"
-                style="width:70%;" name="menu-item-icon[<?php echo esc_attr($item_id); ?>]" value="<?php echo esc_attr($icon); ?>" readonly/>
-            <button type="button" class="button upload-icon-button" style="width:29%;"
-                data-item-id="<?php echo esc_attr($item_id); ?>"><?php esc_html_e('Upload', 'the-menu'); ?></button><br>
-            <description style="opacity: 0.5;"><small><i><?php esc_html_e('You will be able to change icon colour on SVGs with simple paths only.', 'the-menu'); ?></i></small></description>
-        </label>
-    </p>
-    <?php
-}
-add_filter('wp_nav_menu_item_custom_fields', 'distm_add_custom_menu_fields', 10, 4);
-
-
-// Save the custom menu fields
-function distm_save_custom_menu_fields($menu_id, $menu_item_db_id, $args) {
-    if (!isset($_POST['distm_custom_menu_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['distm_custom_menu_nonce'])), 'distm_custom_menu_fields')) {
-        return;
-    }
-
-    if (isset($_POST['menu-item-icon'][$menu_item_db_id])) {
-        $icon_url = sanitize_text_field(wp_unslash($_POST['menu-item-icon'][$menu_item_db_id]));
-        update_post_meta($menu_item_db_id, '_menu_item_icon', $icon_url);
-    }
-}
-add_action('wp_update_nav_menu_item', 'distm_save_custom_menu_fields', 10, 3);
-
-// Sanitize the plugin settings
-function distm_get_svg_content($url) {
-    if (substr($url, -4) !== '.svg') {
-        return false;
-    }
-
-    $response = wp_remote_get($url);
-    if (is_wp_error($response)) {
-        return false;
-    }
-
-    $svg_content = wp_remote_retrieve_body($response);
-    if (empty($svg_content)) {
-        return false;
-    }
-
-    return $svg_content;
-}
-
-// Add the custom visibility field
-function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
-    $visibility = get_post_meta($item_id, '_menu_item_visibility', true);
-    if (empty($visibility)) {
-        $visibility = 'everyone';
-    }
-    $roles = get_post_meta($item_id, '_menu_item_roles', true);
-    if (!is_array($roles)) {
-        $roles = array();
-    }
-    
-    $visibility_options = array(
-        'everyone' => __('Everyone', 'the-menu'),
-        'logged_in' => __('Logged in users', 'the-menu'),
-        'logged_out' => __('Logged out users', 'the-menu')
-    );
-
-    $available_roles = wp_roles()->roles;
-    ?>
-    <p class="field-visibility description description-wide">
-        <label for="edit-menu-item-visibility-<?php echo esc_attr($item_id); ?>">
-            <?php esc_html_e('Visibility', 'the-menu'); ?><br />
-            <select id="edit-menu-item-visibility-<?php echo esc_attr($item_id); ?>" class="widefat code edit-menu-item-visibility" name="menu-item-visibility[<?php echo esc_attr($item_id); ?>]">
-                <?php foreach ($visibility_options as $key => $label) : ?>
-                    <option value="<?php echo esc_attr($key); ?>" <?php selected($visibility, $key); ?>>
-                        <?php echo esc_html($label); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-    </p>
-
-    <div class="field-roles description description-wide" style="<?php echo $visibility === 'logged_in' ? '' : 'display:none;'; ?>">
-        <label for="edit-menu-item-roles-<?php echo esc_attr($item_id); ?>">
-            <?php esc_html_e('User Roles (for logged in users)', 'the-menu'); ?><br />
-            <?php foreach ($available_roles as $role_key => $role) : ?>
-                <input type="checkbox" id="edit-menu-item-role-<?php echo esc_attr($role_key . '-' . $item_id); ?>" name="menu-item-roles[<?php echo esc_attr($item_id); ?>][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $roles)); ?>>
-                <label for="edit-menu-item-role-<?php echo esc_attr($role_key . '-' . $item_id); ?>"><?php echo esc_html($role['name']); ?></label><br>
-            <?php endforeach; ?>
-            <small><description style="opacity: 0.5;line-height:1em;"><i><?php esc_html_e('Select who can see this menu item. If none are selected, all roles can see it.', 'the-menu'); ?></i></description></small>
-        </label>
-    </div>
-    <?php
-    wp_add_inline_script('distm-admin-script', "
-        jQuery(document).ready(function($) {
-            $('#edit-menu-item-visibility-<?php echo esc_js($item_id); ?>').change(function() {
-                if ($(this).val() === 'logged_in') {
-                    $(this).closest('.menu-item-settings').find('.field-roles').show();
-                } else {
-                    $(this).closest('.menu-item-settings').find('.field-roles').hide();
-                }
-            });
-        });
-    ");
-}
-add_filter('wp_nav_menu_item_custom_fields', 'distm_add_custom_visibility_field', 10, 4);
-
-// Save the custom visibility field
-function distm_save_custom_visibility_field($menu_id, $menu_item_db_id, $args) {
-    if (!isset($_POST['distm_custom_menu_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['distm_custom_menu_nonce'])), 'distm_custom_menu_fields')) {
-        return;
-    }
-
-    if (isset($_POST['menu-item-visibility'][$menu_item_db_id])) {
-        $visibility = sanitize_text_field(wp_unslash($_POST['menu-item-visibility'][$menu_item_db_id]));
-        update_post_meta($menu_item_db_id, '_menu_item_visibility', $visibility);
-    } else {
-        delete_post_meta($menu_item_db_id, '_menu_item_visibility');
-    }
-    
-    if (isset($_POST['menu-item-roles'][$menu_item_db_id])) {
-        $roles = array_map('sanitize_text_field', wp_unslash($_POST['menu-item-roles'][$menu_item_db_id]));
-        update_post_meta($menu_item_db_id, '_menu_item_roles', $roles);
-    } else {
-        delete_post_meta($menu_item_db_id, '_menu_item_roles');
-    }
-}
-add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 3);
-
-// WordPress Walker for the menu
-class DISTM_Icon_Walker extends Walker_Nav_Menu {
-    function start_el(&$output, $item, $depth=0, $args=null, $id=0) {
-        $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
-        $title = apply_filters('the_title', $item->title, $item->ID);
-        $url = $item->url;
-
-        $icon_html = '';
-        if (!empty($icon_url)) {
-            if (substr($icon_url, -4) === '.svg') {
-                $svg_content = distm_get_svg_content($icon_url);
-                if ($svg_content !== false) {
-                    $icon_html = $svg_content;
-                }
-            } else {
-                $icon_html = '<img src="' . esc_url($icon_url) . '" alt="' . esc_attr($title) . ' ' . esc_attr__('Icon', 'the-menu') . '" class="tm-menu-icon" />';
-            }
-        }
-
-        $visibility = get_post_meta($item->ID, '_menu_item_visibility', true);
-        if (empty($visibility)) {
-            $visibility = 'everyone';
-        }
-        $roles = get_post_meta($item->ID, '_menu_item_roles', true);
-        if (!is_array($roles)) {
-            $roles = array();
-        }
-
-        $show_item = false;
-        if ($visibility === 'everyone') {
-            $show_item = true;
-        } elseif ($visibility === 'logged_in' && is_user_logged_in()) {
-            if (empty($roles) || array_intersect($roles, wp_get_current_user()->roles)) {
-                $show_item = true;
-            }
-        } elseif ($visibility === 'logged_out' && !is_user_logged_in()) {
-            $show_item = true;
-        }
-
-        if ($show_item) {
-            $output .= '<li class="tm-menu-item-' . esc_attr($item->ID) . '">';
-            
-            // Get the 'don't display menu text' setting
-            $options = get_option('distm_settings');
-            $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
-
-            $output .= '<a href="' . esc_url($url) . '">' . $icon_html;
-            
-            // Only add the title span if 'don't display menu text' is not enabled
-            if (!$hide_text) {
-                $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
-            }
-            
-            $output .= '</a>';
-        }
-    }
-}
-
-function distm_filter_null_values($value) {
-    return $value !== null;
-}
-
 // Initialize the plugin settings
 function distm_settings_init() {
     register_setting('distmGeneral', 'distm_settings', array(
@@ -350,7 +153,8 @@ function distm_settings_init() {
         ['id' => 'distm_enable_transparency', 'title' => __('Enable transparency on scroll', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('This will make the menu transparent during scroll.', 'the-menu')]],
         ['id' => 'distm_enable_loader_animation', 'title' => __('Enable loader animation', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Displays a loader animation to prevent "double-clicks" The Menu.', 'the-menu')]],
         ['id' => 'distm_enable_addon_menu', 'title' => __('Enable addon menu', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Enables an additional menu for more links.', 'the-menu')]],
-        ['id' => 'distm_disable_menu_text', 'title' => __('Disable menu text', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Display only icons in the menu, no text.', 'the-menu')]]
+        ['id' => 'distm_disable_menu_text', 'title' => __('Disable menu text', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Display only icons in the menu, no text.', 'the-menu')]],
+        ['id' => 'distm_delete_data', 'title' => __('Delete data on uninstall', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('If checked, all plugin data and settings will be removed when deleting the plugin from the plugins page. This will not affect data if you remove files via FTP or deactivate the plugin.', 'the-menu')]]
     ];
 
     $customization_fields = [
@@ -364,8 +168,8 @@ function distm_settings_init() {
         ['id' => 'distm_addon_menu_style', 'title' => __('Addon menu style', 'the-menu'), 'callback' => 'distm_dropdown_field_callback', 'section' => 'distm_customization_section', 'args' => ['choices' => ['app-icon' => __('App icon', 'the-menu'), 'icon' => __('Icon', 'the-menu'), 'list' => __('List', 'the-menu')], 'description' => __('Choose the general style for the add-on menu items.', 'the-menu')]],
         ['id' => 'distm_addon_bg_color', 'title' => __('Add-on background colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the background color for the add-on menu.', 'the-menu')]],
         ['id' => 'distm_addon_label_color', 'title' => __('Add-on label colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the label color for the add-on menu items.', 'the-menu')]],
-        ['id' => 'distm_addon_icon_bg', 'title' => __('Add-on icon colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon color for the add-on menu items.', 'the-menu')]],
-        ['id' => 'distm_addon_icon_color', 'title' => __('Add-on icon background colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon background color for the add-on menu items.', 'the-menu')]]
+        ['id' => 'distm_addon_icon_color', 'title' => __('Add-on icon colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon color for the add-on menu items.', 'the-menu')]],
+        ['id' => 'distm_addon_icon_bg', 'title' => __('Add-on icon background colour', 'the-menu'), 'callback' => 'distm_color_picker_callback', 'section' => 'distm_customization_section', 'args' => ['description' => __('Set the icon background color for the add-on menu items.', 'the-menu')]]
     ];
     
     add_settings_section(
@@ -420,6 +224,92 @@ function distm_settings_init() {
 }
 add_action('admin_init', 'distm_settings_init');
 
+function distm_load_default_settings() {
+    // Default settings with all required values
+    $default_settings = array(
+        'distm_enable_mobile_menu' => false,
+        'distm_menu_style' => 'pill',
+        'distm_background_color' => '#333333',
+        'distm_icon_color' => '#777777',
+        'distm_label_color' => '#FFFFFF',
+        'distm_featured_background_color' => '#446084',
+        'distm_featured_icon_color' => '#FFFFFF',
+        'distm_addon_menu_style' => 'app-icon',
+        'distm_addon_bg_color' => '#000000',
+        'distm_addon_label_color' => '#FFFFFF',
+        'distm_addon_icon_bg' => '#446084',
+        'distm_addon_icon_color' => '#FFFFFF',
+        'distm_featured_icon' => '',
+        'distm_enable_transparency' => false,
+        'distm_enable_loader_animation' => false,
+        'distm_enable_addon_menu' => false,
+        'distm_disable_menu_text' => false,
+        'distm_only_on_mobile' => false,
+        'distm_delete_data' => false,
+        'distm_exclude_pages' => array()
+    );
+
+    // Get existing settings or empty array if none exist
+    $existing_settings = get_option('distm_settings', array());
+
+    // Merge existing settings with defaults, ensuring all required values are set
+    $merged_settings = wp_parse_args($existing_settings, $default_settings);
+
+    // Validate and sanitize each setting
+    foreach ($merged_settings as $key => $value) {
+        // Handle color values
+        if (strpos($key, 'color') !== false) {
+            if (empty($value) || $value === 'null') {
+                $merged_settings[$key] = $default_settings[$key];
+            } else {
+                // Ensure color values are properly formatted
+                if (strpos($value, 'rgba') === 0) {
+                    // Keep rgba values as is
+                    continue;
+                }
+                // Ensure hex colors start with #
+                if ($value[0] !== '#') {
+                    $merged_settings[$key] = '#' . ltrim($value, '#');
+                }
+            }
+        }
+        // Handle menu styles
+        elseif ($key === 'distm_menu_style') {
+            $valid_styles = array('pill', 'rounded', 'flat');
+            if (empty($value) || !in_array($value, $valid_styles)) {
+                $merged_settings[$key] = $default_settings[$key];
+            }
+        }
+        // Handle addon menu styles
+        elseif ($key === 'distm_addon_menu_style') {
+            $valid_styles = array('app-icon', 'icon', 'list');
+            if (empty($value) || !in_array($value, $valid_styles)) {
+                $merged_settings[$key] = $default_settings[$key];
+            }
+        }
+        // Handle boolean values
+        elseif (in_array($key, array(
+            'distm_enable_mobile_menu',
+            'distm_enable_transparency',
+            'distm_enable_loader_animation',
+            'distm_enable_addon_menu',
+            'distm_disable_menu_text',
+            'distm_only_on_mobile'
+        ))) {
+            $merged_settings[$key] = (bool) $value;
+        }
+        // Handle arrays
+        elseif ($key === 'distm_exclude_pages') {
+            if (!is_array($value)) {
+                $merged_settings[$key] = array();
+            }
+        }
+    }
+
+    // Update the settings in the database
+    update_option('distm_settings', $merged_settings);
+}
+
 // Add the page exclusion settings
 function distm_pages_field_callback($args) {
 
@@ -438,42 +328,57 @@ function distm_pages_field_callback($args) {
 
 // Sanitize the plugin settings
 function distm_settings_sanitize($input) {
-    $sanitized_input = array();
-    foreach ($input as $key => $value) {
-        switch ($key) {
-            case 'distm_exclude_pages':
-                $sanitized_input[$key] = !empty($value) ? array_map('absint', (array)$value) : array();
-                break;
-            case 'distm_background_color':
-            case 'distm_icon_color':
-            case 'distm_label_color':
-            case 'distm_featured_background_color':
-            case 'distm_featured_icon_color':
-            case 'distm_addon_bg_color':
-            case 'distm_addon_label_color':
-            case 'distm_addon_icon_bg':
-            case 'distm_addon_icon_color':
-                $sanitized_input[$key] = sanitize_hex_color($value);
-                break;
-            case 'distm_featured_icon':
-                $sanitized_input[$key] = esc_url_raw($value);
-                break;
-            case 'distm_enable_mobile_menu':
-            case 'distm_only_on_mobile':
-            case 'distm_enable_transparency':
-            case 'distm_enable_loader_animation':
-            case 'distm_enable_addon_menu':
-            case 'distm_disable_menu_text':
-                $sanitized_input[$key] = isset($value) ? (bool)$value : false;
-                break;
-            default:
-                if (is_array($value)) {
-                    $sanitized_input[$key] = array_map('sanitize_text_field', $value);
-                } else {
-                    $sanitized_input[$key] = sanitize_text_field($value);
-                }
-        }
+    if (!is_array($input)) {
+        return array();
     }
+    
+    $sanitized_input = array();
+    
+    try {
+        foreach ($input as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+            
+            switch ($key) {
+                case 'distm_exclude_pages':
+                    $sanitized_input[$key] = !empty($value) ? array_map('absint', (array)$value) : array();
+                    break;
+                case 'distm_background_color':
+                case 'distm_icon_color':
+                case 'distm_label_color':
+                case 'distm_featured_background_color':
+                case 'distm_featured_icon_color':
+                case 'distm_addon_bg_color':
+                case 'distm_addon_label_color':
+                case 'distm_addon_icon_bg':
+                case 'distm_addon_icon_color':
+                    $sanitized_input[$key] = sanitize_hex_color($value);
+                    break;
+                case 'distm_featured_icon':
+                    $sanitized_input[$key] = esc_url_raw($value);
+                    break;
+                case 'distm_enable_mobile_menu':
+                case 'distm_only_on_mobile':
+                case 'distm_enable_transparency':
+                case 'distm_enable_loader_animation':
+                case 'distm_enable_addon_menu':
+                case 'distm_disable_menu_text':
+                case 'distm_delete_data':
+                    $sanitized_input[$key] = isset($value) ? (bool)$value : false;
+                    break;
+                default:
+                    if (is_array($value)) {
+                        $sanitized_input[$key] = array_map('sanitize_text_field', $value);
+                    } else {
+                        $sanitized_input[$key] = sanitize_text_field($value);
+                    }
+            }
+        }
+    } catch (Exception $e) {
+        return get_option('distm_settings', array());
+    }
+
     return $sanitized_input;
 }
 

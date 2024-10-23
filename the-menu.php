@@ -6,7 +6,7 @@ namespace Distinct\TheMenu;
 Plugin Name: The Menu
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Enhance your WordPress site with a customisable, mobile-friendly navigation menu featuring SVG icons and extensive colour options.
-Version: 1.2.6
+Version: 1.2.7
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://distinct.africa
@@ -18,31 +18,39 @@ Requires PHP: 7.0
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Include the plugin files
-include_once('admin/tm-settings.php');
-include_once('include/tm-menu.php');
-
-// Enqueue the plugin styles
-function distm_enqueue_frontend_scripts() {
-    $options = get_option('distm_settings', array());
-    $excluded_pages = isset($options['distm_exclude_pages']) ? array_map('absint', (array)$options['distm_exclude_pages']) : array();
-
-    if (!is_admin()) {
-        $current_page_id = get_queried_object_id();
-        if (!in_array($current_page_id, $excluded_pages)) {
-            $mobile_menu_enabled = !empty($options['distm_enable_mobile_menu']);
-            $only_on_mobile = !empty($options['distm_only_on_mobile']);
-
-            $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
-
-            if ($should_load) {
-                wp_enqueue_style('distm', plugins_url('css/style.css', __FILE__), array(), '1.0.2', 'all');
-                wp_enqueue_script('distm-frontend', plugins_url('js/scripts.js', __FILE__), array('jquery'), '1.0.2', true);
-            }
-        }
+function distm_activate_plugin() {
+    if (!current_user_can('activate_plugins')) {
+        return;
     }
+
+    if (!wp_doing_ajax() && !in_array($GLOBALS['pagenow'], array('plugins.php', 'update.php'))) {
+        return;
+    }
+
+    distm_check_required_files();
+    distm_load_default_settings();
 }
-add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\distm_enqueue_frontend_scripts');
+
+function distm_deactivate_plugin() {
+    if (!current_user_can('activate_plugins')) {
+        return;
+    }
+
+    if (!wp_doing_ajax() && !in_array($GLOBALS['pagenow'], array('plugins.php', 'update.php'))) {
+        return;
+    }
+
+    delete_transient('the-menu_license_status');
+}
+// Register the activation/deactivation hooks
+register_activation_hook(__FILE__, __NAMESPACE__ . '\\distm_activate_plugin');
+register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\distm_deactivate_plugin');
+
+// Include the plugin files
+include_once(__DIR__ . '/admin/admin-init.php');
+include_once(__DIR__ . '/admin/admin-pages.php');
+include_once(__DIR__ . '/admin/admin-menus.php');
+include_once(__DIR__ . '/frontend/frontend-init.php');
 
 if (!function_exists('get_plugin_data')) {
     require_once(ABSPATH . 'wp-admin/includes/plugin.php');
@@ -146,12 +154,16 @@ class Plugin_License_Validator {
         check_admin_referer('the_menu_check_license_nonce');
 
         $license_status = $this->validate_license();
+
+        $redirect_nonce = wp_create_nonce('the_menu_license_check');
+
         $redirect_url = add_query_arg(
             array(
                 'license_check_result' => $license_status ? 'valid' : 'invalid',
-                '_wpnonce' => wp_create_nonce('the_menu_license_check')
+                '_wpnonce' => $redirect_nonce,
+                'page' => 'the-menu-license-settings'
             ),
-            wp_get_referer()
+            admin_url('admin.php')
         );
 
         wp_safe_redirect($redirect_url);
@@ -160,14 +172,16 @@ class Plugin_License_Validator {
 
     // Clear the license cache
     public function clear_license_cache() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         if (
-            isset($_GET['license_check_result']) &&
-            isset($_GET['_wpnonce']) &&
-            wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'the_menu_license_check') &&
-            current_user_can('manage_options')
+            isset($_GET['license_check_result'], $_GET['_wpnonce']) &&
+            wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'the_menu_license_check')
         ) {
-            $license_check_result = sanitize_text_field(wp_unslash($_GET['license_check_result']));
-            if ($license_check_result === 'valid' || $license_check_result === 'invalid') {
+            $result = sanitize_text_field(wp_unslash($_GET['license_check_result']));
+            if (in_array($result, array('valid', 'invalid'), true)) {
                 delete_transient($this->plugin_slug . '_license_status');
             }
         }
@@ -246,11 +260,16 @@ class Plugin_License_Validator {
 
     // Handle the license settings
     public function register_license_settings() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         register_setting(
             $this->plugin_slug . '_license_settings',
             $this->license_option_key,
             array(
-                'sanitize_callback' => array($this, 'sanitize_license_key')
+                'sanitize_callback' => array($this, 'sanitize_license_key'),
+                'default' => ''
             )
         );
 

@@ -8,10 +8,10 @@
     --distm-featured-background-color: #446084;
     --distm-featured-icon-color: #FFF;
     /*addon menu icon*/
-    --distm-addon-bg-color:rgba(255,255,255,0.6);
+    --distm-addon-bg-color:#000000;
     --distm-addon-label-color: #333;
-    --distm-addon-icon-color:#446084;
-    --distm-addon-icon-bg:#333;
+    --distm-addon-icon-color:#FFFFFF;
+    --distm-addon-icon-bg:#446084;
 }
 
 .the-menu{
