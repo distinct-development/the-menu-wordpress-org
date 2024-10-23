@@ -397,7 +397,7 @@ function distm_checkbox_field_callback($args) {
     $checked = $value ? 'checked' : '';
     echo "<input id='" . esc_attr($args['label_for']) . "' name='distm_settings[" . esc_attr($args['label_for']) . "]' type='checkbox' value='1' " . esc_attr($checked) . " class='" . esc_attr($args['class']) . "'>";
     if (!empty($args['description'])) {
-        echo "<label for='" . esc_attr($args['label_for']) . "'>" . esc_html($args['description']) . "</label>";
+        echo "<br><label for='" . esc_attr($args['label_for']) . "'><small>" . esc_html($args['description']) . "</small></label>";
     }
 }
 
