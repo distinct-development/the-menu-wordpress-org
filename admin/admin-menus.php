@@ -78,7 +78,7 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
                 style="width: 100%; margin-bottom: 10px;">
             <div class="dashicon-grid" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
                 <?php
-                // Common Dashicons that might be suitable for menu items
+                // Commonly used menu icons displayed first
                 $dashicons = array(
                     'menu' => __('Menu (Default)', 'the-menu'),
                     'admin-home' => __('Home', 'the-menu'),
@@ -102,13 +102,13 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
                     'share' => __('Share', 'the-menu'),
                     'star-empty' => __('Star', 'the-menu'),
                     'tag' => __('Tag', 'the-menu'),
-                    'video-alt' => __('Video', 'the-menu'),
-                    // Add more commonly used icons here
+                    'format-video' => __('Video', 'the-menu'),
                 );
-                // First display commonly used icons
+
+                // Display commonly used icons first
                 foreach ($dashicons as $icon_name => $label) {
                     $selected = ($dashicon === $icon_name) ? 'selected' : '';
-                    echo sprintf(
+                    printf(
                         '<span class="dashicons dashicons-%s dashicon-option %s" data-icon="%s" title="%s"></span>',
                         esc_attr($icon_name),
                         esc_attr($selected),
@@ -117,46 +117,75 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
                     );
                 }
 
-                // Then add a separator
+                // Add separator
                 echo '<div class="dashicon-separator" style="width: 100%; border-bottom: 1px solid #ddd; margin: 10px 0; grid-column: 1/-1;"></div>';
 
-                // Add the rest of the dashicons
+                // Add category based icons
                 $all_dashicons = array(
-                    'album', 'align-center', 'align-left', 'align-right', 'analytics',
-                    'archive', 'art', 'awards', 'backup', 'book', 'book-alt',
-                    'building', 'businessman', 'camera', 'chart-area', 'chart-bar',
-                    'chart-line', 'chart-pie', 'clipboard', 'clock', 'cloud',
-                    'desktop', 'edit', 'editor-help', 'email-alt', 'facebook',
-                    'facebook-alt', 'feedback', 'flag', 'format-aside', 'format-audio',
-                    'format-chat', 'format-image', 'format-quote', 'format-video',
-                    'forms', 'groups', 'id', 'images-alt', 'images-alt2', 'index-card',
-                    'layout', 'lightbulb', 'list-view', 'location-alt', 'lock',
-                    'marker', 'media-archive', 'media-audio', 'media-code', 'media-default',
-                    'media-document', 'media-interactive', 'media-spreadsheet',
-                    'media-text', 'media-video', 'megaphone', 'microphone',
-                    'migrate', 'money', 'palmtree', 'performance', 'plus',
-                    'portfolio', 'post-status', 'pressthis', 'randomize', 'redo',
-                    'rss', 'schedule', 'screenoptions', 'share-alt', 'share-alt2',
-                    'shield', 'slides', 'smartphone', 'smiley', 'sort',
-                    'sos', 'star-filled', 'star-half', 'store', 'tablet',
-                    'tagcloud', 'testimonial', 'text', 'thumbs-down', 'thumbs-up',
-                    'translation', 'twitter', 'universal-access', 'unlock',
-                    'update', 'upload', 'vault', 'video-alt2', 'video-alt3',
-                    'visibility', 'welcome-add-page', 'welcome-comments',
-                    'welcome-learn-more', 'welcome-view-site', 'welcome-widgets-menus',
-                    'wordpress', 'wordpress-alt', 'yes'
+                    // Admin Menu
+                    __('Admin Menu', 'the-menu') => array(
+                        'menu', 'menu-alt', 'menu-alt2', 'menu-alt3',
+                        'admin-site', 'admin-site-alt', 'admin-site-alt2', 'admin-site-alt3',
+                        'dashboard', 'admin-post', 'admin-media', 'admin-links', 'admin-page',
+                        'admin-comments', 'admin-appearance', 'admin-plugins', 'plugins-checked',
+                        'admin-users', 'admin-tools', 'admin-settings', 'admin-network', 'admin-home',
+                        'admin-generic', 'admin-collapse', 'filter', 'admin-customizer', 'admin-multisite'
+                    ),
+                    __('Welcome Screen', 'the-menu') => array(
+                        'welcome-write-blog', 'welcome-add-page', 'welcome-view-site', 'welcome-widgets-menus',
+                        'welcome-comments', 'welcome-learn-more'
+                    ),
+                    __('Post Formats', 'the-menu') => array(
+                        'format-aside', 'format-image', 'format-gallery', 'format-video', 'format-status', 
+                        'format-quote', 'format-chat', 'format-audio', 'camera', 'camera-alt',
+                        'images-alt', 'images-alt2', 'video-alt', 'video-alt2', 'video-alt3'
+                    ),
+                    __('Media', 'the-menu') => array(
+                        'media-archive', 'media-audio', 'media-code', 'media-default', 'media-document',
+                        'media-interactive', 'media-spreadsheet', 'media-text', 'media-video',
+                        'playlist-audio', 'playlist-video', 'controls-play', 'controls-pause',
+                        'controls-forward', 'controls-skipforward', 'controls-back', 'controls-skipback',
+                        'controls-repeat', 'controls-volumeon', 'controls-volumeoff'
+                    ),
+                    __('Social', 'the-menu') => array(
+                        'share', 'share-alt', 'share-alt2', 'rss', 'email',
+                        'email-alt', 'email-alt2', 'networking', 'amazon',
+                        'facebook', 'facebook-alt', 'google', 'instagram',
+                        'linkedin', 'pinterest', 'podio', 'reddit', 'spotify',
+                        'twitch', 'twitter', 'twitter-alt', 'whatsapp',
+                        'xing', 'youtube'
+                    ),
+                    __('Misc', 'the-menu') => array(
+                        'location', 'location-alt', 'vault', 'shield', 'shield-alt',
+                        'sos', 'search', 'slides', 'analytics', 'chart-pie',
+                        'chart-bar', 'chart-line', 'chart-area', 'groups',
+                        'businessman', 'businesswoman', 'businessperson', 'id',
+                        'id-alt', 'products', 'awards', 'forms', 'testimonial',
+                        'portfolio', 'book', 'book-alt', 'download', 'upload',
+                        'backup', 'clock', 'lightbulb', 'microphone', 'desktop',
+                        'laptop', 'tablet', 'smartphone', 'phone', 'store',
+                        'album', 'palmtree', 'tickets-alt', 'money', 'money-alt',
+                        'smiley', 'thumbs-up', 'thumbs-down', 'superhero', 'superhero-alt'
+                    )
                 );
 
-                foreach ($all_dashicons as $icon_name) {
-                    if (!isset($dashicons[$icon_name])) {  // Skip if already shown above
-                        $selected = ($dashicon === $icon_name) ? 'selected' : '';
-                        echo sprintf(
-                            '<span class="dashicons dashicons-%s dashicon-option %s" data-icon="%s" title="%s"></span>',
-                            esc_attr($icon_name),
-                            esc_attr($selected),
-                            esc_attr($icon_name),
-                            esc_attr($icon_name)
-                        );
+                foreach ($all_dashicons as $category => $icons) {
+                    printf(
+                        '<div class="dashicon-category-header" style="width: 100%%; grid-column: 1/-1; margin: 10px 0 5px; font-weight: bold;">%s</div>',
+                        esc_html($category)
+                    );
+                    
+                    foreach ($icons as $icon_name) {
+                        if (!isset($dashicons[$icon_name])) {  // Skip if already shown in common icons
+                            $selected = ($dashicon === $icon_name) ? 'selected' : '';
+                            printf(
+                                '<span class="dashicons dashicons-%s dashicon-option %s" data-icon="%s" title="%s"></span>',
+                                esc_attr($icon_name),
+                                esc_attr($selected),
+                                esc_attr($icon_name),
+                                esc_attr($icon_name)
+                            );
+                        }
                     }
                 }
                 ?>
@@ -208,6 +237,11 @@ function distm_save_custom_menu_fields($menu_id, $menu_item_db_id, $args) {
 }
 add_action('wp_update_nav_menu_item', 'distm_save_custom_menu_fields', 10, 3);
 
+function distm_add_menu_nonce_field() {
+    wp_nonce_field('distm_custom_menu_fields', 'distm_custom_menu_nonce');
+}
+add_action('wp_nav_menu_item_custom_fields', 'distm_add_menu_nonce_field', 5, 4);
+
 // Add the custom visibility field
 function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
     $visibility = get_post_meta($item_id, '_menu_item_visibility', true);
@@ -230,7 +264,9 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
     <p class="field-visibility description description-wide">
         <label for="edit-menu-item-visibility-<?php echo esc_attr($item_id); ?>">
             <?php esc_html_e('Visibility', 'the-menu'); ?><br />
-            <select id="edit-menu-item-visibility-<?php echo esc_attr($item_id); ?>" class="widefat code edit-menu-item-visibility" name="menu-item-visibility[<?php echo esc_attr($item_id); ?>]">
+            <select id="edit-menu-item-visibility-<?php echo esc_attr($item_id); ?>" 
+                    class="widefat code edit-menu-item-visibility" 
+                    name="menu-item-visibility[<?php echo esc_attr($item_id); ?>]">
                 <?php foreach ($visibility_options as $key => $label) : ?>
                     <option value="<?php echo esc_attr($key); ?>" <?php selected($visibility, $key); ?>>
                         <?php echo esc_html($label); ?>
@@ -241,51 +277,62 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
     </p>
 
     <div class="field-roles description description-wide" style="<?php echo $visibility === 'logged_in' ? '' : 'display:none;'; ?>">
-        <label for="edit-menu-item-roles-<?php echo esc_attr($item_id); ?>">
+        <label>
             <?php esc_html_e('User Roles (for logged in users)', 'the-menu'); ?><br />
             <?php foreach ($available_roles as $role_key => $role) : ?>
-                <input type="checkbox" id="edit-menu-item-role-<?php echo esc_attr($role_key . '-' . $item_id); ?>" name="menu-item-roles[<?php echo esc_attr($item_id); ?>][]" value="<?php echo esc_attr($role_key); ?>" <?php checked(in_array($role_key, $roles)); ?>>
-                <label for="edit-menu-item-role-<?php echo esc_attr($role_key . '-' . $item_id); ?>"><?php echo esc_html($role['name']); ?></label><br>
+                <input type="checkbox" 
+                       name="menu-item-roles[<?php echo esc_attr($item_id); ?>][]" 
+                       value="<?php echo esc_attr($role_key); ?>" 
+                       <?php checked(in_array($role_key, $roles)); ?>>
+                <?php echo esc_html($role['name']); ?><br>
             <?php endforeach; ?>
-            <small><description style="opacity: 0.5;line-height:1em;"><i><?php esc_html_e('Select who can see this menu item. If none are selected, all roles can see it.', 'the-menu'); ?></i></description></small>
+            <small><i style="opacity: 0.5;line-height:1em;">
+                <?php esc_html_e('Select who can see this menu item. If none are selected, all roles can see it.', 'the-menu'); ?>
+            </i></small>
         </label>
     </div>
-    <?php
-    wp_add_inline_script('distm-admin-script', "
+
+    <script type="text/javascript">
         jQuery(document).ready(function($) {
-            $('#edit-menu-item-visibility-<?php echo esc_js($item_id); ?>').change(function() {
+            $('#edit-menu-item-visibility-<?php echo esc_js($item_id); ?>').on('change', function() {
+                var $rolesField = $(this).closest('.menu-item-settings').find('.field-roles');
                 if ($(this).val() === 'logged_in') {
-                    $(this).closest('.menu-item-settings').find('.field-roles').show();
+                    $rolesField.slideDown();
                 } else {
-                    $(this).closest('.menu-item-settings').find('.field-roles').hide();
+                    $rolesField.slideUp();
                 }
             });
         });
-    ");
+    </script>
+    <?php
 }
-add_filter('wp_nav_menu_item_custom_fields', 'distm_add_custom_visibility_field', 10, 4);
+add_action('wp_nav_menu_item_custom_fields', 'distm_add_custom_visibility_field', 10, 4);
+
 
 // Save the custom visibility field
-function distm_save_custom_visibility_field($menu_id, $menu_item_db_id, $args) {
-    if (!isset($_POST['distm_custom_menu_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['distm_custom_menu_nonce'])), 'distm_custom_menu_fields')) {
+function distm_save_custom_visibility_field($menu_id, $menu_item_db_id) {
+    if (!current_user_can('edit_theme_options')) {
         return;
     }
 
+    if (!isset($_POST['distm_custom_menu_nonce']) || 
+        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['distm_custom_menu_nonce'])), 'distm_custom_menu_fields')) {
+        return;
+    }
+
+    // Save visibility setting
     if (isset($_POST['menu-item-visibility'][$menu_item_db_id])) {
         $visibility = sanitize_text_field(wp_unslash($_POST['menu-item-visibility'][$menu_item_db_id]));
         update_post_meta($menu_item_db_id, '_menu_item_visibility', $visibility);
-    } else {
-        delete_post_meta($menu_item_db_id, '_menu_item_visibility');
     }
-    
-    if (isset($_POST['menu-item-roles'][$menu_item_db_id])) {
-        $roles = array_map('sanitize_text_field', wp_unslash($_POST['menu-item-roles'][$menu_item_db_id]));
-        update_post_meta($menu_item_db_id, '_menu_item_roles', $roles);
-    } else {
-        delete_post_meta($menu_item_db_id, '_menu_item_roles');
-    }
+
+    // Save user roles
+    $roles = isset($_POST['menu-item-roles'][$menu_item_db_id]) ? 
+            array_map('sanitize_text_field', wp_unslash($_POST['menu-item-roles'][$menu_item_db_id])) : 
+            array();
+    update_post_meta($menu_item_db_id, '_menu_item_roles', $roles);
 }
-add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 3);
+add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 2);
 
 // WordPress Walker for the menu
 class DISTM_Icon_Walker extends Walker_Nav_Menu {

@@ -56,6 +56,40 @@ jQuery(document).ready(function($) {
         });
     }
 
+    // Dashicon selection for featured icon
+    $(document).on('click', '.dashicon-option', function() {
+        const container = $(this).closest('.featured-icon-wrapper');
+        const selectedIcon = $(this).data('icon');
+        
+        // Update hidden input
+        container.find('.selected-dashicon').val(selectedIcon);
+        
+        // Update visual selection
+        container.find('.dashicon-option').removeClass('selected');
+        $(this).addClass('selected');
+
+        // Select dashicon radio button
+        container.find('input[value="dashicon"]').prop('checked', true).trigger('change');
+
+        // Clear upload preview and input
+        container.find('.icon-preview').empty();
+        container.find('input[name="distm_settings[distm_featured_icon]"]').val('');
+    });
+
+    // Handle form submission
+    $('form').on('submit', function() {
+        $('.featured-icon-wrapper').each(function() {
+            const iconType = $(this).find('.icon-type-radio:checked').val();
+            const dashiconValue = $(this).find('.selected-dashicon').val();
+            
+            // Update the hidden fields
+            $('input[name="distm_settings[distm_featured_icon_type]"]').val(iconType);
+            if (iconType === 'dashicon' && dashiconValue) {
+                $('input[name="distm_settings[distm_featured_dashicon]"]').val(dashiconValue);
+            }
+        });
+    });
+
     // Initialize media uploader for both menu items and featured icon
     initializeMediaUploader('.upload-icon-button, .tm-upload-button');
 
@@ -196,10 +230,12 @@ jQuery(document).ready(function($) {
             .dashicon-option:hover {
                 background: #f0f0f0;
                 transform: scale(1.2);
+                border-radius: 10px;
             }
             .dashicon-option.selected {
-                background: #2271b1;
+                background: var(--tm-secondary-color, #2271b1);
                 color: white;
+                border-radius: 10px;
             }
             .icon-type-label {
                 display: inline-block;
@@ -210,12 +246,13 @@ jQuery(document).ready(function($) {
                 grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
                 gap: 5px;
                 padding: 10px;
+                border-radius: 10px;
             }
             .dashicon-selection-section {
                 background: #fff;
                 padding: 10px;
                 border: 1px solid #ddd;
-                border-radius: 4px;
+                border-radius: 15px;
             }
             .icon-preview {
                 margin: 5px 0;
