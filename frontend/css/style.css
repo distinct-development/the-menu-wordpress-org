@@ -255,14 +255,15 @@
     height: 70px;
     background-color: var(--distm-addon-icon-bg);
 }
-#tm-addon-menu svg{
+#tm-addon-menu svg, #tm-addon-menu .dashicons{
     width:70px;
     height: 70px;
     padding: 15px;
     background-color: var(--distm-addon-icon-bg);
+    font-size: 70px;
 }
 
-#tm-addon-menu a:hover svg, #tm-addon-menu a:hover img{
+#tm-addon-menu a:hover svg, #tm-addon-menu a:hover img,#tm-addon-menu a:hover .dashicons{
     background: var(--distm-featured-background-color);
 }
 
@@ -287,13 +288,34 @@ text-decoration: none;
 }
 
 /* addon menu options */
-.icon #tm-addon-menu svg, .icon #tm-addon-menu img{
+.icon #tm-addon-menu svg, .icon #tm-addon-menu img, .icon #tm-addon-menu .dashicons{
     border-radius: 0;
     background-color: transparent!important;
     padding: 0!important;
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
 }
-.app-icon #tm-addon-menu svg, .app-icon #tm-addon-menu img{
+.icon #tm-addon-menu svg:hover :is(path,rect,circle,ellipse,polygon,polyline,line), .icon #tm-addon-menu .dashicons:hover{
+    fill: var(--distm-featured-background-color);
+    color: var(--distm-featured-background-color);
+}
+.icon #tm-addon-menu img:hover{
+    opacity: 0.8;
+}
+.app-icon #tm-addon-menu svg, .app-icon #tm-addon-menu img, .app-icon #tm-addon-menu .dashicons{ 
     border-radius: 25%;
+}
+.app-icon #tm-addon-menu img{
+    object-fit: cover;
+    height: 100px!important;
+    width: 100px!important;
+    background-color: var(--distm-addon-icon-bg);
+}
+.app-icon #tm-addon-menu img:hover{
+    opacity: 0.8;
+    background: var(--distm-featured-background-color);
 }
 
 .list #tm-addon-menu li{
@@ -303,7 +325,7 @@ text-decoration: none;
     justify-content: space-around;
     align-items: center;
     margin: 0;
-    width: 100%;
+    width: 90%;
 
 }
 .list #tm-addon-menu li:last-of-type{
@@ -316,11 +338,12 @@ text-decoration: none;
     text-align: center;
     font-size: 1em;
     height: 50px;
+    width: 80%!important;
 }
 .list #tm-addon-menu li a:hover{
     background: var(--distm-featured-background-color);
 }
-.list #tm-addon-menu li a img, .list #tm-addon-menu li a svg{
+.list #tm-addon-menu li a img, .list #tm-addon-menu li a svg, .list #tm-addon-menu li a .dashicons{
     display: none!important;
 }
 .list #tm-addon-menu li .tm-menu-item-title{
@@ -507,3 +530,54 @@ text-decoration: none;
 
 /* Page loader */
 
+/* Dasicons*/
+#tm-fixed-mobile-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#tm-fixed-mobile-menu .dashicons {
+    width: 30px;
+    height: 30px;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--distm-icon-color);
+}
+
+#tm-fixed-mobile-menu img.tm-menu-icon,
+#tm-fixed-mobile-menu svg {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.tm-menu-item-title {
+    margin-left: 5px;
+}
+
+/* Icon-only mode adjustments */
+.icon-only .tm-menu-item a {
+    justify-content: center;
+}
+
+.icon-only .tm-menu-item .dashicons {
+    margin: 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    #tm-fixed-mobile-menu .dashicons {
+        width: 24px;
+        height: 24px;
+        font-size: 24px;
+    }
+
+    #tm-fixed-mobile-menu img.tm-menu-icon,
+    #tm-fixed-mobile-menu svg {
+        width: 24px;
+        height: 24px;
+    }
+}

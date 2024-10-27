@@ -374,3 +374,84 @@ table.form-table{
 table.form-table:last-of-type{
     border:none
 }
+
+
+/*DASHICONS*/
+
+.menu-item-settings .field-custom {
+    margin: 20px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+}
+
+.menu-item-settings .icon-type-selector {
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.menu-item-settings .icon-preview {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    background: #fff;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.menu-item-settings .icon-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+.menu-item-settings .dashicon-selection-section {
+    background: #fff;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.menu-item-settings .dashicon-search {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.menu-item-settings .dashicon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.menu-item-settings .dashicon-option {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.menu-item-settings .dashicon-option:hover {
+    background: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.menu-item-settings .dashicon-option.selected {
+    background: #2271b1;
+    color: white;
+}
+
