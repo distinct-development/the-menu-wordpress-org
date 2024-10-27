@@ -225,7 +225,8 @@
 #tm-addon-menu ul{
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-evenly;
+    justify-content: space-between;
+    align-items: start;
     width:100%;
     gap: 5%;
     padding: 5%;
@@ -234,7 +235,8 @@
     border:none;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: end;
     text-align: center;
     margin: 5px 0;
 }
@@ -264,7 +266,7 @@
     background: var(--distm-featured-background-color);
 }
 
-#tm-addon-menu svg path{
+#tm-addon-menu svg :is(path,rect,circle,ellipse,polygon,polyline,line){
     fill: var(--distm-addon-icon-color);
 }
 

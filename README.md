@@ -43,6 +43,13 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.8 - 27/10/2024
+
+- Fixed icon colours in the add-on menu, it was changing paths colours only and now it looks for 'circle', 'rect', etc. as well.
+- Add-on menu items weren't lining up nicely when link text wrapping varied, this has been fixed so that they line up.
+- When trying to set the visibility of a menu item to logged in users you had to save the menu and then open the menu item again to be able to select roles, this has now been updated to show immediately.
+
+
 ### 1.2.7 - 23/10/2024
 
 - Added loading of default colours if no settings are set on plugin activation

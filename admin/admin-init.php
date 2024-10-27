@@ -46,10 +46,10 @@ function distm_enqueue_admin_scripts($hook_suffix) {
     if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'nav-menus.php') {
         wp_enqueue_media();
         wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery', 'wp-color-picker', 'media-upload'), '1.0.3', true);
+        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery', 'wp-color-picker', 'media-upload'), '1.0.4', true);
     }
     if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings'){
-        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/style.css', array(), '1.0.3');
+        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/style.css', array(), '1.0.4');
     }
 }
 add_action('admin_enqueue_scripts', 'distm_enqueue_admin_scripts');

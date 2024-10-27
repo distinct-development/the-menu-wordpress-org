@@ -4,9 +4,9 @@ namespace Distinct\TheMenu;
 
 /*
 Plugin Name: The Menu
-Plugin URI: https://wordpress.org/plugins/the-menu/
+Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Enhance your WordPress site with a customisable, mobile-friendly navigation menu featuring SVG icons and extensive colour options.
-Version: 1.2.7
+Version: 1.2.8
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://plugins.distinct.africa

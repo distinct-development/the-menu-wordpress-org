@@ -1,4 +1,4 @@
-// Initialize the WP color picker on .color-field inputs
+// Initialize menu visibility controls
 jQuery(document).ready(function($) {
     // Color picker initialization
     $('.color-field').wpColorPicker();
@@ -44,4 +44,41 @@ jQuery(document).ready(function($) {
 
     // Initialize media uploader for menu item icons
     initializeMediaUploader('.upload-icon-button');
+
+    // Handle visibility dropdown changes
+    function handleVisibilityChange(dropdown) {
+        const rolesContainer = $(dropdown).closest('.menu-item-settings').find('.field-roles');
+        if ($(dropdown).val() === 'logged_in') {
+            rolesContainer.slideDown(300);
+        } else {
+            rolesContainer.slideUp(300);
+        }
+    }
+
+    // Initialize visibility controls for existing menu items
+    $('.edit-menu-item-visibility').each(function() {
+        handleVisibilityChange(this);
+    });
+
+    // Handle visibility changes for dynamically added menu items
+    $(document).on('change', '.edit-menu-item-visibility', function() {
+        handleVisibilityChange(this);
+    });
+
+    // Handle menu item expansion
+    $(document).on('click', '.item-edit', function() {
+        const menuItem = $(this).closest('.menu-item');
+        const visibilityDropdown = menuItem.find('.edit-menu-item-visibility');
+        
+        // Small delay to ensure the menu item is expanded
+        setTimeout(function() {
+            handleVisibilityChange(visibilityDropdown);
+        }, 100);
+    });
+
+    // Initialize visibility on menu load
+    $(document).on('menu-item-added', function(event, menuMarkup) {
+        const visibilityDropdown = $(menuMarkup).find('.edit-menu-item-visibility');
+        handleVisibilityChange(visibilityDropdown);
+    });
 });

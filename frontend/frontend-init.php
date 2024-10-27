@@ -48,7 +48,7 @@ function distm_enqueue_frontend_scripts() {
 
             if ($should_load) {
                 // First enqueue the base stylesheet
-                wp_enqueue_style('distm-style', plugins_url('css/style.css', __FILE__), array(), '1.0.3', 'all');
+                wp_enqueue_style('distm-style', plugins_url('css/style.css', __FILE__), array(), '1.0.4', 'all');
                 
                 // Create custom CSS with validated colors
                 $custom_css = "
@@ -72,7 +72,7 @@ function distm_enqueue_frontend_scripts() {
                 wp_add_inline_style('distm-style', $custom_css);
 
                 // Enqueue the script
-                wp_enqueue_script('distm-frontend', plugins_url('js/script.js', __FILE__), array('jquery'), '1.0.3', true);
+                wp_enqueue_script('distm-frontend', plugins_url('js/script.js', __FILE__), array('jquery'), '1.0.4', true);
             }
         }
     }
