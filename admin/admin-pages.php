@@ -23,6 +23,7 @@ function distm_the_menu_page() {
     }
 
     if (isset($_POST['submit'])) {
+        // Verify nonce
         check_admin_referer('distm_the_menu_settings_nonce', 'distm_the_menu_settings_nonce');
 
         $settings = array();
@@ -43,7 +44,7 @@ function distm_the_menu_page() {
         add_settings_error(
             'distm_messages',
             'distm_message',
-            __('Settings saved.', 'the-menu'),
+            esc_html__('Settings saved.', 'the-menu'),
             'updated'
         );
     }
@@ -241,8 +242,6 @@ function distm_load_default_settings() {
         'distm_label_color' => '#FFFFFF',
         'distm_featured_background_color' => '#446084',
         'distm_featured_icon_color' => '#FFFFFF',
-        'distm_featured_icon_type' => 'dashicon',
-        'distm_featured_dashicon' => 'menu',
         'distm_featured_icon' => '',
         'distm_addon_menu_style' => 'app-icon',
         'distm_addon_bg_color' => '#000000',

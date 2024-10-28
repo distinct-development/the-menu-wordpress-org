@@ -206,30 +206,27 @@ function distm_save_custom_menu_fields($menu_id, $menu_item_db_id, $args) {
         return;
     }
 
-    // Check if our nonce is set.
+    // Verify menu item nonce
     $nonce_field = 'distm_menu_item_' . $menu_item_db_id;
     if (!isset($_POST[$nonce_field]) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonce_field])), 'distm_menu_item_' . $menu_item_db_id)) {
         return;
     }
 
-    // Save icon type
+    // Save icon type with sanitization
     if (isset($_POST['menu-item-icon-type'][$menu_item_db_id])) {
         $icon_type = sanitize_text_field(wp_unslash($_POST['menu-item-icon-type'][$menu_item_db_id]));
-        update_post_meta($menu_item_db_id, '_menu_item_icon_type', $icon_type);
-
-        // If icon type is dashicon, clear the uploaded icon URL
-        if ($icon_type === 'dashicon') {
-            update_post_meta($menu_item_db_id, '_menu_item_icon', '');
+        if (in_array($icon_type, array('dashicon', 'upload'), true)) {
+            update_post_meta($menu_item_db_id, '_menu_item_icon_type', $icon_type);
         }
     }
 
-    // Save uploaded icon URL
+    // Save icon URL with proper sanitization
     if (isset($_POST['menu-item-icon'][$menu_item_db_id])) {
-        $icon_url = sanitize_text_field(wp_unslash($_POST['menu-item-icon'][$menu_item_db_id]));
+        $icon_url = esc_url_raw(wp_unslash($_POST['menu-item-icon'][$menu_item_db_id]));
         update_post_meta($menu_item_db_id, '_menu_item_icon', $icon_url);
     }
 
-    // Save selected dashicon
+    // Save dashicon with sanitization
     if (isset($_POST['menu-item-dashicon'][$menu_item_db_id])) {
         $dashicon = sanitize_text_field(wp_unslash($_POST['menu-item-dashicon'][$menu_item_db_id]));
         update_post_meta($menu_item_db_id, '_menu_item_dashicon', $dashicon);
@@ -342,29 +339,64 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         $url = $item->url;
         $icon_html = '';
 
+        // Set defaults if icon type is not set
+        if (!empty($url) && $url !== null) {
+            $icon_type = 'dashicon';
+            update_post_meta($item->ID, '_menu_item_icon_type', 'dashicon');
+            update_post_meta($item->ID, '_menu_item_dashicon', 'menu');
+        }
+
         if ($icon_type === 'dashicon') {
             $dashicon = get_post_meta($item->ID, '_menu_item_dashicon', true);
-            if (!empty($dashicon)) {
-                $icon_html = sprintf('<span class="dashicons dashicons-%s" aria-hidden="true"></span>', esc_attr($dashicon));
+            if (empty($dashicon)) {
+                $dashicon = 'menu'; // Set default dashicon
+                update_post_meta($item->ID, '_menu_item_dashicon', $dashicon);
             }
+            $icon_html = sprintf(
+                '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                esc_attr($dashicon)
+            );
         } else {
             $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
-            if (!empty($icon_url)) {
+            if (!empty($icon_url) && $icon_url !== '') {
                 if (substr($icon_url, -4) === '.svg') {
                     $svg_content = distm_get_svg_content($icon_url);
                     if ($svg_content !== false) {
-                        $icon_html = $svg_content;
+                        $icon_html = wp_kses(
+                            $svg_content,
+                            array_merge(
+                                wp_kses_allowed_html('post'),
+                                array(
+                                    'svg' => array(
+                                        'xmlns' => true,
+                                        'viewbox' => true,
+                                        'width' => true,
+                                        'height' => true,
+                                        'preserveaspectratio' => true,
+                                        'class' => true
+                                    ),
+                                    'path' => array(
+                                        'd' => true,
+                                        'fill' => true,
+                                        'stroke' => true,
+                                        'stroke-width' => true
+                                    )
+                                )
+                            )
+                        );
                     }
                 } else {
-                    $icon_html = sprintf('<img src="%s" alt="%s %s" class="tm-menu-icon" />', 
-                        esc_url($icon_url), 
-                        esc_attr($title), 
+                    $icon_html = sprintf(
+                        '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                        esc_url($icon_url),
+                        esc_attr($title),
                         esc_attr__('Icon', 'the-menu')
                     );
                 }
             }
         }
 
+        // Get visibility settings
         $visibility = get_post_meta($item->ID, '_menu_item_visibility', true);
         if (empty($visibility)) {
             $visibility = 'everyone';
@@ -374,6 +406,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
             $roles = array();
         }
 
+        // Check visibility permissions
         $show_item = false;
         if ($visibility === 'everyone') {
             $show_item = true;

@@ -110,20 +110,24 @@ if (!function_exists('distm_hex_to_rgba')) {
 // Add the fixed mobile menu to the front-end
 function distm_add_fixed_menu() {
     $options = get_option('distm_settings', array());
+    
+    // Basic validation - return if mobile menu is not enabled
     if (empty($options['distm_enable_mobile_menu'])) {
         return;
     }
 
+    // Handle page exclusions
     $excluded_pages = isset($options['distm_exclude_pages']) ? array_map('absint', (array)$options['distm_exclude_pages']) : array();
-
-    if (is_page() && in_array(get_queried_object_id(), $excluded_pages)) {
+    if (is_page() && in_array(get_queried_object_id(), $excluded_pages, true)) {
         return;
     }
 
+    // Check mobile-only setting
     if (!empty($options['distm_only_on_mobile']) && !wp_is_mobile()) {
         return;
     }
 
+    // Prepare CSS classes
     $additional_classes = array();
     if (!empty($options['distm_enable_transparency'])) {
         $additional_classes[] = 'tm-scrolling';
@@ -132,99 +136,229 @@ function distm_add_fixed_menu() {
         $additional_classes[] = 'icon-only';
     }
 
+    // Validate menu styles
     $valid_menu_styles = array('pill', 'rounded', 'flat');
-    $menu_style = isset($options['distm_menu_style']) && in_array($options['distm_menu_style'], $valid_menu_styles) 
+    $menu_style = isset($options['distm_menu_style']) && in_array($options['distm_menu_style'], $valid_menu_styles, true) 
                 ? $options['distm_menu_style'] 
                 : 'pill';
 
     $valid_addon_menu_styles = array('app-icon', 'icon', 'list');
-    $addon_menu_style = isset($options['distm_addon_menu_style']) && in_array($options['distm_addon_menu_style'], $valid_addon_menu_styles) 
-                        ? $options['distm_addon_menu_style'] 
-                        : 'app-icon';
+    $addon_menu_style = isset($options['distm_addon_menu_style']) && in_array($options['distm_addon_menu_style'], $valid_addon_menu_styles, true) 
+    ? $options['distm_addon_menu_style'] 
+    : 'app-icon';
 
-    // Get featured icon URL with fallback to default
-    // Get featured icon settings
-    $icon_type = isset($options['distm_featured_icon_type']) ? $options['distm_featured_icon_type'] : 'dashicon';
-    $dashicon = isset($options['distm_featured_dashicon']) ? $options['distm_featured_dashicon'] : 'menu';
+    $icon_type = isset($options['distm_featured_icon_type']) ? sanitize_text_field($options['distm_featured_icon_type']) : 'upload';
+
+    // Get dashicon value
+    $dashicon = isset($options['distm_featured_dashicon']) ? sanitize_text_field($options['distm_featured_dashicon']) : 'menu';
+    
+    // Get icon URL
     $icon_url = isset($options['distm_featured_icon']) ? esc_url($options['distm_featured_icon']) : '';
     
-    // Get the default icon URL for fallback
-    $default_icon_url = plugin_dir_url(dirname(__FILE__)) . 'admin/assets/menu-logo.svg';
-    
-    
-    $link_url = !empty($options['distm_enable_addon_menu']) ? '#' : home_url('/');
+    // Get default icon URL for fallback only when needed
+    $default_icon_url = esc_url(plugin_dir_url(dirname(__FILE__)) . 'admin/assets/menu-logo.svg');
 
-    ?>
+    // Then in the display logic section:
+    if ($icon_type === 'dashicon') {
+        printf(
+            '<span class="dashicons dashicons-%s"></span>',
+            esc_attr($dashicon)
+        );
+    } elseif ($icon_type === 'upload' && !empty($icon_url)) {
+        if (substr($icon_url, -4) === '.svg') {
+            $svg_content = distm_get_svg_content($icon_url);
+            if ($svg_content !== false) {
+                echo wp_kses($svg_content, distm_get_allowed_svg_tags());
+            } else {
+                // Only use default if SVG content is invalid
+                $default_svg_content = distm_get_svg_content($default_icon_url);
+                if ($default_svg_content !== false) {
+                    echo wp_kses($default_svg_content, distm_get_allowed_svg_tags());
+                }
+            }
+        } else {
+            printf(
+                '<img src="%s" alt="%s" />',
+                esc_url($icon_url),
+                esc_attr__('Featured Icon', 'the-menu')
+            );
+        }
+    } else {
+        // Only use default SVG as last resort
+        $default_svg_content = distm_get_svg_content($default_icon_url);
+        if ($default_svg_content !== false) {
+            echo wp_kses($default_svg_content, distm_get_allowed_svg_tags());
+        }
+    }
+    // Set link URL based on addon menu setting
+    $link_url = !empty($options['distm_enable_addon_menu']) ? '#' : esc_url(home_url('/'));
 
-    <?php if (!empty($options['distm_enable_loader_animation'])) : ?>
-    <div id="tm-pageLoader">
-        <div>
-            <span class="custom-loader"></span>
+    // Start output with loader if enabled
+    if (!empty($options['distm_enable_loader_animation'])) : ?>
+        <div id="tm-pageLoader">
+            <div>
+                <span class="custom-loader"></span>
+            </div>
         </div>
-    </div>
     <?php endif; ?>
 
-    <div class="the-menu <?php echo esc_attr(implode(' ', $additional_classes)); ?>">
+    <div class="the-menu <?php echo esc_attr(implode(' ', array_map('sanitize_html_class', $additional_classes))); ?>">
         <div class="tm-fixed-mobile-menu-wrapper <?php echo esc_attr($menu_style); ?>">
             <div id="tm-fixed-mobile-menu">
                 <div class="tm-left-menu">
-                <?php wp_nav_menu(array( 'theme_location' => 'left-menu', 'walker' => new distm_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
+                    <?php 
+                    wp_nav_menu(array(
+                        'theme_location' => 'left-menu',
+                        'walker' => new distm_Icon_Walker(),
+                        'container' => false,
+                        'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+                        'fallback_cb' => false
+                    ));
+                    ?>
                 </div>
                 <div class="tm-featured-bg">
-                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 140 60" preserveAspectRatio="none">
-                    <path d="M139.2,0c-13.3,0-25.3,7.7-31.4,19.5-7.1,13.6-21.3,23-37.8,23s-30.7-9.3-37.8-23S14.2,0,.8,0h-.8v60h140V0h-.8Z"/>
-                </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 140 60" preserveAspectRatio="none">
+                        <path d="M139.2,0c-13.3,0-25.3,7.7-31.4,19.5-7.1,13.6-21.3,23-37.8,23s-30.7-9.3-37.8-23S14.2,0,.8,0h-.8v60h140V0h-.8Z"/>
+                    </svg>
                     <div class="tm-filler"></div>
                 </div>
                 <div class="tm-right-menu">
-                    <?php wp_nav_menu(array( 'theme_location' => 'right-menu', 'walker' => new distm_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
-                </div>
-            </div>
-        </div>
-        <?php if (!empty($options['distm_enable_addon_menu'])): ?>
-        <div class="tm-addon-menu-wrapper <?php echo esc_attr($addon_menu_style); ?> ">
-            <div id="tm-addon-menu">
-            <?php wp_nav_menu(array( 'theme_location' => 'addon-menu', 'walker' => new distm_Icon_Walker(), 'container' => false, 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>'));?>
-            </div>
-        </div>
-        <?php endif; ?>
-        <div class="tm-featured">
-        <a href="<?php echo esc_url($link_url); ?>" class="tm-menu-item">
-            <div class="tm-icon-wrapper">
-                <div class="tm-featured-icon">
                     <?php 
-                    if ($icon_type === 'dashicon' && !empty($dashicon)) {
-                        echo '<span class="dashicons dashicons-' . esc_attr($dashicon) . '"></span>';
-                    } elseif ($icon_type === 'upload' && !empty($icon_url)) {
-                        if (substr($icon_url, -4) === '.svg') {
-                            $svg_content = distm_get_svg_content($icon_url);
-                            if ($svg_content !== false) {
-                                echo wp_kses($svg_content, distm_get_allowed_svg_tags());
-                            } else {
-                                // Fallback to default if SVG content is invalid
-                                $svg_content = distm_get_svg_content($default_icon_url);
-                                if ($svg_content !== false) {
-                                    echo wp_kses($svg_content, distm_get_allowed_svg_tags());
-                                }
-                            }
-                        } else {
-                            echo '<img src="' . esc_url($icon_url) . '" alt="' . esc_attr__('Featured Icon', 'the-menu') . '" />';
-                        }
-                    } else {
-                        // Default fallback
-                        $svg_content = distm_get_svg_content($default_icon_url);
-                        if ($svg_content !== false) {
-                            echo wp_kses($svg_content, distm_get_allowed_svg_tags());
-                        }
-                    }
+                    wp_nav_menu(array(
+                        'theme_location' => 'right-menu',
+                        'walker' => new distm_Icon_Walker(),
+                        'container' => false,
+                        'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+                        'fallback_cb' => false
+                    ));
                     ?>
                 </div>
-                <svg class="tm-menu-close" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50 50">
-                    <path d="M30.7,25l16.4-16.4c1.6-1.6,1.6-4.1,0-5.7-1.6-1.6-4.1-1.6-5.7,0l-16.4,16.4L8.6,2.9c-1.6-1.6-4.1-1.6-5.7,0-1.6,1.6-1.6,4.1,0,5.7l16.4,16.4L2.9,41.4c-1.6,1.6-1.6,4.1,0,5.7h0c1.6,1.6,4.1,1.6,5.7,0l16.4-16.4,16.4,16.4c1.6,1.6,4.1,1.6,5.7,0h0c1.6-1.6,1.6-4.1,0-5.7l-16.4-16.4Z"/>
-                </svg>
             </div>
-        </a>
-    </div>
+        </div>
+
+        <?php if (!empty($options['distm_enable_addon_menu'])) : ?>
+            <div class="tm-addon-menu-wrapper <?php echo esc_attr($addon_menu_style); ?>">
+                <div id="tm-addon-menu">
+                    <?php 
+                    wp_nav_menu(array(
+                        'theme_location' => 'addon-menu',
+                        'walker' => new distm_Icon_Walker(),
+                        'container' => false,
+                        'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>',
+                        'fallback_cb' => false
+                    ));
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="tm-featured">
+            <a href="<?php echo esc_url($link_url); ?>" class="tm-menu-item">
+                <div class="tm-icon-wrapper">
+                    <div class="tm-featured-icon">
+                        <?php 
+                        if ($icon_type === 'dashicon' && !empty($dashicon)) {
+                            printf(
+                                '<span class="dashicons dashicons-%s"></span>',
+                                esc_attr($dashicon)
+                            );
+                        } elseif ($icon_type === 'upload' && !empty($icon_url)) {
+                            if (substr($icon_url, -4) === '.svg') {
+                                $svg_content = distm_get_svg_content($icon_url);
+                                if ($svg_content !== false) {
+                                    echo wp_kses(
+                                        $svg_content,
+                                        array_merge(
+                                            wp_kses_allowed_html('post'),
+                                            array(
+                                                'svg' => array(
+                                                    'xmlns' => true,
+                                                    'viewbox' => true,
+                                                    'width' => true,
+                                                    'height' => true,
+                                                    'preserveaspectratio' => true,
+                                                    'class' => true
+                                                ),
+                                                'path' => array(
+                                                    'd' => true,
+                                                    'fill' => true,
+                                                    'stroke' => true,
+                                                    'stroke-width' => true
+                                                )
+                                            )
+                                        )
+                                    );
+                                } else {
+                                    // Fallback to default if SVG content is invalid
+                                    $default_svg_content = distm_get_svg_content($default_icon_url);
+                                    if ($default_svg_content !== false) {
+                                        echo wp_kses(
+                                            $default_svg_content,
+                                            array_merge(
+                                                wp_kses_allowed_html('post'),
+                                                array(
+                                                    'svg' => array(
+                                                        'xmlns' => true,
+                                                        'viewbox' => true,
+                                                        'width' => true,
+                                                        'height' => true,
+                                                        'preserveaspectratio' => true,
+                                                        'class' => true
+                                                    ),
+                                                    'path' => array(
+                                                        'd' => true,
+                                                        'fill' => true,
+                                                        'stroke' => true,
+                                                        'stroke-width' => true
+                                                    )
+                                                )
+                                            )
+                                        );
+                                    }
+                                }
+                            } else {
+                                printf(
+                                    '<img src="%s" alt="%s" />',
+                                    esc_url($icon_url),
+                                    esc_attr__('Featured Icon', 'the-menu')
+                                );
+                            }
+                        } else {
+                            // Default fallback
+                            $default_svg_content = distm_get_svg_content($default_icon_url);
+                            if ($default_svg_content !== false) {
+                                echo wp_kses(
+                                    $default_svg_content,
+                                    array_merge(
+                                        wp_kses_allowed_html('post'),
+                                        array(
+                                            'svg' => array(
+                                                'xmlns' => true,
+                                                'viewbox' => true,
+                                                'width' => true,
+                                                'height' => true,
+                                                'preserveaspectratio' => true,
+                                                'class' => true
+                                            ),
+                                            'path' => array(
+                                                'd' => true,
+                                                'fill' => true,
+                                                'stroke' => true,
+                                                'stroke-width' => true
+                                            )
+                                        )
+                                    )
+                                );
+                            }
+                        }
+                        ?>
+                    </div>
+                    <svg class="tm-menu-close" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50 50">
+                        <path d="M30.7,25l16.4-16.4c1.6-1.6,1.6-4.1,0-5.7-1.6-1.6-4.1-1.6-5.7,0l-16.4,16.4L8.6,2.9c-1.6-1.6-4.1-1.6-5.7,0-1.6,1.6-1.6,4.1,0,5.7l16.4,16.4L2.9,41.4c-1.6,1.6-1.6,4.1,0,5.7h0c1.6,1.6,4.1,1.6,5.7,0l16.4-16.4,16.4,16.4c1.6,1.6,4.1,1.6,5.7,0h0c1.6-1.6,1.6-4.1,0-5.7l-16.4-16.4Z"/>
+                    </svg>
+                </div>
+            </a>
+        </div>
     </div>
     <?php
 }
@@ -234,6 +368,52 @@ add_action('wp_footer', 'distm_add_fixed_menu');
 function distm_get_allowed_svg_tags() {
     return array(
         'svg' => array(
+            'xmlns' => true,
+            'viewbox' => true,
+            'width' => true,
+            'height' => true,
+            'preserveaspectratio' => true,
+            'class' => true,
+            'version' => true,
+        ),
+        'path' => array(
+            'd' => true,
+            'fill' => true,
+            'stroke' => true,
+            'stroke-width' => true
+        ),
+        'circle' => array(
+            'cx' => true,
+            'cy' => true,
+            'r' => true,
+            'fill' => true
+        ),
+        'rect' => array(
+            'x' => true,
+            'y' => true,
+            'width' => true,
+            'height' => true,
+            'fill' => true
+        ),
+        'g' => array(
+            'fill' => true,
+            'transform' => true,
+            'stroke' => true
+        ),
+        'title' => array('title' => true),
+        'desc' => array(),
+    );
+}
+function distm_sanitize_svg_content($svg_content) {
+    // Remove any script tags and their content
+    $svg_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $svg_content);
+    
+    // Remove onclick and other potentially harmful attributes
+    $svg_content = preg_replace('/\bon\w+\s*=\s*([\'"])?[^"\']*\1/i', '', $svg_content);
+    
+    // Only allow specific SVG elements and attributes
+    $allowed_tags = array(
+        'svg' => array(
             'class' => true,
             'aria-hidden' => true,
             'aria-labelledby' => true,
@@ -241,13 +421,28 @@ function distm_get_allowed_svg_tags() {
             'xmlns' => true,
             'width' => true,
             'height' => true,
-            'viewbox' => true,
+            'viewBox' => true,
+            'preserveAspectRatio' => true,
+            'version' => true,
         ),
-        'g' => array('fill' => true),
-        'title' => array('title' => true),
         'path' => array(
             'd' => true,
             'fill' => true,
-        )
+        ),
+        'circle' => array(
+            'cx' => true,
+            'cy' => true,
+            'r' => true,
+            'fill' => true,
+        ),
+        'rect' => array(
+            'x' => true,
+            'y' => true,
+            'width' => true,
+            'height' => true,
+            'fill' => true,
+        ),
     );
+    
+    return wp_kses($svg_content, $allowed_tags);
 }

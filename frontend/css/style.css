@@ -9,7 +9,7 @@
     --distm-featured-icon-color: #FFF;
     /*addon menu icon*/
     --distm-addon-bg-color:#000000;
-    --distm-addon-label-color: #333;
+    --distm-addon-label-color: #FFF;
     --distm-addon-icon-color:#FFFFFF;
     --distm-addon-icon-bg:#446084;
 }
@@ -312,8 +312,6 @@ text-decoration: none;
 }
 .app-icon #tm-addon-menu img{
     object-fit: cover;
-    height: 100px!important;
-    width: 100px!important;
     background-color: var(--distm-addon-icon-bg);
 }
 .app-icon #tm-addon-menu img:hover{

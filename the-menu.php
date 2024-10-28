@@ -3,9 +3,9 @@
 namespace Distinct\TheMenu;
 
 /*
-Plugin Name: The Menu
+Plugin Name: The Menu - Custom mobile navigation with icons
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
-Description: Enhance your WordPress site with a customisable, mobile-friendly navigation menu featuring SVG icons and extensive colour options.
+Description: Create beautiful mobile navigation menus with custom icons, role-based visibility, and extensive style options for your WordPress site.
 Version: 1.2.8
 Author: Distinct
 License: GPL-2.0-or-later
@@ -29,6 +29,14 @@ function distm_activate_plugin() {
 
     distm_check_required_files();
     distm_load_default_settings();
+    
+    // Get the current version from options
+    $current_version = get_option('distm_plugin_version', '0');
+    
+    // If this is a new installation or updating from a version before icon types
+    if (version_compare($current_version, '1.2.8', '<')) {
+        distm_migrate_menu_item_icon_types();
+    }
 }
 
 function distm_deactivate_plugin() {
@@ -51,6 +59,39 @@ include_once(__DIR__ . '/admin/admin-init.php');
 include_once(__DIR__ . '/admin/admin-pages.php');
 include_once(__DIR__ . '/admin/admin-menus.php');
 include_once(__DIR__ . '/frontend/frontend-init.php');
+
+function distm_migrate_menu_item_icon_types() {
+    // Get all menu items
+    $menu_items = get_posts(array(
+        'post_type' => 'nav_menu_item',
+        'posts_per_page' => -1,
+        'fields' => 'ids'
+    ));
+
+    foreach ($menu_items as $menu_item_id) {
+        // Get existing icon URL
+        $icon_url = get_post_meta($menu_item_id, '_menu_item_icon', true);
+        
+        // If there's an icon URL, set type to 'upload'
+        if (!empty($icon_url) && $icon_url !== '') {
+            update_post_meta($menu_item_id, '_menu_item_icon_type', 'upload');
+        }
+    }
+
+    // Update plugin version in options to track migration
+    update_option('distm_plugin_version', '1.2.8');
+}
+
+// Add a function to handle plugin updates
+function distm_check_for_updates() {
+    $current_version = get_option('distm_plugin_version', '0');
+    
+    // If updating from a version before icon types
+    if (version_compare($current_version, '1.2.8', '<')) {
+        distm_migrate_menu_item_icon_types();
+    }
+}
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_check_for_updates');
 
 if (!function_exists('get_plugin_data')) {
     require_once(ABSPATH . 'wp-admin/includes/plugin.php');
@@ -150,13 +191,14 @@ class Plugin_License_Validator {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'the-menu'));
         }
-
-        check_admin_referer('the_menu_check_license_nonce');
-
+    
+        if (!isset($_REQUEST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['_wpnonce'])), 'the_menu_check_license_nonce')) {
+            wp_die(esc_html__('Invalid nonce verification', 'the-menu'));
+        }
+    
         $license_status = $this->validate_license();
-
         $redirect_nonce = wp_create_nonce('the_menu_license_check');
-
+        
         $redirect_url = add_query_arg(
             array(
                 'license_check_result' => $license_status ? 'valid' : 'invalid',
@@ -165,7 +207,7 @@ class Plugin_License_Validator {
             ),
             admin_url('admin.php')
         );
-
+    
         wp_safe_redirect($redirect_url);
         exit;
     }
