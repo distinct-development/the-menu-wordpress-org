@@ -23,14 +23,17 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
     $nonce_field = 'distm_menu_item_' . $item_id;
     wp_nonce_field('distm_menu_item_' . $item_id, $nonce_field);
 
+    // Get existing meta values with proper fallbacks
     $icon = get_post_meta($item_id, '_menu_item_icon', true);
     $icon_type = get_post_meta($item_id, '_menu_item_icon_type', true);
     $dashicon = get_post_meta($item_id, '_menu_item_dashicon', true);
 
-    // Set default values for new items
+    // Set default values if not set
     if (empty($icon_type)) {
-        $icon_type = 'dashicon';  // Set dashicon as default
-        $dashicon = 'menu';       // Set a default dashicon
+        $icon_type = 'dashicon';
+    }
+    if (empty($dashicon)) {
+        $dashicon = 'menu';
     }
     ?>
     <div class="field-custom description description-wide">
@@ -38,17 +41,23 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
         
         <!-- Icon Type Selector -->
         <div class="icon-type-selector" style="margin-bottom: 10px;">
-            <label class="icon-type-label">
-                <input type="radio" name="menu-item-icon-type[<?php echo esc_attr($item_id); ?>]" 
-                       value="dashicon" <?php checked($icon_type, 'dashicon'); ?> class="icon-type-radio">
-                <?php esc_html_e('Select dashicon', 'the-menu'); ?>
-            </label>
-            <label class="icon-type-label" style="margin-left: 15px;">
-                <input type="radio" name="menu-item-icon-type[<?php echo esc_attr($item_id); ?>]" 
-                       value="upload" <?php checked($icon_type, 'upload'); ?> class="icon-type-radio">
-                <?php esc_html_e('Upload icon', 'the-menu'); ?>
-            </label>
+        <label class="icon-type-label">
+            <input type="radio" name="menu-item-icon-type[<?php echo esc_attr($item_id); ?>]" 
+                value="dashicon" <?php checked($icon_type === 'dashicon' || empty($icon)); ?> class="icon-type-radio">
+            <?php esc_html_e('Select dashicon', 'the-menu'); ?>
+        </label>
+        <label class="icon-type-label" style="margin-left: 15px;">
+            <input type="radio" name="menu-item-icon-type[<?php echo esc_attr($item_id); ?>]" 
+                value="upload" <?php checked($icon_type === 'upload' && !empty($icon)); ?> class="icon-type-radio">
+            <?php esc_html_e('Upload icon', 'the-menu'); ?>
+        </label>
         </div>
+
+        <!-- Hidden field to ensure the dashicon value is always submitted -->
+        <input type="hidden" 
+            name="menu-item-dashicon[<?php echo esc_attr($item_id); ?>]" 
+            class="selected-dashicon" 
+            value="<?php echo esc_attr($dashicon); ?>">
 
         <!-- Upload Icon Section -->
         <div class="icon-upload-section" style="<?php echo $icon_type === 'dashicon' ? 'display: none;' : ''; ?>">
@@ -206,31 +215,41 @@ function distm_save_custom_menu_fields($menu_id, $menu_item_db_id, $args) {
         return;
     }
 
-    // Verify menu item nonce
+    // Verify nonce
     $nonce_field = 'distm_menu_item_' . $menu_item_db_id;
-    if (!isset($_POST[$nonce_field]) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonce_field])), 'distm_menu_item_' . $menu_item_db_id)) {
+    if (!isset($_POST[$nonce_field]) || 
+        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$nonce_field])), 'distm_menu_item_' . $menu_item_db_id)) {
         return;
     }
 
-    // Save icon type with sanitization
-    if (isset($_POST['menu-item-icon-type'][$menu_item_db_id])) {
-        $icon_type = sanitize_text_field(wp_unslash($_POST['menu-item-icon-type'][$menu_item_db_id]));
-        if (in_array($icon_type, array('dashicon', 'upload'), true)) {
-            update_post_meta($menu_item_db_id, '_menu_item_icon_type', $icon_type);
-        }
-    }
+    // Get the icon URL and type
+    $icon_url = isset($_POST['menu-item-icon'][$menu_item_db_id]) ? 
+        esc_url_raw(wp_unslash($_POST['menu-item-icon'][$menu_item_db_id])) : '';
+    
+    $icon_type = isset($_POST['menu-item-icon-type'][$menu_item_db_id]) ?
+        sanitize_text_field(wp_unslash($_POST['menu-item-icon-type'][$menu_item_db_id])) : 'dashicon';
 
-    // Save icon URL with proper sanitization
-    if (isset($_POST['menu-item-icon'][$menu_item_db_id])) {
-        $icon_url = esc_url_raw(wp_unslash($_POST['menu-item-icon'][$menu_item_db_id]));
+    // Force icon type to dashicon if there's no URL
+    if (empty($icon_url)) {
+        $icon_type = 'dashicon';
+    }
+    
+    // If we have a URL, force icon type to upload
+    if (!empty($icon_url)) {
+        $icon_type = 'upload';
         update_post_meta($menu_item_db_id, '_menu_item_icon', $icon_url);
+    } else {
+        delete_post_meta($menu_item_db_id, '_menu_item_icon');
     }
 
-    // Save dashicon with sanitization
-    if (isset($_POST['menu-item-dashicon'][$menu_item_db_id])) {
-        $dashicon = sanitize_text_field(wp_unslash($_POST['menu-item-dashicon'][$menu_item_db_id]));
-        update_post_meta($menu_item_db_id, '_menu_item_dashicon', $dashicon);
-    }
+    // Save icon type
+    update_post_meta($menu_item_db_id, '_menu_item_icon_type', $icon_type);
+
+    // Handle dashicon - always save a default
+    $dashicon = isset($_POST['menu-item-dashicon'][$menu_item_db_id]) 
+        ? sanitize_text_field(wp_unslash($_POST['menu-item-dashicon'][$menu_item_db_id]))
+        : 'menu';
+    update_post_meta($menu_item_db_id, '_menu_item_dashicon', $dashicon);
 }
 add_action('wp_update_nav_menu_item', 'distm_save_custom_menu_fields', 10, 3);
 
@@ -334,66 +353,51 @@ add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 
 // WordPress Walker for the menu
 class DISTM_Icon_Walker extends Walker_Nav_Menu {
     function start_el(&$output, $item, $depth=0, $args=null, $id=0) {
+        // Get icon settings with strong validation
         $icon_type = get_post_meta($item->ID, '_menu_item_icon_type', true);
+        if (!in_array($icon_type, ['dashicon', 'upload'])) {
+            $icon_type = 'dashicon'; // Default fallback
+        }
+        
+        $dashicon = get_post_meta($item->ID, '_menu_item_dashicon', true);
+        if (empty($dashicon)) {
+            $dashicon = 'menu'; // Default fallback
+        }
+        
+        $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
+        
         $title = apply_filters('the_title', $item->title, $item->ID);
         $url = $item->url;
         $icon_html = '';
 
-        // Set defaults if icon type is not set
-        if (!empty($url) && $url !== null) {
-            $icon_type = 'dashicon';
-            update_post_meta($item->ID, '_menu_item_icon_type', 'dashicon');
-            update_post_meta($item->ID, '_menu_item_dashicon', 'menu');
-        }
-
         if ($icon_type === 'dashicon') {
-            $dashicon = get_post_meta($item->ID, '_menu_item_dashicon', true);
-            if (empty($dashicon)) {
-                $dashicon = 'menu'; // Set default dashicon
-                update_post_meta($item->ID, '_menu_item_dashicon', $dashicon);
-            }
             $icon_html = sprintf(
                 '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
                 esc_attr($dashicon)
             );
-        } else {
-            $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
-            if (!empty($icon_url) && $icon_url !== '') {
-                if (substr($icon_url, -4) === '.svg') {
-                    $svg_content = distm_get_svg_content($icon_url);
-                    if ($svg_content !== false) {
-                        $icon_html = wp_kses(
-                            $svg_content,
-                            array_merge(
-                                wp_kses_allowed_html('post'),
-                                array(
-                                    'svg' => array(
-                                        'xmlns' => true,
-                                        'viewbox' => true,
-                                        'width' => true,
-                                        'height' => true,
-                                        'preserveaspectratio' => true,
-                                        'class' => true
-                                    ),
-                                    'path' => array(
-                                        'd' => true,
-                                        'fill' => true,
-                                        'stroke' => true,
-                                        'stroke-width' => true
-                                    )
-                                )
-                            )
-                        );
-                    }
+        } elseif ($icon_type === 'upload' && !empty($icon_url)) {
+            if (substr($icon_url, -4) === '.svg') {
+                $svg_content = distm_get_svg_content($icon_url);
+                if ($svg_content !== false) {
+                    $icon_html = $svg_content;
                 } else {
+                    // Fallback to dashicon if SVG fails
                     $icon_html = sprintf(
-                        '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                        esc_url($icon_url),
-                        esc_attr($title),
-                        esc_attr__('Icon', 'the-menu')
+                        '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                        'menu'
                     );
                 }
+            } else {
+                $icon_html = sprintf(
+                    '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                    esc_url($icon_url),
+                    esc_attr($title),
+                    esc_attr__('Icon', 'the-menu')
+                );
             }
+        } else {
+            // Default fallback to menu dashicon
+            $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
         }
 
         // Get visibility settings

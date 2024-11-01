@@ -1,4 +1,4 @@
-# The Menu - Custom mobile navigation with icons
+# The Menu: Custom mobile navigation with icons
 
 Create beautiful mobile navigation menus with custom icons, role-based visibility, and extensive style options for your WordPress site.
 
@@ -155,7 +155,12 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
-### 1.2.8 - 28/10/2024
+### 1.2.10 - 29/10/2024
+
+- [HOTFIX] Dashicon and menu styling was a little off on some sites
+- Now allows scrolling in the addon menu
+
+### 1.2.9 - 29/10/2024
 
 - [NOTE] Please check your site once updated, the new dashicons functionallity may override current uploaded icons, which means you may need to re-select them.
 - Added default dashicons to select for menu icons incase you don't have svg icons to upload.

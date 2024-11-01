@@ -3,10 +3,10 @@
 namespace Distinct\TheMenu;
 
 /*
-Plugin Name: The Menu - Custom mobile navigation with icons
+Plugin Name: The Menu: Custom mobile navigation with icons
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Create beautiful mobile navigation menus with custom icons, role-based visibility, and extensive style options for your WordPress site.
-Version: 1.2.8
+Version: 1.2.10
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://plugins.distinct.africa
@@ -26,9 +26,11 @@ function distm_activate_plugin() {
     if (!wp_doing_ajax() && !in_array($GLOBALS['pagenow'], array('plugins.php', 'update.php'))) {
         return;
     }
+    // Flush rewrite rules and clear any cached styles
+    flush_rewrite_rules();
+    wp_cache_flush();
 
     distm_check_required_files();
-    distm_load_default_settings();
     
     // Get the current version from options
     $current_version = get_option('distm_plugin_version', '0');
@@ -58,6 +60,7 @@ register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\distm_deactivate_plugin'
 include_once(__DIR__ . '/admin/admin-init.php');
 include_once(__DIR__ . '/admin/admin-pages.php');
 include_once(__DIR__ . '/admin/admin-menus.php');
+include_once(__DIR__ . '/admin/admin-help.php');
 include_once(__DIR__ . '/frontend/frontend-init.php');
 
 function distm_migrate_menu_item_icon_types() {

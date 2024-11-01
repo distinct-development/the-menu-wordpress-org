@@ -1,9 +1,9 @@
-=== The Menu - Custom mobile navigation with icons ===
+=== The Menu: Custom mobile navigation with icons ===
 Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.8
+Stable tag: 1.2.10
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,132 +19,132 @@ The Menu plugin is designed to enhance your website's usability and aesthetic ap
 
 = Core features =
 
-Mobile-optimised bottom navigation bar
-Custom SVG icon support and built-in Dashicons
-Extensive colour customisation options
-Transparent menus that adapt on scroll
-Role-based menu item visibility
-Additional "add-on" menu for extra navigation items
-App-like mobile navigation experience
-Smooth animations and transitions
-Compatible with popular page builders
-PWA-friendly design
-Responsive and touch-optimised
-Custom icon upload support
-Page-specific menu visibility
-Multiple menu styles (Pill, Rounded, Flat)
+- Mobile-optimised bottom navigation bar
+- Custom SVG icon support and built-in Dashicons
+- Extensive colour customisation options
+- Transparent menus that adapt on scroll
+- Role-based menu item visibility
+- Additional "add-on" menu for extra navigation items
+- App-like mobile navigation experience
+- Smooth animations and transitions
+- Compatible with popular page builders
+- PWA-friendly design
+- Responsive and touch-optimised
+- Custom icon upload support
+- Page-specific menu visibility
+- Multiple menu styles (Pill, Rounded, Flat)
 
 = Perfect for =
 
-Mobile-first websites
-Online shops
-Restaurant menus
-Progressive Web Apps
-Service businesses
-Portfolio sites
-Business directories
-Event websites
-Community platforms
-Educational sites
+- Mobile-first websites
+- Online shops
+- Restaurant menus
+- Progressive Web Apps
+- Service businesses
+- Portfolio sites
+- Business directories
+- Event websites
+- Community platforms
+- Educational sites
 
 = Professional customisation =
 The Menu offers extensive customisation options to match your brand:
 
-Custom colours for icons and backgrounds
-Multiple menu styles and layouts
-Flexible positioning options
-Icon-only or icon-with-text display
-Transparent scroll effects
-Custom icon uploads
-Built-in Dashicons support
+- Custom colours for icons and backgrounds
+- Multiple menu styles and layouts
+- Flexible positioning options
+- Icon-only or icon-with-text display
+- Transparent scroll effects
+- Custom icon uploads
+- Built-in Dashicons support
 
 = Advanced features =
 
-Role-based visibility: Show different menu items to different user roles
-Page exclusions: Choose which pages show or hide the menu
-Add-on menu: Additional menu space for extra navigation items
-Mobile-only option: Display the menu only on mobile devices
-Loading animations: Smooth transitions between pages
-SVG colour controls: Customise icon colours directly
-Multiple menu positions: Left, right, and add-on menu locations
-Transparent effects: Menu adapts as users scroll
+- Role-based visibility: Show different menu items to different user roles
+- Page exclusions: Choose which pages show or hide the menu
+- Add-on menu: Additional menu space for extra navigation items
+- Mobile-only option: Display the menu only on mobile devices
+- Loading animations: Smooth transitions between pages
+- SVG colour controls: Customise icon colours directly
+- Multiple menu positions: Left, right, and add-on menu locations
+- Transparent effects: Menu adapts as users scroll
 
 = Compatible with popular tools =
 Works seamlessly with:
 
-WooCommerce
-Elementor
-Divi Builder
-Gutenberg
-Popular WordPress themes
-Custom theme frameworks
-Other navigation plugins
+- WooCommerce
+- Elementor
+- Divi Builder
+- Gutenberg
+- Popular WordPress themes
+- Custom theme frameworks
+- Other navigation plugins
 
 == Installation ==
 
-Upload the plugin files to the /wp-content/plugins/the-menu directory, or install the plugin through the WordPress plugins screen directly
-Activate the plugin through the 'Plugins' screen in WordPress
-Navigate to 'The Menu' in your admin sidebar to configure the plugin
-Set up your menus under 'Appearance > Menus'
+- Upload the plugin files to the /wp-content/plugins/the-menu directory, or install the plugin through the WordPress plugins screen directly
+- Activate the plugin through the 'Plugins' screen in WordPress
+- Navigate to 'The Menu' in your admin sidebar to configure the plugin
+- Set up your menus under 'Appearance > Menus'
 
 = Quick start guide =
 
-Create a new menu in WordPress
-Assign it to one of The Menu's locations (Left, Right, or Add-on)
-Add icons to your menu items
-Customise colours and styles
-Configure visibility settings
-Test on mobile devices
+- Create a new menu in WordPress
+- Assign it to one of The Menu's locations (Left, Right, or Add-on)
+- Add icons to your menu items
+- Customise colours and styles
+- Configure visibility settings
+- Test on mobile devices
 
 == Frequently Asked Questions ==
 = How do I add icons to menu items? =
 You can add icons in two ways:
 
-Upload custom SVG icons through the menu item settings
-Select from the built-in Dashicons library
-Each menu item has these options when editing in the WordPress admin area.
+- Upload custom SVG icons through the menu item settings
+- Select from the built-in Dashicons library
+- Each menu item has these options when editing in the WordPress admin area.
 
 = Can I control who sees certain menu items? =
 Yes, you have granular control over menu item visibility:
 
-Show to everyone
-Show only to logged-in users
-Show only to logged-out users
-Show to specific user roles
-Hide on specific pages
+- Show to everyone
+- Show only to logged-in users
+- Show only to logged-out users
+- Show to specific user roles
+- Hide on specific pages
 
 = Is the menu responsive? =
 Yes, The Menu is fully responsive and mobile-optimised. You can:
 
-Set it to appear only on mobile devices
-Configure different styles for various screen sizes
-Optimise for both portrait and landscape orientations
+- Set it to appear only on mobile devices
+- Configure different styles for various screen sizes
+- Optimise for both portrait and landscape orientations
 
 = Will it work with my theme? =
 The Menu is designed to work with any properly coded WordPress theme. It's been tested with:
 
-Popular theme frameworks
-Custom themes
-WooCommerce themes
-Page builder themes
+- Popular theme frameworks
+- Custom themes
+- WooCommerce themes
+- Page builder themes
 
 = Can I customise the colours? =
 Yes, you have complete control over:
 
-Background colours
-Icon colours
-Text colours
-Featured item colours
-Add-on menu colours
-Transparency effects
+- Background colours
+- Icon colours
+- Text colours
+- Featured item colours
+- Add-on menu colours
+- Transparency effects
 
 = Does it support touch gestures? =
 Yes, The Menu is optimised for touch devices with:
 
-Smooth touch interactions
-Swipe support
-Touch-friendly hit areas
-Mobile-optimised animations
+- Smooth touch interactions
+- Swipe support
+- Touch-friendly hit areas
+- Mobile-optimised animations
 
 == Screenshots ==
 
@@ -157,7 +157,12 @@ Mobile-optimised animations
 
 == Changelog ==
 
-= 1.2.8 - 28/10/2024 =
+= 1.2.10 - 29/10/2024 =
+
+- [HOTFIX] Dashicon and menu styling was a little off on some sites
+- Now allows scrolling in the addon menu
+
+= 1.2.9 - 29/10/2024 =
 
 - [NOTE] Please check your site once updated, the new dashicons functionallity may override current uploaded icons, which means you may need to re-select them.
 - Added default dashicons to select for menu icons incase you don't have svg icons to upload.

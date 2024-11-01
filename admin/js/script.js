@@ -1,268 +1,313 @@
 jQuery(document).ready(function($) {
+    // Single global instance of media uploader
+    let customUploader = null;
+    let hasUploaderEvents = false;
+
     // Color picker initialization
     $('.color-field').wpColorPicker();
+    initializeColorPickers();
 
-    // Handle icon type radio selection (works for both menu items and featured icon)
-    $(document).on('change', '.icon-type-radio', function() {
-        const container = $(this).closest('.field-custom, .featured-icon-wrapper');
+    // Hex to RGBA conversion
+    function hexToRGBA(hex, alpha = 1) {
+        // Remove the hash if present
+        hex = hex.replace('#', '');
+    
+        // Parse the values
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+    
+        // Return RGBA string
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function initializeColorPickers() {
+        $('.color-field').each(function() {
+            const $input = $(this);
+            
+            // Special handling for addon background color
+            if ($input.attr('id') === 'distm_addon_bg_color') {
+                $input.wpColorPicker({
+                    change: function(event, ui) {
+                        const rgbaColor = hexToRGBA(ui.color.toString(), 0.6);
+                        $('.preview-frame .tm-addon-menu-wrapper').css('background-color', rgbaColor);
+                    },
+                    clear: function() {
+                        $('.preview-frame .tm-addon-menu-wrapper').css('background-color', '');
+                    }
+                });
+            } else {
+                // Regular color picker initialization
+                $input.wpColorPicker();
+            }
+        });
+    }
+
+    // Function to load initial states and set up preview
+    function initializePreviewState() {
+        // Handle transparency on scroll
+        const transparencyEnabled = $('input[name="distm_settings[distm_enable_transparency]"]').is(':checked');
+        $('.preview-frame .the-menu').toggleClass('tm-scrolling', transparencyEnabled);
+
+        // Handle icons only (no text)
+        const iconsOnlyEnabled = $('input[name="distm_settings[distm_disable_menu_text]"]').is(':checked');
+        $('.preview-frame .the-menu').toggleClass('icon-only', iconsOnlyEnabled);
+
+        // Handle menu style
+        const menuStyle = $('select[name="distm_settings[distm_menu_style]"]').val();
+        $('.preview-frame .tm-fixed-mobile-menu-wrapper')
+            .removeClass('pill rounded flat')
+            .addClass(menuStyle);
+
+        // Handle addon menu style
+        const addonStyle = $('select[name="distm_settings[distm_addon_menu_style]"]').val();
+        $('.preview-frame .tm-addon-menu-wrapper')
+            .removeClass('app-icon icon list')
+            .addClass(addonStyle);
+
+        // Handle addon background color with RGBA conversion
+        const addonBgColor = $('#distm_addon_bg_color').val();
+        if (addonBgColor) {
+            const rgbaColor = hexToRGBA(addonBgColor, 0.6);
+            $('.preview-frame .tm-addon-menu-wrapper').css('background-color', rgbaColor);
+        }
+    }
+
+    // Function to update preview state
+    function updatePreview(selector, cssClass, isEnabled) {
+        const element = $(selector);
+        if (element.length) {
+            element.toggleClass(cssClass, isEnabled);
+            // Force a redraw
+            element[0].offsetHeight;
+        }
+    }
+
+    // Function to set up live preview updates
+    function initStyleUpdates() {
+        // Transparency on scroll toggle
+        $('input[name="distm_settings[distm_enable_transparency]"]').on('change', function() {
+            const isEnabled = $(this).is(':checked');
+            updatePreview('.preview-frame .the-menu', 'tm-scrolling', isEnabled);
+        });
+
+        // Icons only toggle
+        $('#distm_disable_menu_text').on('change', function() {
+            const isEnabled = $(this).is(':checked');
+            console.log('Toggle changed:', isEnabled);
+            updatePreview('.preview-frame .the-menu', 'icon-only', isEnabled);
+        });
+
+        // Menu style updates
+        $('select[name="distm_settings[distm_menu_style]"]').on('change', function() {
+            const menuStyle = $(this).val();
+            const menuWrapper = $('.preview-frame .tm-fixed-mobile-menu-wrapper');
+            menuWrapper.removeClass('pill rounded flat').addClass(menuStyle);
+        });
+
+        // Addon menu style updates
+        $('select[name="distm_settings[distm_addon_menu_style]"]').on('change', function() {
+            const addonStyle = $(this).val();
+            const addonWrapper = $('.preview-frame .tm-addon-menu-wrapper');
+            addonWrapper.removeClass('app-icon icon list').addClass(addonStyle);
+        });
+    }
+
+    // Handle icon type radio selection
+    $('.icon-type-radio').on('change', function() {
+        const container = $(this).closest('.featured-icon-wrapper');
         const uploadSection = container.find('.icon-upload-section');
         const dashiconSection = container.find('.dashicon-selection-section');
         
         if ($(this).val() === 'upload') {
-            uploadSection.slideDown(300);
-            dashiconSection.slideUp(300);
+            uploadSection.show();
+            dashiconSection.hide();
         } else {
-            uploadSection.slideUp(300);
-            dashiconSection.slideDown(300);
+            uploadSection.hide();
+            dashiconSection.show();
         }
     });
 
-    // Media uploader for icons
-    function initializeMediaUploader(buttonSelector) {
-        $(document).on('click', buttonSelector, function(e) {
-            e.preventDefault();
-            
-            const button = $(this);
-            const inputField = button.prev('input');
-            const previewContainer = button.closest('.icon-upload-section').find('.icon-preview');
-            
-            // Create or reuse media frame
-            let custom_uploader = button.data('media-frame');
-            
-            if (!custom_uploader) {
-                custom_uploader = wp.media({
-                    title: 'Select or Upload Icon',
-                    library: { type: ['image', 'image/svg+xml'] },
-                    button: { text: 'Use this icon' },
-                    multiple: false
-                });
+    // Media uploader initialization and handler
+    $('.tm-upload-button').on('click', function(e) {
+        e.preventDefault();
+        
+        if (!customUploader) {
+            customUploader = wp.media({
+                title: 'Select Icon',
+                library: { type: ['image', 'image/svg+xml'] },
+                button: { text: 'Use this icon' },
+                multiple: false
+            });
 
-                // When an image is selected
-                custom_uploader.on('select', function() {
-                    const attachment = custom_uploader.state().get('selection').first().toJSON();
-                    inputField.val(attachment.url);
-                    
-                    // Update preview
+            customUploader.on('select', function() {
+                const attachment = customUploader.state().get('selection').first().toJSON();
+                const container = $('.featured-icon-wrapper');
+                const inputField = container.find('#distm_featured_icon');
+                const previewContainer = container.find('.icon-preview');
+                const featuredIconContainer = $('.preview-frame .tm-featured-icon');
+                
+                inputField.val(attachment.url);
+
+                if (attachment.url.toLowerCase().endsWith('.svg')) {
+                    fetch(attachment.url)
+                        .then(response => response.text())
+                        .then(svgContent => {
+                            previewContainer.html(`<img src="${attachment.url}" style="max-width: 40px; height: auto;">`);
+                            featuredIconContainer.html(svgContent);
+                        })
+                        .catch(() => {
+                            const fallbackIcon = '<span class="dashicons dashicons-menu"></span>';
+                            previewContainer.html(fallbackIcon);
+                            featuredIconContainer.html(fallbackIcon);
+                        });
+                } else {
+                    const imgHtml = `<img src="${attachment.url}" alt="Featured Icon" />`;
                     previewContainer.html(`<img src="${attachment.url}" style="max-width: 40px; height: auto;">`);
+                    featuredIconContainer.html(imgHtml);
+                }
 
-                    // Select upload radio button
-                    button.closest('.field-custom, .featured-icon-wrapper').find('input[value="upload"]').prop('checked', true).trigger('change');
-                });
+                container.find('input[value="upload"]').prop('checked', true).trigger('change');
+            });
+        }
 
-                button.data('media-frame', custom_uploader);
-            }
-
-            custom_uploader.open();
-        });
-    }
-
-    // Dashicon selection for featured icon
-    $(document).on('click', '.dashicon-option', function() {
-        const container = $(this).closest('.featured-icon-wrapper');
-        const selectedIcon = $(this).data('icon');
-        
-        // Update hidden input
-        container.find('.selected-dashicon').val(selectedIcon);
-        
-        // Update visual selection
-        container.find('.dashicon-option').removeClass('selected');
-        $(this).addClass('selected');
-
-        // Select dashicon radio button
-        container.find('input[value="dashicon"]').prop('checked', true).trigger('change');
-
-        // Clear upload preview and input
-        container.find('.icon-preview').empty();
-        container.find('input[name="distm_settings[distm_featured_icon]"]').val('');
-    });
-
-    // Handle form submission
-    $('form').on('submit', function() {
-        $('.featured-icon-wrapper').each(function() {
-            const iconType = $(this).find('.icon-type-radio:checked').val();
-            const dashiconValue = $(this).find('.selected-dashicon').val();
-            
-            // Update the hidden fields
-            $('input[name="distm_settings[distm_featured_icon_type]"]').val(iconType);
-            if (iconType === 'dashicon' && dashiconValue) {
-                $('input[name="distm_settings[distm_featured_dashicon]"]').val(dashiconValue);
-            }
-        });
-    });
-
-    // Initialize media uploader for both menu items and featured icon
-    initializeMediaUploader('.upload-icon-button, .tm-upload-button');
-
-    // Dashicon search functionality
-    $(document).on('input', '.dashicon-search', function() {
-        const searchTerm = $(this).val().toLowerCase();
-        const container = $(this).closest('.field-custom, .featured-icon-wrapper');
-        const icons = container.find('.dashicon-option');
-        
-        icons.each(function() {
-            const iconName = $(this).data('icon').toLowerCase();
-            $(this).toggle(iconName.includes(searchTerm));
-        });
+        customUploader.open();
     });
 
     // Dashicon selection
-    $(document).on('click', '.dashicon-option', function() {
-        const container = $(this).closest('.field-custom, .featured-icon-wrapper');
+    $('.dashicon-grid').on('click', '.dashicon-option', function() {
+        const container = $(this).closest('.featured-icon-wrapper');
         const selectedIcon = $(this).data('icon');
+        const previewContainer = container.find('.icon-preview');
+        const featuredIconContainer = $('.preview-frame .tm-featured-icon');
+        const dashiconHtml = `<span class="dashicons dashicons-${selectedIcon}"></span>`;
         
-        // Update hidden input
-        container.find('.selected-dashicon').val(selectedIcon);
-        
-        // Update visual selection
+        previewContainer.html(dashiconHtml);
         container.find('.dashicon-option').removeClass('selected');
         $(this).addClass('selected');
-
-        // Select dashicon radio button
+        container.find('.selected-dashicon').val(selectedIcon);
+        featuredIconContainer.html(dashiconHtml);
         container.find('input[value="dashicon"]').prop('checked', true).trigger('change');
-
-        // Clear upload preview and input
-        container.find('.icon-preview').empty();
-        container.find('.edit-menu-item-icon, input[name*="distm_featured_icon"]').val('');
     });
 
-    // Ensure form submission includes dashicon values
-    $(document).on('submit', '#update-nav-menu, .tm-wrap form', function() {
-        $('.dashicon-selection-section').each(function() {
-            const selectedIcon = $(this).find('.dashicon-option.selected').data('icon');
-            if (selectedIcon) {
-                $(this).find('.selected-dashicon').val(selectedIcon);
+    // Initialize tabs
+    function initializeTabs() {
+        if ($('.tm-tabs').length === 0) {
+            const $tabContainer = $('<div class="tm-tabs"></div>');
+            const $tabList = $('<div class="tm-tab-list"></div>');
+            
+            $('.settings-section').each(function(index) {
+                $(this).wrap('<div class="tm-tab-content"></div>');
+            });
+            
+            $('.settings-section').each(function(index) {
+                const title = $(this).find('.settings-section-title').text();
+                const tabId = `tm-tab-${index}`;
+                const $tab = $(`<button type="button" class="tm-tab" data-tab="${tabId}">${title}</button>`);
+                
+                $(this).closest('.tm-tab-content').attr('id', tabId);
+                $tabList.append($tab);
+            });
+
+            $tabContainer.append($tabList);
+            $('.settings-wrapper').prepend($tabContainer);
+
+            const savedTab = localStorage.getItem('tmActiveTab');
+            const $tabs = $('.tm-tab');
+            const $contents = $('.tm-tab-content');
+            
+            if (savedTab && $(`#${savedTab}`).length) {
+                $tabs.removeClass('active');
+                $contents.removeClass('active');
+                $(`.tm-tab[data-tab="${savedTab}"]`).addClass('active');
+                $(`#${savedTab}`).addClass('active');
+            } else {
+                $tabs.first().addClass('active');
+                $contents.first().addClass('active');
             }
-        });
-    });
-
-    // Mobile menu functionality
-    const targetElement = document.querySelector('.tm-scrolling');
-
-    function setOpacity(opacity) {
-        if (targetElement) {
-            targetElement.style.opacity = opacity;
         }
     }
 
-    let scrollTimeout = null;
+    // Initialize everything
+    initializeTabs();
+    initializePreviewState();
+    initStyleUpdates();
 
-    if (targetElement) {
-        window.addEventListener('scroll', () => {
-            setOpacity(0.2);
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                setOpacity(1);
-            }, 150);
-        });
-    }
+    // Tab click handler
+    $(document).on('click', '.tm-tab', function(e) {
+        e.preventDefault();
+        const tabId = $(this).data('tab');
+        
+        $('.tm-tab').removeClass('active');
+        $('.tm-tab-content').removeClass('active');
+        $(this).addClass('active');
+        $(`#${tabId}`).addClass('active');
+        
+        localStorage.setItem('tmActiveTab', tabId);
+    });
 
-    // Addon menu toggle
-    const icon = document.querySelector('.tm-featured');
-    const menuPopup = document.querySelector('.tm-addon-menu-wrapper');
-    const featuredBg = document.querySelector('.tm-featured-bg');
+    // Form submission handling
+    $('form').on('submit', function(e) {
+        const form = $(this);
+        
+        // Save active tab
+        const activeTab = $('.tm-tab.active').data('tab');
+        if (activeTab) {
+            localStorage.setItem('tmActiveTab', activeTab);
+        }
 
-    if (icon && menuPopup) {
-        icon.addEventListener('click', function() {
-            const isShown = menuPopup.classList.contains('show');
-            if (!isShown) {
-                menuPopup.classList.add('show');
-                menuPopup.style.display = 'flex';
-                menuPopup.style.animation = 'slideIn 0.5s forwards';
-                icon.classList.add('active');
-                if (featuredBg) featuredBg.classList.add('expanded');
-            } else {
-                menuPopup.style.animation = 'slideOut 0.5s forwards';
-                icon.classList.remove('active');
-                if (featuredBg) featuredBg.classList.remove('expanded');
-                setTimeout(() => {
-                    menuPopup.classList.remove('show');
-                    menuPopup.style.display = 'none';
-                }, 500);
+        // Handle excluded pages
+        const excludedPagesSelect = $('#distm_exclude_pages');
+        if (excludedPagesSelect.length) {
+            const selectedPages = excludedPagesSelect.val() || [];
+            form.find('input[name="distm_settings[distm_exclude_pages][]"]').remove();
+            selectedPages.forEach(function(pageId) {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'distm_settings[distm_exclude_pages][]',
+                    value: pageId
+                }));
+            });
+        }
+
+        // Handle icon settings
+        const iconWrapper = form.find('.featured-icon-wrapper');
+        if (iconWrapper.length) {
+            const iconType = iconWrapper.find('.icon-type-radio:checked').val();
+            const dashiconValue = iconWrapper.find('.selected-dashicon').val();
+
+            form.find('input[name="distm_settings[distm_featured_icon_type]"]').remove();
+            form.find('input[name="distm_settings[distm_featured_dashicon]"]').remove();
+
+            form.append($('<input>', {
+                type: 'hidden',
+                name: 'distm_settings[distm_featured_icon_type]',
+                value: iconType || 'dashicon'
+            }));
+
+            if (iconType === 'dashicon' && dashiconValue) {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'distm_settings[distm_featured_dashicon]',
+                    value: dashiconValue
+                }));
             }
-        });
+        }
 
-        // Close menu when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!icon.contains(event.target) && !menuPopup.contains(event.target) && menuPopup.classList.contains('show')) {
-                menuPopup.style.animation = 'slideOut 0.5s forwards';
-                icon.classList.remove('active');
-                if (featuredBg) featuredBg.classList.remove('expanded');
-                setTimeout(() => {
-                    menuPopup.classList.remove('show');
-                    menuPopup.style.display = 'none';
-                }, 500);
+        // Handle unchecked checkboxes
+        form.find('input[type="checkbox"]').each(function() {
+            if (!$(this).is(':checked')) {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: $(this).attr('name'),
+                    value: '0'
+                }));
             }
-        });
-    }
-
-    // Page loader
-    const links = document.querySelectorAll('.the-menu a');
-    links.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href === '#') {
-                e.preventDefault();
-                return;
-            }
-
-            var pageLoader = document.getElementById('tm-pageLoader');
-            if (pageLoader) {
-                pageLoader.style.display = 'block';
-                setTimeout(function() {
-                    window.location.href = href;
-                }, 100);
-            }
-            e.preventDefault();
         });
     });
 
-    // Add styles for the dashicon grid
-    $('<style>')
-        .prop('type', 'text/css')
-        .html(`
-            .dashicon-option {
-                padding: 10px;
-                font-size: 20px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                display: inline-block;
-            }
-            .dashicon-option:hover {
-                background: #f0f0f0;
-                transform: scale(1.2);
-                border-radius: 10px;
-            }
-            .dashicon-option.selected {
-                background: var(--tm-secondary-color, #2271b1);
-                color: white;
-                border-radius: 10px;
-            }
-            .icon-type-label {
-                display: inline-block;
-                margin-right: 15px;
-            }
-            .dashicon-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-                gap: 5px;
-                padding: 10px;
-                border-radius: 10px;
-            }
-            .dashicon-selection-section {
-                background: #fff;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 15px;
-            }
-            .icon-preview {
-                margin: 5px 0;
-                min-height: 40px;
-            }
-            .dashicon-separator {
-                grid-column: 1/-1;
-                border-bottom: 1px solid #ddd;
-                margin: 10px 0;
-            }
-        `)
-        .appendTo('head');
+    // Handle settings notices
+    if ($('.settings-error').length) {
+        $('.settings-error').insertBefore('.tm-tabs');
+    }
 });

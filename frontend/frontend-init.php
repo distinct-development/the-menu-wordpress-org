@@ -5,8 +5,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // Enqueue the plugin styles
 function distm_enqueue_frontend_scripts() {
     $options = get_option('distm_settings', array());
-    $excluded_pages = isset($options['distm_exclude_pages']) ? array_map('absint', (array)$options['distm_exclude_pages']) : array();
-
+    
+    // Filter out any 0 values from excluded pages and ensure we have valid page IDs
+    $excluded_pages = isset($options['distm_exclude_pages']) ? 
+        array_filter(array_map('absint', (array)$options['distm_exclude_pages'])) : 
+        array();
+    
     // Default values
     $defaults = array(
         'distm_background_color' => '#333333',
@@ -19,7 +23,7 @@ function distm_enqueue_frontend_scripts() {
         'distm_addon_icon_color' => '#FFFFFF',
         'distm_addon_icon_bg' => '#446084'
     );
-
+    
     // Helper function to validate and get color value
     function get_valid_color($color_value, $default_color) {
         if (empty($color_value) || $color_value === 'null' || !preg_match('/^#[a-f0-9]{6}$/i', $color_value)) {
@@ -27,55 +31,52 @@ function distm_enqueue_frontend_scripts() {
         }
         return $color_value;
     }
-
-    // Merge options with defaults
+    
     $options = wp_parse_args($options, $defaults);
-
-    // Validate each color value against defaults
+    
     foreach ($defaults as $key => $default_value) {
         if (strpos($key, 'color') !== false || strpos($key, 'bg') !== false) {
             $options[$key] = get_valid_color($options[$key], $default_value);
         }
     }
-
+    
     if (!is_admin()) {
         $current_page_id = get_queried_object_id();
-        if (!in_array($current_page_id, $excluded_pages)) {
+        
+        // Only check exclusion if we have valid excluded pages and a valid current page ID
+        $is_excluded = !empty($excluded_pages) && 
+                      $current_page_id > 0 && 
+                      in_array($current_page_id, $excluded_pages);
+        
+        
+        if (!$is_excluded) {
             $mobile_menu_enabled = !empty($options['distm_enable_mobile_menu']);
             $only_on_mobile = !empty($options['distm_only_on_mobile']);
-
             $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
-
+            
             if ($should_load) {
-                // First enqueue the base stylesheet
-                wp_enqueue_style('distm-style', plugins_url('css/style.css', __FILE__), array(), '1.0.4', 'all');
+                wp_enqueue_style('distm-style', plugins_url('frontend/css/style.css', dirname(__FILE__)), array(), '1.0.7', 'all');
                 
-                // Create custom CSS with validated colors
                 $custom_css = "
-                :root {
-                    --distm-background-color: " . esc_attr($options['distm_background_color']) . ";
-                    --distm-icon-color: " . esc_attr($options['distm_icon_color']) . ";
-                    --distm-label-color: " . esc_attr($options['distm_label_color']) . ";
-                    --distm-featured-background-color: " . esc_attr($options['distm_featured_background_color']) . ";
-                    --distm-featured-icon-color: " . esc_attr($options['distm_featured_icon_color']) . ";
-                    --distm-addon-bg-color: " . esc_attr(distm_hex_to_rgba($options['distm_addon_bg_color'], '0.6')) . ";
-                    --distm-addon-label-color: " . esc_attr($options['distm_addon_label_color']) . ";
-                    --distm-addon-icon-color: " . esc_attr($options['distm_addon_icon_color']) . ";
-                    --distm-addon-icon-bg: " . esc_attr($options['distm_addon_icon_bg']) . ";
-                }
-                #tm-pageLoader .custom-loader { 
-                    background-color: " . esc_attr($options['distm_featured_background_color']) . "; 
-                }  
+                    :root {
+                        --distm-background-color: " . esc_attr($options['distm_background_color']) . ";
+                        --distm-icon-color: " . esc_attr($options['distm_icon_color']) . ";
+                        --distm-label-color: " . esc_attr($options['distm_label_color']) . ";
+                        --distm-featured-background-color: " . esc_attr($options['distm_featured_background_color']) . ";
+                        --distm-featured-icon-color: " . esc_attr($options['distm_featured_icon_color']) . ";
+                        --distm-addon-bg-color: " . esc_attr(distm_hex_to_rgba($options['distm_addon_bg_color'], '0.6')) . ";
+                        --distm-addon-label-color: " . esc_attr($options['distm_addon_label_color']) . ";
+                        --distm-addon-icon-color: " . esc_attr($options['distm_addon_icon_color']) . ";
+                        --distm-addon-icon-bg: " . esc_attr($options['distm_addon_icon_bg']) . ";
+                    }
                 ";
-
-                // Add the custom CSS after the main stylesheet
+                
                 wp_add_inline_style('distm-style', $custom_css);
-
-                // Enqueue the script
-                wp_enqueue_script('distm-frontend', plugins_url('js/script.js', __FILE__), array('jquery'), '1.0.4', true);
+                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), '1.0.7', true);
+                wp_enqueue_style('dashicons');
             }
-        }
-    }
+        } 
+    } 
 }
 add_action('wp_enqueue_scripts', 'distm_enqueue_frontend_scripts', 100);
 
@@ -158,38 +159,7 @@ function distm_add_fixed_menu() {
     // Get default icon URL for fallback only when needed
     $default_icon_url = esc_url(plugin_dir_url(dirname(__FILE__)) . 'admin/assets/menu-logo.svg');
 
-    // Then in the display logic section:
-    if ($icon_type === 'dashicon') {
-        printf(
-            '<span class="dashicons dashicons-%s"></span>',
-            esc_attr($dashicon)
-        );
-    } elseif ($icon_type === 'upload' && !empty($icon_url)) {
-        if (substr($icon_url, -4) === '.svg') {
-            $svg_content = distm_get_svg_content($icon_url);
-            if ($svg_content !== false) {
-                echo wp_kses($svg_content, distm_get_allowed_svg_tags());
-            } else {
-                // Only use default if SVG content is invalid
-                $default_svg_content = distm_get_svg_content($default_icon_url);
-                if ($default_svg_content !== false) {
-                    echo wp_kses($default_svg_content, distm_get_allowed_svg_tags());
-                }
-            }
-        } else {
-            printf(
-                '<img src="%s" alt="%s" />',
-                esc_url($icon_url),
-                esc_attr__('Featured Icon', 'the-menu')
-            );
-        }
-    } else {
-        // Only use default SVG as last resort
-        $default_svg_content = distm_get_svg_content($default_icon_url);
-        if ($default_svg_content !== false) {
-            echo wp_kses($default_svg_content, distm_get_allowed_svg_tags());
-        }
-    }
+    
     // Set link URL based on addon menu setting
     $link_url = !empty($options['distm_enable_addon_menu']) ? '#' : esc_url(home_url('/'));
 
@@ -266,54 +236,15 @@ function distm_add_fixed_menu() {
                             if (substr($icon_url, -4) === '.svg') {
                                 $svg_content = distm_get_svg_content($icon_url);
                                 if ($svg_content !== false) {
-                                    echo wp_kses(
-                                        $svg_content,
-                                        array_merge(
-                                            wp_kses_allowed_html('post'),
-                                            array(
-                                                'svg' => array(
-                                                    'xmlns' => true,
-                                                    'viewbox' => true,
-                                                    'width' => true,
-                                                    'height' => true,
-                                                    'preserveaspectratio' => true,
-                                                    'class' => true
-                                                ),
-                                                'path' => array(
-                                                    'd' => true,
-                                                    'fill' => true,
-                                                    'stroke' => true,
-                                                    'stroke-width' => true
-                                                )
-                                            )
-                                        )
-                                    );
+                                    // Add viewBox attribute if missing
+                                    if (strpos($svg_content, 'viewBox') === false) {
+                                        $svg_content = str_replace('<svg', '<svg viewBox="0 0 40 40"', $svg_content);
+                                    }
+                                    echo wp_kses($svg_content, distm_get_allowed_svg_tags());
                                 } else {
-                                    // Fallback to default if SVG content is invalid
                                     $default_svg_content = distm_get_svg_content($default_icon_url);
                                     if ($default_svg_content !== false) {
-                                        echo wp_kses(
-                                            $default_svg_content,
-                                            array_merge(
-                                                wp_kses_allowed_html('post'),
-                                                array(
-                                                    'svg' => array(
-                                                        'xmlns' => true,
-                                                        'viewbox' => true,
-                                                        'width' => true,
-                                                        'height' => true,
-                                                        'preserveaspectratio' => true,
-                                                        'class' => true
-                                                    ),
-                                                    'path' => array(
-                                                        'd' => true,
-                                                        'fill' => true,
-                                                        'stroke' => true,
-                                                        'stroke-width' => true
-                                                    )
-                                                )
-                                            )
-                                        );
+                                        echo wp_kses($default_svg_content, distm_get_allowed_svg_tags());
                                     }
                                 }
                             } else {
@@ -324,31 +255,10 @@ function distm_add_fixed_menu() {
                                 );
                             }
                         } else {
-                            // Default fallback
+                            // Use default SVG
                             $default_svg_content = distm_get_svg_content($default_icon_url);
                             if ($default_svg_content !== false) {
-                                echo wp_kses(
-                                    $default_svg_content,
-                                    array_merge(
-                                        wp_kses_allowed_html('post'),
-                                        array(
-                                            'svg' => array(
-                                                'xmlns' => true,
-                                                'viewbox' => true,
-                                                'width' => true,
-                                                'height' => true,
-                                                'preserveaspectratio' => true,
-                                                'class' => true
-                                            ),
-                                            'path' => array(
-                                                'd' => true,
-                                                'fill' => true,
-                                                'stroke' => true,
-                                                'stroke-width' => true
-                                            )
-                                        )
-                                    )
-                                );
+                                echo wp_kses($default_svg_content, distm_get_allowed_svg_tags());
                             }
                         }
                         ?>
@@ -359,6 +269,7 @@ function distm_add_fixed_menu() {
                 </div>
             </a>
         </div>
+    </div>
     </div>
     <?php
 }
@@ -375,30 +286,35 @@ function distm_get_allowed_svg_tags() {
             'preserveaspectratio' => true,
             'class' => true,
             'version' => true,
+            'transform' => true
         ),
         'path' => array(
             'd' => true,
             'fill' => true,
             'stroke' => true,
-            'stroke-width' => true
+            'stroke-width' => true,
+            'transform' => true
         ),
         'circle' => array(
             'cx' => true,
             'cy' => true,
             'r' => true,
-            'fill' => true
+            'fill' => true,
+            'transform' => true
         ),
         'rect' => array(
             'x' => true,
             'y' => true,
             'width' => true,
             'height' => true,
-            'fill' => true
+            'fill' => true,
+            'transform' => true
         ),
         'g' => array(
             'fill' => true,
             'transform' => true,
-            'stroke' => true
+            'stroke' => true,
+            'transform' => true
         ),
         'title' => array('title' => true),
         'desc' => array(),
@@ -424,16 +340,19 @@ function distm_sanitize_svg_content($svg_content) {
             'viewBox' => true,
             'preserveAspectRatio' => true,
             'version' => true,
+            'transform' => true // Add transform attribute
         ),
         'path' => array(
             'd' => true,
             'fill' => true,
+            'transform' => true // Add transform attribute
         ),
         'circle' => array(
             'cx' => true,
             'cy' => true,
             'r' => true,
             'fill' => true,
+            'transform' => true // Add transform attribute
         ),
         'rect' => array(
             'x' => true,
@@ -441,6 +360,7 @@ function distm_sanitize_svg_content($svg_content) {
             'width' => true,
             'height' => true,
             'fill' => true,
+            'transform' => true // Add transform attribute
         ),
     );
     
