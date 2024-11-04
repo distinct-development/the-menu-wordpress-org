@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 function distm_add_help_submenu() {
     add_submenu_page(

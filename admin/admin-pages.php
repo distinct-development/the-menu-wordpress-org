@@ -145,7 +145,7 @@ function distm_the_menu_page() {
                                 }
                                 $class_string = implode(' ', array_map('esc_attr', $field_classes));
                                 ?>
-                                <div class="<?php echo $class_string; ?>">
+                                <div class="<?php echo esc_html($class_string); ?>">
                                     <label class="setting-label" for="<?php echo esc_attr($field['id']); ?>">
                                         <?php echo esc_html($field['title']); ?>
                                     </label>

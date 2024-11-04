@@ -155,6 +155,14 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.11 - 01/11/2024
+
+- New live preview system with real-time updates for all styling changes
+- New tab-based settings organization for better UX
+- SVG sanitization and security improvements
+- Fixed icon sizing inconsistencies
+- New WordPress Walker class for preview functionality
+
 ### 1.2.10 - 29/10/2024
 
 - [HOTFIX] Dashicon and menu styling was a little off on some sites

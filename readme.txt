@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.10
+Stable tag: 1.2.11
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -156,6 +156,14 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.11 - 01/11/2024 =
+
+- New live preview system with real-time updates for all styling changes
+- New tab-based settings organization for better UX
+- SVG sanitization and security improvements
+- Fixed icon sizing inconsistencies
+- New WordPress Walker class for preview functionality
 
 = 1.2.10 - 29/10/2024 =
 

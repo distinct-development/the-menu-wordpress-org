@@ -1,5 +1,4 @@
 <?php
-
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 function distm_check_required_files() {
@@ -41,34 +40,74 @@ function distm_check_required_files() {
     }
 }
 
-// Enqueue the plugin styles
+// Enqueue the plugin styles and scripts
 function distm_enqueue_admin_scripts($hook_suffix) {
+    // Get plugin version for cache busting
+    $plugin_version = get_plugin_data(__DIR__ . '/../the-menu.php')['Version'];
+    
     if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'the-menu_page_distm-help') {
         wp_enqueue_media();
         wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('distm-admin-script', plugin_dir_url(__FILE__) . 'js/script.js', array('jquery', 'wp-color-picker'), '1.0.8', true);
+        wp_enqueue_script(
+            'distm-admin-script', 
+            plugin_dir_url(__FILE__) . 'js/script.js', 
+            array('jquery', 'wp-color-picker'), 
+            $plugin_version, 
+            true // Load in footer
+        );
         
         if (is_admin()) {
             // Add these lines to load frontend styles for the preview
             if ($hook_suffix == 'toplevel_page_the-menu') {
-                wp_enqueue_style('distm-frontend-style', plugin_dir_url(dirname(__FILE__)) . 'frontend/css/style.css', array(), '1.0.7');
-                wp_enqueue_script('distm-frontend-script', plugin_dir_url(dirname(__FILE__)) . 'frontend/js/script.js', array(), '1.0.7');
+                wp_enqueue_style(
+                    'distm-frontend-style', 
+                    plugin_dir_url(dirname(__FILE__)) . 'frontend/css/style.css', 
+                    array(), 
+                    $plugin_version
+                );
+                wp_enqueue_script(
+                    'distm-frontend-script', 
+                    plugin_dir_url(dirname(__FILE__)) . 'frontend/js/script.js', 
+                    array('jquery'), 
+                    $plugin_version, 
+                    true // Load in footer
+                );
                 wp_enqueue_style('dashicons');
             }
         }
     }
+
     if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'the-menu_page_distm-help') {
-        wp_enqueue_style('distm-admin-style', plugin_dir_url(__FILE__) . 'css/style.css', array(), '1.0.8');
+        wp_enqueue_style(
+            'distm-admin-style', 
+            plugin_dir_url(__FILE__) . 'css/style.css', 
+            array(), 
+            $plugin_version
+        );
     }
+
     if ($hook_suffix == 'nav-menus.php') {
         wp_enqueue_media();
-        wp_enqueue_script('distm-wp-menus', plugin_dir_url(__FILE__) . 'js/wp-menu.js', array(), '1.0.8');
+        wp_enqueue_script(
+            'distm-wp-menus', 
+            plugin_dir_url(__FILE__) . 'js/wp-menu.js', 
+            array('jquery'), 
+            $plugin_version, 
+            true // Load in footer
+        );
     }
+
     if ($hook_suffix !== 'toplevel_page_the-menu') return;
 
     wp_enqueue_style('wp-color-picker');
     wp_enqueue_script('wp-color-picker');
-    wp_enqueue_script('iris', admin_url('js/iris.min.js'), array('jquery-ui-draggable', 'jquery-ui-slider', 'jquery-touch-punch'), false, 1);
+    wp_enqueue_script(
+        'iris', 
+        admin_url('js/iris.min.js'), 
+        array('jquery-ui-draggable', 'jquery-ui-slider', 'jquery-touch-punch'), 
+        $plugin_version, 
+        true // Load in footer
+    );
     
     // Make sure jQuery UI and Touch Punch are loaded
     wp_enqueue_script('jquery-ui-core');

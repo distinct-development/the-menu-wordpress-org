@@ -772,6 +772,96 @@ input[type=checkbox]:checked, input[type=radio]:checked{
     }
 }
 
+.preview-item-add {
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.preview-item-add:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.1);
+}
+
+.preview-item-add .dashicons {
+    color: var(--distm-addon-icon-color, #fff);
+    font-size: 35px;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-menu-item-default {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tm-menu-item-default a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--distm-label-color);
+    padding: 10px 0;
+    width: 100%;
+}
+
+.tm-menu-item-default .tm-menu-item-title {
+    margin-top: 5px;
+}
+.tm-menu-item-add {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.tm-menu-item-add:hover {
+    opacity: 1;
+}
+
+.tm-menu-item-add .preview-item {
+    padding: 10px 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: var(--distm-label-color);
+}
+
+
+.menu-exists-but-empty .tm-menu-item-default .tm-menu-item-title {
+    color: var(--distm-label-color);
+    opacity: 0.8;
+}
+
+/* Style differences for empty menu vs no menu */
+.tm-menu-item-default .preview-item-add, .tm-menu-item-add .preview-item-add {
+    border: 2px dashed var(--distm-icon-color);
+    border-radius: 8px;
+    padding: 8px 16px;
+    opacity: 0.7;
+}
+
+.tm-menu-item-default .preview-item-add:hover {
+    opacity: 1;
+    background: rgba(255,255,255,0.1);
+}
+
+.tm-menu-item-add .preview-item-add {
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    margin: 4px;
+}
+
+.tm-menu-item-add .preview-item-add:hover {
+    background: rgba(255,255,255,0.2);
+}
+
 /*PAGE EXCLUSIONS*/
 .page-exclusion-grid {
     display: grid;
