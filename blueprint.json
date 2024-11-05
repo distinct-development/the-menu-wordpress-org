@@ -28,13 +28,6 @@
             }
         },
         {
-            "step": "importWxr",
-            "file": {
-                "resource": "url",
-                "url": "https://raw.githubusercontent.com/distinct-development/the-menu-wordpress-org/refs/heads/main/blueprint-content.xml"
-            }
-        },
-        {
             "step": "setSiteOptions",
             "options": {
                 "blogname": "The Menu: Demo",
