@@ -44,6 +44,24 @@
                 "template": "twentytwentyfour",
                 "stylesheet": "twentytwentyfour"
             }
+        },
+        {
+            "step": "runPHP",
+            "code": "<?php require_once 'wordpress/wp-load.php'; update_option( 'distm_settings', maybe_unserialize( 'a:22:{s:24:\"distm_enable_mobile_menu\";b:1;s:16:\"distm_menu_style\";s:4:\"pill\";s:22:\"distm_background_color\";s:7:\"#f4a338\";s:16:\"distm_icon_color\";s:7:\"#ffffff\";s:17:\"distm_label_color\";s:7:\"#FFFFFF\";s:31:\"distm_featured_background_color\";s:7:\"#e55420\";s:25:\"distm_featured_icon_color\";s:7:\"#FFFFFF\";s:19:\"distm_featured_icon\";s:70:\"http://the-menu-preview.local/wp-content/uploads/2024/11/menu-logo.svg\";s:22:\"distm_addon_menu_style\";s:8:\"app-icon\";s:20:\"distm_addon_bg_color\";s:7:\"#000000\";s:23:\"distm_addon_label_color\";s:7:\"#FFFFFF\";s:19:\"distm_addon_icon_bg\";s:7:\"#f4a338\";s:22:\"distm_addon_icon_color\";s:7:\"#FFFFFF\";s:25:\"distm_enable_transparency\";b:0;s:29:\"distm_enable_loader_animation\";b:0;s:23:\"distm_enable_addon_menu\";b:1;s:23:\"distm_disable_menu_text\";b:0;s:20:\"distm_only_on_mobile\";b:0;s:17:\"distm_delete_data\";b:1;s:19:\"distm_exclude_pages\";a:1:{i:0;i:0;}s:24:\"distm_featured_icon_type\";s:6:\"upload\";s:23:\"distm_featured_dashicon\";s:6:\"carrot\";}' ) ); ?>"
+        },
+        {
+            "step": "runPHP",
+            "code": "<?php require_once 'wordpress/wp-load.php'; $locations = array(); $locations['menu_1'] = 2; set_theme_mod( 'nav_menu_locations', $locations ); ?>"
+        },
+        {
+            "step": "runPHP",
+            "code": "<?php require_once 'wordpress/wp-load.php'; update_option( 'nav_menu_options', maybe_unserialize( 'a:1:{s:8:\"auto_add\";a:0:{}}' ) ); ?>"
+        },
+        {
+            "step": "setSiteOptions",
+            "options": {
+                "theme_mods_twentytwentyfour": "a:2:{s:18:\"custom_css_post_id\";i:-1;s:18:\"nav_menu_locations\";a:3:{s:9:\"left-menu\";i:4;s:10:\"right-menu\";i:5;s:10:\"addon-menu\";i:6;}}"
+            }
         }
     ]
 }
