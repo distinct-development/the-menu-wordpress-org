@@ -52,7 +52,6 @@ The Menu offers extensive customisation options to match your brand:
 
 - Custom colours for icons and backgrounds
 - Multiple menu styles and layouts
-- Flexible positioning options
 - Icon-only or icon-with-text display
 - Transparent scroll effects
 - Custom icon uploads
@@ -142,7 +141,6 @@ Yes, you have complete control over:
 Yes, The Menu is optimised for touch devices with:
 
 - Smooth touch interactions
-- Swipe support
 - Touch-friendly hit areas
 - Mobile-optimised animations
 
