@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.6.2
-Stable tag: 1.2.11
+Stable tag: 1.2.12
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -154,6 +154,13 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.12 - 08/11/2024 =
+
+- Enhancements for first time users looking at the live preview
+- You can now click menu locations to create menus for that location
+- In the preview clicking an item will link correct menu for the user to edit it
+- Tweaks and enhancements to flex on the addon-menu to make it a bit mor asthetically pleasing
 
 = 1.2.11 - 01/11/2024 =
 

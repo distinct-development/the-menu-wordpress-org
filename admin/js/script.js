@@ -311,3 +311,27 @@ jQuery(document).ready(function($) {
         $('.settings-error').insertBefore('.tm-tabs');
     }
 });
+
+function verifyLicense(licenseKey) {
+    jQuery.ajax({
+        url: distmAjax.ajaxurl,
+        type: 'POST',
+        data: {
+            action: 'distm_verify_license',
+            nonce: distmAjax.nonce,
+            license_key: licenseKey
+        },
+        success: function(response) {
+            if (response.success) {
+                updateLicenseStatus(true);
+            } else {
+                updateLicenseStatus(false);
+                console.error('License verification failed:', response.data);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('License verification error:', error);
+            updateLicenseStatus(false);
+        }
+    });
+}

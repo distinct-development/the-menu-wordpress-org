@@ -153,6 +153,13 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.12 - 08/11/2024
+
+- Enhancements for first time users looking at the live preview
+- You can now click menu locations to create menus for that location
+- In the preview clicking an item will link correct menu for the user to edit it
+- Tweaks and enhancements to flex on the addon-menu to make it a bit mor asthetically pleasing
+
 ### 1.2.11 - 01/11/2024
 
 - New live preview system with real-time updates for all styling changes

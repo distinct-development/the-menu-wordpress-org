@@ -320,6 +320,10 @@ function distm_get_settings() {
 
 // Add the page exclusion settings
 function distm_pages_field_callback($args) {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'the-menu'));
+    }
+
     $options = get_option('distm_settings');
     $selected_pages = isset($options['distm_exclude_pages']) ? (array)$options['distm_exclude_pages'] : array();
 

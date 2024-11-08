@@ -55,7 +55,7 @@ function distm_enqueue_frontend_scripts() {
             $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
             
             if ($should_load) {
-                wp_enqueue_style('distm-style', plugins_url('frontend/css/style.css', dirname(__FILE__)), array(), '1.0.7', 'all');
+                wp_enqueue_style('distm-style', plugins_url('frontend/css/style.css', dirname(__FILE__)), array(), '1.0.8', 'all');
                 
                 $custom_css = "
                     :root {
@@ -68,11 +68,14 @@ function distm_enqueue_frontend_scripts() {
                         --distm-addon-label-color: " . esc_attr($options['distm_addon_label_color']) . ";
                         --distm-addon-icon-color: " . esc_attr($options['distm_addon_icon_color']) . ";
                         --distm-addon-icon-bg: " . esc_attr($options['distm_addon_icon_bg']) . ";
+                }
+                #tm-pageLoader .custom-loader { 
+                    background-color: " . esc_attr($options['distm_featured_background_color']) . "; 
                     }
                 ";
                 
                 wp_add_inline_style('distm-style', $custom_css);
-                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), '1.0.7', true);
+                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), '1.0.8', true);
                 wp_enqueue_style('dashicons');
             }
         } 

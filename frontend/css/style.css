@@ -120,6 +120,7 @@ body{
 #tm-fixed-mobile-menu .menu img, #tm-fixed-mobile-menu .menu svg{
     height: 25px;
     object-fit: contain;
+    margin: 0 auto;
 }
 
 #tm-fixed-mobile-menu .menu svg :is(path,rect,circle,ellipse,polygon,polyline,line){
@@ -191,6 +192,7 @@ body{
     transition-duration: .3s;
     max-height: 70px;
     height: 100%;
+    gap: 5px;
 }
 
 #tm-fixed-mobile-menu a:hover{
@@ -223,18 +225,25 @@ body{
     transform: scale(1); /* Scale up when active */
     opacity: 1;
 }
+#tm-addon-menu{
+    display: flex;
+    align-items: center;
+    width:100%;
+    
+    height: 100vh;
+    overflow-y: scroll;
+}
 
 #tm-addon-menu ul{
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: start!important;
-    width:90%;
+    width: 90%;
     column-gap: 5%;
-    row-gap: 0px;
-    height: calc(100vh - 300px);
-    overflow-y: scroll;
-    padding: 20% 5% 150px!important;
+    row-gap: 20px;
+    padding-left: 0;
+    padding: 70px 5% 150px!important;
+    height: auto;
 }
 .list #tm-addon-menu ul{
     width:100%;
@@ -347,7 +356,7 @@ body{
     justify-content: space-around;
     align-items: center;
     margin: 0;
-    width: 90%;
+    width: 100%;
 
 }
 .list #tm-addon-menu li:last-of-type{
@@ -360,13 +369,22 @@ body{
     text-align: center;
     font-size: 1em;
     height: 50px;
-    width: 80%!important;
+    width: 100%;
+    position: relative;
 }
 .list #tm-addon-menu li a:hover{
     background: var(--distm-featured-background-color);
 }
 .list #tm-addon-menu li a img, .list #tm-addon-menu li a svg, .list #tm-addon-menu li a .dashicons{
     display: none!important;
+    /* background: transparent;
+    position: absolute;
+    top: 7px;
+    left: 0;
+    width: 35px!important;
+    height: 35px!important;
+    padding: 0!important;
+    font-size: 35px!important; */
 }
 .list #tm-addon-menu li .tm-menu-item-title{
     margin-top: 0!important;
@@ -395,7 +413,6 @@ body{
         font-size: 1em;
     }
 }
-
 
 /*FEATURED ICON*/
 .tm-featured svg :is(path,rect,circle,ellipse,polygon,polyline,line){
@@ -577,11 +594,7 @@ body{
 /* Page loader */
 
 /* Dasicons*/
-#tm-fixed-mobile-menu a {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+
 
 #tm-fixed-mobile-menu .dashicons {
     width: 25px;
@@ -591,6 +604,7 @@ body{
     align-items: center;
     justify-content: center;
     color: var(--distm-icon-color);
+    margin: 0 auto;
 }
 
 #tm-fixed-mobile-menu img.tm-menu-icon,

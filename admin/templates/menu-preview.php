@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <div class="preview-frame">
         <div class="preview-content">
             <iframe src="<?php echo esc_url(home_url('/')); ?>"
-                style="width: 100%; height: 100%; border: none; transform: scale(1); transform-origin: 0 0;"></iframe>
+                style="width: 100%; height: 100%; border: none; transform: scale(1); transform-origin: 0 0;" loading="lazy"></iframe>
             <div
                 class="the-menu <?php echo esc_attr(get_option('distm_settings')['distm_disable_menu_text'] ? 'icon-only' : ''); ?>">
                 <div
@@ -17,10 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                             <?php 
                                 wp_nav_menu(array(
                                     'theme_location' => 'left-menu',
-                                    'walker' => new DISTM_Preview_Walker(),
+                                    'walker' => new DISTM_Preview_Walker('left-menu'),
                                     'container' => false,
                                     'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>',
-                                    'fallback_cb' => 'distm_preview_menu_fallback'
+                                    'fallback_cb' => 'distm_preview_menu_fallback',
+                                    'fallback_args' => array(
+                                        'theme_location' => 'left-menu'
+                                    )
                                 ));
                                 ?>
                         </div>
@@ -36,11 +39,15 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                             <?php 
                                 wp_nav_menu(array(
                                     'theme_location' => 'right-menu',
-                                    'walker' => new DISTM_Preview_Walker(),
+                                    'walker' => new DISTM_Preview_Walker('right-menu'),
                                     'container' => false,
                                     'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>',
-                                    'fallback_cb' => 'distm_preview_menu_fallback'
+                                    'fallback_cb' => 'distm_preview_menu_fallback',
+                                    'fallback_args' => array(
+                                        'theme_location' => 'right-menu'
+                                    )
                                 ));
+                                
                                 ?>
                         </div>
                     </div>
@@ -57,8 +64,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                                 'walker' => new DISTM_Preview_Walker(),
                                 'container' => false,
                                 'items_wrap' => '<ul id="%1$s" class="%2$s">%3$s</ul>',
-                                'fallback_cb' => 'distm_preview_menu_fallback'
+                                'fallback_cb' => 'distm_preview_menu_fallback',
+                                'fallback_args' => array(
+                                    'theme_location' => 'addon-menu'
+                                )
                             ));
+                            
                             ?>
                     </div>
                 </div>
@@ -238,13 +249,31 @@ document.addEventListener('DOMContentLoaded', function() {
     initFeaturedIcon();
     initStyleUpdates();
 });
+
 </script>
 <?php
 class DISTM_Preview_Walker extends Walker_Nav_Menu {
     private $has_items = false;
+    private $menu_id = null;
+    private $location = '';
+
+    function __construct($location = '') {
+        $this->location = $location;
+    }
+
+    function start_lvl(&$output, $depth = 0, $args = null) {
+        if ($this->menu_id === null && isset($args->menu)) {
+            $this->menu_id = $args->menu->term_id;
+        }
+        parent::start_lvl($output, $depth, $args);
+    }
 
     function start_el(&$output, $item, $depth=0, $args=null, $id=0) {
         $this->has_items = true;
+        
+        if ($this->menu_id === null && isset($args->menu)) {
+            $this->menu_id = $args->menu->term_id;
+        }
         
         // Get icon settings with validation
         $icon_type = get_post_meta($item->ID, '_menu_item_icon_type', true);
@@ -259,7 +288,16 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
         
         $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
         $title = apply_filters('the_title', $item->title, $item->ID);
-        $edit_url = admin_url('nav-menus.php');
+        
+        // Create edit URL with menu ID
+        $edit_url = add_query_arg(
+            array(
+                'action' => 'edit',
+                'menu' => absint($this->menu_id),
+                'location' => $this->location
+            ),
+            admin_url('nav-menus.php')
+        );
         
         $icon_html = '';
 
@@ -294,7 +332,6 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
         $output .= '<li class="tm-menu-item-' . esc_attr($item->ID) . '">';
         $output .= '<a href="' . esc_url($edit_url) . '" class="preview-item" target="_blank">' . $icon_html;
         
-        // Get the 'don't display menu text' setting
         $options = get_option('distm_settings');
         $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
 
@@ -308,9 +345,26 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
     function walk($elements, $max_depth, ...$args) {
         $output = parent::walk($elements, $max_depth, ...$args);
         
-        // If no items were processed, add the "Add Item" button
+        // If menu exists but has no items
         if (!$this->has_items) {
-            $edit_url = admin_url('nav-menus.php');
+            $menu_args = $args[0] ?? null;
+            
+            $menu_id = 0;
+            if (isset($menu_args->menu) && is_object($menu_args->menu)) {
+                $menu_id = $menu_args->menu->term_id;
+            }
+    
+            $create_params = array(
+                'action' => 'edit',
+                'menu' => absint($menu_id),
+            );
+    
+            if (empty($menu_id) && !empty($this->location)) {
+                $create_params['location'] = $this->location;
+            }
+    
+            $edit_url = add_query_arg($create_params, admin_url('nav-menus.php'));
+            
             $options = get_option('distm_settings');
             $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
             
@@ -319,7 +373,8 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
             $output .= '<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>';
             
             if (!$hide_text) {
-                $output .= '<span class="tm-menu-item-title">' . esc_html__('Add Item', 'the-menu') . '</span>';
+                $message = __('Add Item', 'the-menu');
+                $output .= '<span class="tm-menu-item-title">' . esc_html($message) . '</span>';
             }
             
             $output .= '</a></li>';
@@ -331,12 +386,37 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
 
 // Custom fallback function for when no menu exists
 function distm_preview_menu_fallback($args) {
-    $edit_url = admin_url('nav-menus.php');
+    $menu_id = 0;
+    
+    $theme_location = '';
+    if (isset($args['fallback_args']) && isset($args['fallback_args']['theme_location'])) {
+        $theme_location = $args['fallback_args']['theme_location'];
+    } elseif (isset($args['theme_location'])) {
+        $theme_location = $args['theme_location'];
+    }
+    
+    $create_params = array(
+        'action' => 'edit',
+        'menu' => 0
+    );
+
+    $location_map = array(
+        'left-menu' => 'locations-left-menu',
+        'right-menu' => 'locations-right-menu',
+        'addon-menu' => 'locations-addon-menu'
+    );
+
+    if (!empty($theme_location) && isset($location_map[$theme_location])) {
+        $create_params['location'] = $theme_location;
+        $create_params['location_select'] = $location_map[$theme_location];
+    }
+
+    $create_url = add_query_arg($create_params, admin_url('nav-menus.php'));
+    $edit_url = admin_url('nav-menus.php' . ($menu_id ? '?action=edit&menu=' . absint($menu_id) : ''));
+
     $options = get_option('distm_settings');
     $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
     
-    // Check if a menu exists but is empty
-    $theme_location = isset($args['theme_location']) ? $args['theme_location'] : '';
     $menu_exists = has_nav_menu($theme_location);
     
     $classes = 'menu';
@@ -346,7 +426,7 @@ function distm_preview_menu_fallback($args) {
     
     $output = '<ul class="' . esc_attr($classes) . '">';
     $output .= '<li class="tm-menu-item-default">';
-    $output .= '<a href="' . esc_url($edit_url) . '" class="preview-item preview-item-add" target="_blank">';
+    $output .= '<a href="' . ($menu_exists ? esc_url($edit_url) : esc_url($create_url)) . '" class="preview-item preview-item-add" target="_blank">';
     $output .= '<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>';
     
     if (!$hide_text) {

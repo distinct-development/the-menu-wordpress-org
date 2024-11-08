@@ -114,6 +114,18 @@ function distm_enqueue_admin_scripts($hook_suffix) {
     wp_enqueue_script('jquery-ui-draggable');
     wp_enqueue_script('jquery-ui-slider');
     wp_enqueue_script('jquery-touch-punch');
+
+    // Add nonce for AJAX operations
+    wp_localize_script('distm-admin-script', 'distmAjax', array(
+        'nonce' => wp_create_nonce('distm_ajax_nonce'),
+        'ajaxurl' => admin_url('admin-ajax.php')
+    ));
+
+    // Add nonce for menu operations
+    wp_localize_script('distm-wp-menus', 'distmMenus', array(
+        'nonce' => wp_create_nonce('distm_menu_nonce'),
+        'ajaxurl' => admin_url('admin-ajax.php')
+    ));
 }
 add_action('admin_enqueue_scripts', 'distm_enqueue_admin_scripts');
 

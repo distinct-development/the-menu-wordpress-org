@@ -37,27 +37,79 @@ jQuery(document).ready(function($) {
     });
 
     // Media uploader
-    $(document).on('click', '.upload-icon-button', function(e) {
-        e.preventDefault();
-        const button = $(this);
-        const inputField = button.prev('input');
-        const container = button.closest('.field-custom');
-        
-        const uploader = wp.media({
-            title: 'Select or Upload Icon',
-            library: { type: ['image', 'image/svg+xml'] },
-            button: { text: 'Use this icon' },
-            multiple: false
+    jQuery(document).ready(function($) {
+        $(document).on('click', '.upload-icon-button', function(e) {
+            e.preventDefault();
+            const button = $(this);
+            const uploader = wp.media({
+                title: 'Select or Upload Icon',
+                library: { type: ['image', 'image/svg+xml'] },
+                button: { text: 'Use this icon' },
+                multiple: false
+            });
+    
+            uploader.on('select', function() {
+                const attachment = uploader.state().get('selection').first().toJSON();
+                
+                // Add nonce verification to the AJAX request
+                $.ajax({
+                    url: distmMenus.ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'distm_update_menu_item',
+                        nonce: distmMenus.nonce,
+                        menu_item_id: button.data('item-id'),
+                        icon_type: 'upload',
+                        icon_url: attachment.url
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            button.prev('input').val(attachment.url);
+                            updateImagePreview(button.closest('.field-custom'));
+                        } else {
+                            console.error('Failed to update menu item:', response.data);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', error);
+                    }
+                });
+            });
+    
+            uploader.open();
         });
     
-        uploader.on('select', function() {
-            const attachment = uploader.state().get('selection').first().toJSON();
-            inputField.val(attachment.url);
-            container.find('input[value="upload"]').prop('checked', true).trigger('change');
-            updateImagePreview(container);
-        });
+        // Update dashicon selection handler
+        $(document).on('click', '.dashicon-option', function() {
+            const container = $(this).closest('.field-custom');
+            const selectedIcon = $(this).data('icon');
+            const menuItemId = container.closest('.menu-item').find('.menu-item-data-db-id').val();
     
-        uploader.open();
+            $.ajax({
+                url: distmMenus.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'distm_update_menu_item',
+                    nonce: distmMenus.nonce,
+                    menu_item_id: menuItemId,
+                    icon_type: 'dashicon',
+                    dashicon: selectedIcon
+                },
+                success: function(response) {
+                    if (response.success) {
+                        container.find('.selected-dashicon').val(selectedIcon);
+                        container.find('.dashicon-option').removeClass('selected');
+                        $(this).addClass('selected');
+                        updateIconPreview(container, selectedIcon);
+                    } else {
+                        console.error('Failed to update dashicon:', response.data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                }
+            });
+        });
     });
 
     // Dashicon selection
@@ -171,4 +223,26 @@ jQuery(document).ready(function($) {
             container.find('.dashicon-selection-section').show();
         }
     });
+});
+
+jQuery(document).ready(function($) {
+    // Check if we're on the menu creation/edit page
+    if (typeof adminpage !== 'undefined' && adminpage === 'nav-menus-php') {
+        // Get the location parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const location = urlParams.get('location');
+        const locationSelect = urlParams.get('location_select');
+        
+        // If we're creating a new menu (menu=0) and have a location parameter
+        if (urlParams.get('menu') === '0' && location && locationSelect) {
+            // Wait a short moment for the form to be ready
+            setTimeout(function() {
+                // Check the appropriate checkbox
+                $('#' + locationSelect).prop('checked', true);
+                
+                // Make sure the menu settings section is expanded
+                $('#menu-settings-column').find('.accordion-section-title').first().click();
+            }, 500);
+        }
+    }
 });

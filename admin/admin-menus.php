@@ -6,9 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function distm_register_my_menus() {
     register_nav_menus(
         array(
-            'left-menu' => esc_html__('[THE MENU] Left Menu', 'the-menu'),
-            'right-menu' => esc_html__('[THE MENU] Right Menu', 'the-menu'),
-            'addon-menu' => esc_html__('[THE MENU] Add-on Menu', 'the-menu')
+            'left-menu' => esc_html__('[THE MENU] Left menu', 'the-menu'),
+            'right-menu' => esc_html__('[THE MENU] Right menu', 'the-menu'),
+            'addon-menu' => esc_html__('[THE MENU] Add-on menu', 'the-menu')
         )
     );
 }
@@ -364,7 +364,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
             $dashicon = 'menu'; // Default fallback
         }
         
-        $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
+        $icon_url = esc_url(get_post_meta($item->ID, '_menu_item_icon', true));
         
         $title = apply_filters('the_title', $item->title, $item->ID);
         $url = $item->url;
@@ -440,3 +440,120 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         }
     }
 }
+
+/**
+ * Handle icon upload via AJAX
+ * 
+ * @return void
+ */
+function distm_handle_icon_upload() {
+    // Verify nonce with proper sanitization
+    if (!isset($_POST['nonce']) || 
+        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'distm_ajax_nonce')) {
+        wp_send_json_error('Invalid nonce');
+        exit;
+    }
+
+    // Verify user capabilities
+    if (!current_user_can('edit_theme_options')) {
+        wp_send_json_error('Insufficient permissions');
+        exit;
+    }
+
+    // Process the upload
+    $attachment_id = media_handle_upload('icon_file', 0);
+    if (is_wp_error($attachment_id)) {
+        wp_send_json_error($attachment_id->get_error_message());
+        exit;
+    }
+
+    $attachment_url = wp_get_attachment_url($attachment_id);
+    wp_send_json_success(array('url' => esc_url($attachment_url)));
+}
+add_action('wp_ajax_distm_upload_icon', 'distm_handle_icon_upload');
+
+/**
+ * Update menu item settings via AJAX
+ * 
+ * @return void
+ */
+function distm_update_menu_item() {
+    // Verify nonce with proper sanitization
+    if (!isset($_POST['nonce']) || 
+        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'distm_menu_nonce')) {
+        wp_send_json_error('Invalid nonce');
+        exit;
+    }
+
+    // Verify user capabilities
+    if (!current_user_can('edit_theme_options')) {
+        wp_send_json_error('Insufficient permissions');
+        exit;
+    }
+
+    // Validate menu item ID
+    $menu_item_id = isset($_POST['menu_item_id']) ? absint($_POST['menu_item_id']) : 0;
+    if (!$menu_item_id) {
+        wp_send_json_error('Invalid menu item ID');
+        exit;
+    }
+
+    // Sanitize and unslash all input data
+    $icon_type = isset($_POST['icon_type']) ? 
+        sanitize_text_field(wp_unslash($_POST['icon_type'])) : '';
+    
+    $icon_url = isset($_POST['icon_url']) ? 
+        esc_url_raw(wp_unslash($_POST['icon_url'])) : '';
+    
+    $dashicon = isset($_POST['dashicon']) ? 
+        sanitize_text_field(wp_unslash($_POST['dashicon'])) : '';
+
+    // Validate icon type
+    if (!empty($icon_type) && !in_array($icon_type, array('dashicon', 'upload'), true)) {
+        wp_send_json_error('Invalid icon type');
+        exit;
+    }
+
+    // Update post meta with sanitized values
+    update_post_meta($menu_item_id, '_menu_item_icon_type', $icon_type);
+    update_post_meta($menu_item_id, '_menu_item_icon', $icon_url);
+    update_post_meta($menu_item_id, '_menu_item_dashicon', $dashicon);
+
+    wp_send_json_success('Menu item updated successfully');
+}
+add_action('wp_ajax_distm_update_menu_item', 'distm_update_menu_item');
+
+/**
+ * Verify license key via AJAX
+ * 
+ * @return void
+ */
+function distm_verify_license() {
+    // Verify nonce with proper sanitization
+    if (!isset($_POST['nonce']) || 
+        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'distm_ajax_nonce')) {
+        wp_send_json_error('Invalid nonce');
+        exit;
+    }
+
+    // Verify user capabilities
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        exit;
+    }
+
+    // Sanitize and validate license key
+    $license_key = isset($_POST['license_key']) ? 
+        sanitize_text_field(wp_unslash($_POST['license_key'])) : '';
+    
+    if (empty($license_key)) {
+        wp_send_json_error('Invalid license key');
+        exit;
+    }
+
+    // Your existing license verification logic here
+    $result = distm_validate_license($license_key);
+    
+    wp_send_json_success($result);
+}
+add_action('wp_ajax_distm_verify_license', 'distm_verify_license');
