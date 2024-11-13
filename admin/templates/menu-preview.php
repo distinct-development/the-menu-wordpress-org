@@ -262,13 +262,21 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
     }
 
     function start_lvl(&$output, $depth = 0, $args = null) {
-        if ($this->menu_id === null && isset($args->menu)) {
-            $this->menu_id = $args->menu->term_id;
-        }
-        parent::start_lvl($output, $depth, $args);
+        // Don't output submenu wrappers
+        return;
     }
 
-    function start_el(&$output, $item, $depth=0, $args=null, $id=0) {
+    function end_lvl(&$output, $depth = 0, $args = null) {
+        // Don't output submenu wrappers
+        return;
+    }
+
+    function start_el(&$output, $item, $depth = 0, $args = null, $id = 0) {
+        // Only process top level items
+        if ($depth !== 0) {
+            return;
+        }
+
         $this->has_items = true;
         
         if ($this->menu_id === null && isset($args->menu)) {
@@ -342,8 +350,21 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
         $output .= '</a></li>';
     }
 
+    function end_el(&$output, $item, $depth = 0, $args = null) {
+        // Only process top level items
+        if ($depth === 0) {
+            // No need to close li tag as it's already closed in start_el
+            return;
+        }
+    }
+
     function walk($elements, $max_depth, ...$args) {
-        $output = parent::walk($elements, $max_depth, ...$args);
+        // Ensure we only process top-level items
+        $top_level_elements = array_filter($elements, function($element) {
+            return empty($element->menu_item_parent) || $element->menu_item_parent == 0;
+        });
+
+        $output = parent::walk($top_level_elements, 1, ...$args);
         
         // If menu exists but has no items
         if (!$this->has_items) {

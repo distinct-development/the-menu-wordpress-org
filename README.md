@@ -153,6 +153,14 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.13 - 13/11/2024
+
+- With the release of WordPress 6.7 we have checked that The Menu is still running as expected... it is.
+- Updated Walker classed to not display submenu items, there is no support for submenus at this stage.
+- Updated the help page to be more descriptive.
+- FIXED: Dashicon colours didn't update in the add-on menu, these now update to your selected icon colour.
+- FIXED: Icon upload didn't save in the native menu editor, this has now been corrected.
+
 ### 1.2.12 - 08/11/2024
 
 - Enhancements for first time users looking at the live preview

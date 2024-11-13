@@ -6,12 +6,12 @@ namespace Distinct\TheMenu;
 Plugin Name: The Menu: Custom mobile navigation with icons
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Create beautiful mobile navigation menus with custom icons, role-based visibility, and extensive style options for your WordPress site.
-Version: 1.2.12
+Version: 1.2.13
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://plugins.distinct.africa
 Requires at least: 6.0
-Tested up to: 6.6.2
+Tested up to: 6.7
 Stable tag: 4.3
 Requires PHP: 7.0
 */

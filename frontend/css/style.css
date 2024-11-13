@@ -294,6 +294,9 @@ body{
 #tm-addon-menu svg :is(path,rect,circle,ellipse,polygon,polyline,line){
     fill: var(--distm-addon-icon-color);
 }
+#tm-addon-menu a .dashicons{
+    color: var(--distm-addon-icon-color);
+}
 
 #tm-addon-menu a{
     font-size: 0.7em;
@@ -430,7 +433,6 @@ body{
     justify-content: center;
     align-items: stretch;
     transition-duration: .5s;
-    border:1px solid #fff;
     overflow: hidden;
 }
 .tm-featured .tm-icon-wrapper img{
@@ -439,7 +441,10 @@ body{
     box-shadow:inset -5px -5px 10px rgba(0,0,0,0.3), inset 5px 5px 10px rgba(255,255,255,0.3), 0 5px 10px rgba(0,0,0,0.3)
 }
 .tm-featured .tm-icon-wrapper svg{
-    padding: 15px;
+    padding:15px;
+}
+.tm-featured.active .tm-menu-close{
+    padding: 15px !important;;
 }
 .tm-featured.active  .tm-icon-wrapper{
     width:50px;
@@ -452,7 +457,7 @@ body{
     width: 5px;
     height: 25px;
     transform: rotate(45deg);
-    background: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.5);
     left: 25%;
     top: 0;
     filter: blur(2px);

@@ -1,4 +1,5 @@
 jQuery(document).ready(function($) {
+    let mediaUploader;
     
     function updateImagePreview(container) {
         const iconType = container.find('.icon-type-radio:checked').val();
@@ -13,78 +14,67 @@ jQuery(document).ready(function($) {
             previewContainer.html(`<img src="${iconUrl}" style="max-width: 40px; height: auto;">`);
         }
     }
+
     // Radio button change handler
     $(document).on('change', '.icon-type-radio', function() {
-    const container = $(this).closest('.field-custom');
-    const uploadSection = container.find('.icon-upload-section');
-    const dashiconSection = container.find('.dashicon-selection-section');
-    const iconType = this.value;
-    
-    if (iconType === 'upload') {
+        const container = $(this).closest('.field-custom');
+        const uploadSection = container.find('.icon-upload-section');
+        const dashiconSection = container.find('.dashicon-selection-section');
+        const iconType = this.value;
+        
+        if (iconType === 'upload') {
             dashiconSection.hide();
             uploadSection.show();
         } else if (iconType === 'dashicon') {
             uploadSection.hide();
             dashiconSection.show();
         }
-    
-    updateImagePreview(container);
+        
+        updateImagePreview(container);
     });
     
     // Initialize previews on page load
     $('.field-custom').each(function() {
-    updateImagePreview($(this));
+        updateImagePreview($(this));
     });
 
-    // Media uploader
-    jQuery(document).ready(function($) {
-        $(document).on('click', '.upload-icon-button', function(e) {
-            e.preventDefault();
-            const button = $(this);
-            const uploader = wp.media({
-                title: 'Select or Upload Icon',
-                library: { type: ['image', 'image/svg+xml'] },
-                button: { text: 'Use this icon' },
-                multiple: false
-            });
-    
-            uploader.on('select', function() {
-                const attachment = uploader.state().get('selection').first().toJSON();
-                
-                // Add nonce verification to the AJAX request
-                $.ajax({
-                    url: distmMenus.ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'distm_update_menu_item',
-                        nonce: distmMenus.nonce,
-                        menu_item_id: button.data('item-id'),
-                        icon_type: 'upload',
-                        icon_url: attachment.url
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            button.prev('input').val(attachment.url);
-                            updateImagePreview(button.closest('.field-custom'));
-                        } else {
-                            console.error('Failed to update menu item:', response.data);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('AJAX error:', error);
-                    }
-                });
-            });
-    
-            uploader.open();
+    // Media uploader handler
+    $(document).on('click', '.upload-icon-button', function(e) {
+        e.preventDefault();
+        const button = $(this);
+        const container = button.closest('.field-custom');
+        const iconInput = container.find('.edit-menu-item-icon');
+        const menuItemId = button.data('item-id');
+        
+        // If the uploader object has already been created, reopen it
+        if (mediaUploader) {
+            mediaUploader.open();
+            return;
+        }
+        
+        // Create the media uploader
+        mediaUploader = wp.media({
+            title: 'Select or Upload Menu Icon',
+            button: {
+                text: 'Use this icon'
+            },
+            library: {
+                type: ['image', 'image/svg+xml']
+            },
+            multiple: false
         });
-    
-        // Update dashicon selection handler
-        $(document).on('click', '.dashicon-option', function() {
-            const container = $(this).closest('.field-custom');
-            const selectedIcon = $(this).data('icon');
-            const menuItemId = container.closest('.menu-item').find('.menu-item-data-db-id').val();
-    
+        
+        // When an image is selected, run a callback
+        mediaUploader.on('select', function() {
+            const attachment = mediaUploader.state().get('selection').first().toJSON();
+            
+            // Update the form field value
+            iconInput.val(attachment.url);
+            
+            // Update the preview
+            updateImagePreview(container);
+            
+            // Update via AJAX to ensure persistence
             $.ajax({
                 url: distmMenus.ajaxurl,
                 type: 'POST',
@@ -92,27 +82,27 @@ jQuery(document).ready(function($) {
                     action: 'distm_update_menu_item',
                     nonce: distmMenus.nonce,
                     menu_item_id: menuItemId,
-                    icon_type: 'dashicon',
-                    dashicon: selectedIcon
+                    icon_type: 'upload',
+                    icon_url: attachment.url
                 },
                 success: function(response) {
-                    if (response.success) {
-                        container.find('.selected-dashicon').val(selectedIcon);
-                        container.find('.dashicon-option').removeClass('selected');
-                        $(this).addClass('selected');
-                        updateIconPreview(container, selectedIcon);
-                    } else {
-                        console.error('Failed to update dashicon:', response.data);
+                    if (!response.success) {
+                        console.error('Failed to update menu item:', response.data);
                     }
+                    // Ensure the radio button is set to 'upload'
+                    container.find('input[value="upload"]').prop('checked', true).trigger('change');
                 },
                 error: function(xhr, status, error) {
                     console.error('AJAX error:', error);
                 }
             });
         });
+        
+        // Open the uploader dialog
+        mediaUploader.open();
     });
 
-    // Dashicon selection
+    // Dashicon selection handler
     $(document).on('click', '.dashicon-option', function() {
         const container = $(this).closest('.field-custom');
         const selectedIcon = $(this).data('icon');
@@ -135,6 +125,27 @@ jQuery(document).ready(function($) {
         // Show/hide sections
         container.find('.icon-upload-section').hide();
         container.find('.dashicon-selection-section').show();
+
+        // Update via AJAX
+        $.ajax({
+            url: distmMenus.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'distm_update_menu_item',
+                nonce: distmMenus.nonce,
+                menu_item_id: menuItemId,
+                icon_type: 'dashicon',
+                dashicon: selectedIcon
+            },
+            success: function(response) {
+                if (!response.success) {
+                    console.error('Failed to update dashicon:', response.data);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+            }
+        });
     });
 
     // Search dashicons
@@ -223,10 +234,8 @@ jQuery(document).ready(function($) {
             container.find('.dashicon-selection-section').show();
         }
     });
-});
 
-jQuery(document).ready(function($) {
-    // Check if we're on the menu creation/edit page
+    // Menu location auto-select handler
     if (typeof adminpage !== 'undefined' && adminpage === 'nav-menus-php') {
         // Get the location parameter from URL
         const urlParams = new URLSearchParams(window.location.search);

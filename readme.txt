@@ -2,8 +2,8 @@
 Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
-Tested up to: 6.6.2
-Stable tag: 1.2.12
+Tested up to: 6.7
+Stable tag: 1.2.13
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -154,6 +154,14 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.13 - 13/11/2024 =
+
+- With the release of WordPress 6.7 we have checked that The Menu is still running as expected... it is.
+- Updated Walker classed to not display submenu items, there is no support for submenus at this stage.
+- Updated the help page to be more descriptive.
+- FIXED: Dashicon colours didn't update in the add-on menu, these now update to your selected icon colour.
+- FIXED: Icon upload didn't save in the native menu editor, this has now been corrected.
 
 = 1.2.12 - 08/11/2024 =
 

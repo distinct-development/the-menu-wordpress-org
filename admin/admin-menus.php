@@ -352,8 +352,18 @@ add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 
 
 // WordPress Walker for the menu
 class DISTM_Icon_Walker extends Walker_Nav_Menu {
-    function start_el(&$output, $item, $depth=0, $args=null, $id=0) {
-        // Get icon settings with strong validation
+    function start_lvl(&$output, $depth = 0, $args = null) {
+        return;
+    }
+
+    function end_lvl(&$output, $depth = 0, $args = null) {
+        return;
+    }
+
+    function start_el(&$output, $item, $depth = 0, $args = null, $id = 0) {
+        if ($depth !== 0) {
+            return;
+        }
         $icon_type = get_post_meta($item->ID, '_menu_item_icon_type', true);
         if (!in_array($icon_type, ['dashicon', 'upload'])) {
             $icon_type = 'dashicon'; // Default fallback
@@ -365,7 +375,6 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         }
         
         $icon_url = esc_url(get_post_meta($item->ID, '_menu_item_icon', true));
-        
         $title = apply_filters('the_title', $item->title, $item->ID);
         $url = $item->url;
         $icon_html = '';
@@ -381,7 +390,6 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 if ($svg_content !== false) {
                     $icon_html = $svg_content;
                 } else {
-                    // Fallback to dashicon if SVG fails
                     $icon_html = sprintf(
                         '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
                         'menu'
@@ -396,21 +404,19 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 );
             }
         } else {
-            // Default fallback to menu dashicon
             $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
         }
 
-        // Get visibility settings
         $visibility = get_post_meta($item->ID, '_menu_item_visibility', true);
         if (empty($visibility)) {
             $visibility = 'everyone';
         }
+        
         $roles = get_post_meta($item->ID, '_menu_item_roles', true);
         if (!is_array($roles)) {
             $roles = array();
         }
 
-        // Check visibility permissions
         $show_item = false;
         if ($visibility === 'everyone') {
             $show_item = true;
@@ -424,19 +430,22 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
 
         if ($show_item) {
             $output .= '<li class="tm-menu-item-' . esc_attr($item->ID) . '">';
-            
-            // Get the 'don't display menu text' setting
             $options = get_option('distm_settings');
             $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
 
             $output .= '<a href="' . esc_url($url) . '">' . $icon_html;
-            
-            // Only add the title span if 'don't display menu text' is not enabled
             if (!$hide_text) {
                 $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
             }
             
             $output .= '</a>';
+            $output .= '</li>';
+        }
+    }
+
+    function end_el(&$output, $item, $depth = 0, $args = null) {
+        if ($depth === 0) {
+            return;
         }
     }
 }
