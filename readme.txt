@@ -155,8 +155,9 @@ Yes, The Menu is optimised for touch devices with:
 
 == Changelog ==
 
-= 1.2.14 - 19/11/2024 =
+= 1.2.14 - 20/11/2024 =
 
+- The preview on the settings page is now sticky so it always remains in view when editing settings.
 - ADDED: All dashicons in the native WordPress menu editor.
 - FIXED: Searching dashicons on the settings page.
 - A few css improvements

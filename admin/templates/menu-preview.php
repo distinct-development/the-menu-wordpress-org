@@ -2,9 +2,9 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 ?>
 <div class="preview-container">
-<p class="addon-message"><?php echo __('view add-on menu', 'the-menu'); ?></p>
+<p class="addon-message"><?php echo esc_html(__('view add-on menu', 'the-menu')); ?></p>
     <div class="preview-header"><span class="dashicons dashicons-visibility"
-            style="color:var(--tm-secondary-color);"></span> <?php echo __('Live preview', 'the-menu'); ?></div>
+            style="color:var(--tm-secondary-color);"></span> <?php echo esc_html(__('Live preview', 'the-menu')); ?></div>
     <div class="preview-frame">
         <div class="preview-content">
             

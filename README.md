@@ -153,6 +153,13 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.14 - 20/11/2024
+
+- The preview on the settings page is now sticky so it always remains in view when editing settings.
+- ADDED: All dashicons in the native WordPress menu editor.
+- FIXED: Searching dashicons on the settings page.
+- A few css improvements
+
 ### 1.2.13 - 13/11/2024
 
 - With the release of WordPress 6.7 we have checked that The Menu is still running as expected... it is.
