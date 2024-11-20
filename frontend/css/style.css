@@ -303,8 +303,8 @@ body{
     color: var(--distm-addon-label-color);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: start;
+    justify-content: start;
     text-decoration: none;
     margin: 0 auto;
 }
