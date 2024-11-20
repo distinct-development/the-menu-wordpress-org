@@ -3,11 +3,11 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.7
-Stable tag: 1.2.13
+Stable tag: 1.2.14
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Icon: assets/icon-256x256.png
+Icon: assets/icon-256x256.gif
 Banner: assets/banner-1544x500.png
 
 Create beautiful mobile navigation menus with custom icons, role-based visibility, and extensive style options for your WordPress site.
@@ -154,6 +154,12 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.14 - 19/11/2024 =
+
+- ADDED: All dashicons in the native WordPress menu editor.
+- FIXED: Searching dashicons on the settings page.
+- A few css improvements
 
 = 1.2.13 - 13/11/2024 =
 

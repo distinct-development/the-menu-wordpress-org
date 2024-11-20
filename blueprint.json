@@ -34,8 +34,8 @@
                 "users_can_register": "0",
                 "admin_email": "dev@test.local",
                 "permalink_structure": "/%postname%/",
-                "template": "twentytwentyfour",
-                "stylesheet": "twentytwentyfour"
+                "template": "twentytwentyfive",
+                "stylesheet": "twentytwentyfive"
             }
         }
     ]

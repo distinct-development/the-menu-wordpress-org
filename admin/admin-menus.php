@@ -140,22 +140,39 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
                         'admin-users', 'admin-tools', 'admin-settings', 'admin-network', 'admin-home',
                         'admin-generic', 'admin-collapse', 'filter', 'admin-customizer', 'admin-multisite'
                     ),
+                
                     __('Welcome Screen', 'the-menu') => array(
                         'welcome-write-blog', 'welcome-add-page', 'welcome-view-site', 'welcome-widgets-menus',
                         'welcome-comments', 'welcome-learn-more'
                     ),
+                
                     __('Post Formats', 'the-menu') => array(
-                        'format-aside', 'format-image', 'format-gallery', 'format-video', 'format-status', 
-                        'format-quote', 'format-chat', 'format-audio', 'camera', 'camera-alt',
+                        'format-aside', 'format-image', 'format-gallery', 'format-video', 'format-status',
+                        'format-quote', 'format-chat', 'format-audio', 'format-standard', 'camera', 'camera-alt',
                         'images-alt', 'images-alt2', 'video-alt', 'video-alt2', 'video-alt3'
                     ),
+                
                     __('Media', 'the-menu') => array(
                         'media-archive', 'media-audio', 'media-code', 'media-default', 'media-document',
                         'media-interactive', 'media-spreadsheet', 'media-text', 'media-video',
                         'playlist-audio', 'playlist-video', 'controls-play', 'controls-pause',
                         'controls-forward', 'controls-skipforward', 'controls-back', 'controls-skipback',
-                        'controls-repeat', 'controls-volumeon', 'controls-volumeoff'
+                        'controls-repeat', 'controls-volumeon', 'controls-volumeoff',
+                        'image-crop', 'image-filter', 'image-flip-horizontal', 'image-flip-vertical',
+                        'image-rotate', 'image-rotate-left', 'image-rotate-right'
                     ),
+                
+                    __('Editor', 'the-menu') => array(
+                        'editor-aligncenter', 'editor-alignleft', 'editor-alignright', 'editor-bold',
+                        'editor-break', 'editor-code', 'editor-contract', 'editor-customchar',
+                        'editor-expand', 'editor-help', 'editor-indent', 'editor-insertmore',
+                        'editor-italic', 'editor-justify', 'editor-kitchensink', 'editor-ltr',
+                        'editor-ol', 'editor-outdent', 'editor-paragraph', 'editor-paste-text',
+                        'editor-paste-word', 'editor-quote', 'editor-removeformatting', 'editor-rtl',
+                        'editor-spellcheck', 'editor-strikethrough', 'editor-table', 'editor-textcolor',
+                        'editor-ul', 'editor-underline', 'editor-unlink', 'editor-video'
+                    ),
+                
                     __('Social', 'the-menu') => array(
                         'share', 'share-alt', 'share-alt2', 'rss', 'email',
                         'email-alt', 'email-alt2', 'networking', 'amazon',
@@ -164,6 +181,21 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
                         'twitch', 'twitter', 'twitter-alt', 'whatsapp',
                         'xing', 'youtube'
                     ),
+                
+                    __('Interface', 'the-menu') => array(
+                        'arrow-down', 'arrow-down-alt', 'arrow-down-alt2',
+                        'arrow-left', 'arrow-left-alt', 'arrow-left-alt2',
+                        'arrow-right', 'arrow-right-alt', 'arrow-right-alt2',
+                        'arrow-up', 'arrow-up-alt', 'arrow-up-alt2',
+                        'grid-view', 'list-view', 'screenoptions', 'info', 'insert',
+                        'plus', 'plus-alt', 'plus-alt2', 'minus', 'dismiss',
+                        'yes', 'yes-alt', 'no', 'no-alt',
+                        'sort', 'update', 'redo', 'undo',
+                        'visibility', 'hidden', 'move', 'lock', 'unlock',
+                        'flag', 'star-empty', 'star-filled', 'star-half', 'sticky',
+                        'warning', 'trash', 'external'
+                    ),
+                
                     __('Misc', 'the-menu') => array(
                         'location', 'location-alt', 'vault', 'shield', 'shield-alt',
                         'sos', 'search', 'slides', 'analytics', 'chart-pie',
@@ -174,7 +206,17 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
                         'backup', 'clock', 'lightbulb', 'microphone', 'desktop',
                         'laptop', 'tablet', 'smartphone', 'phone', 'store',
                         'album', 'palmtree', 'tickets-alt', 'money', 'money-alt',
-                        'smiley', 'thumbs-up', 'thumbs-down', 'superhero', 'superhero-alt'
+                        'smiley', 'thumbs-up', 'thumbs-down', 'superhero', 'superhero-alt',
+                        'layout', 'leftright', 'performance', 'universal-access', 'universal-access-alt',
+                        'art', 'building', 'carrot', 'cloud',
+                        'cloud-saved', 'cloud-upload', 'coffee', 'food', 'games',
+                        'hammer', 'heart', 'hourglass', 'html', 'index-card',
+                        'marker', 'nametag', 'open-folder', 'paperclip', 'pets',
+                        'post-status', 'pressthis', 'tag', 'tagcloud', 'tickets',
+                        'translation', 'wordpress', 'wordpress-alt',
+                        'database', 'database-add', 'database-export', 'database-import',
+                        'database-remove', 'database-view', 'fullscreen-alt', 'fullscreen-exit-alt',
+                        'migrate', 'rest-api'
                     )
                 );
 

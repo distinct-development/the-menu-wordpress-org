@@ -55,7 +55,9 @@ function distm_enqueue_frontend_scripts() {
             $should_load = $mobile_menu_enabled && (!$only_on_mobile || wp_is_mobile());
             
             if ($should_load) {
-                wp_enqueue_style('distm-style', plugins_url('frontend/css/style.css', dirname(__FILE__)), array(), '1.0.8', 'all');
+                $plugin_data = get_file_data(dirname(__FILE__) . '../../the-menu.php', array('Version' => 'Version'), 'plugin');
+                $plugin_version = isset($plugin_data['Version']) ? $plugin_data['Version'] : '1.0.8';
+                wp_enqueue_style('distm-style', plugins_url('frontend/css/style.css', dirname(__FILE__)), array(), $plugin_version, 'all');
                 
                 $custom_css = "
                     :root {
@@ -75,7 +77,7 @@ function distm_enqueue_frontend_scripts() {
                 ";
                 
                 wp_add_inline_style('distm-style', $custom_css);
-                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), '1.0.8', true);
+                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), $plugin_version, true);
                 wp_enqueue_style('dashicons');
             }
         } 

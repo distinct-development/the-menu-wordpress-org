@@ -15,7 +15,7 @@
 }
 
 body{
-    padding-bottom: 80px!important;
+    padding-bottom: 80px;
 }
 
 .the-menu{
@@ -209,7 +209,7 @@ body{
     position: fixed;
     bottom: 0;
     width: 100%;
-    min-height: 100vh;
+    min-height: 100svh;
     background: var(--distm-addon-bg-color);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -227,10 +227,9 @@ body{
 }
 #tm-addon-menu{
     display: flex;
-    align-items: center;
+    align-items: start;
     width:100%;
-    
-    height: 100vh;
+    height: 100svh;
     overflow-y: scroll;
 }
 

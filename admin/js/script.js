@@ -94,7 +94,6 @@ jQuery(document).ready(function($) {
         // Icons only toggle
         $('#distm_disable_menu_text').on('change', function() {
             const isEnabled = $(this).is(':checked');
-            console.log('Toggle changed:', isEnabled);
             updatePreview('.preview-frame .the-menu', 'icon-only', isEnabled);
         });
 
@@ -114,8 +113,8 @@ jQuery(document).ready(function($) {
     }
 
     // Handle icon type radio selection
-    $('.icon-type-radio').on('change', function() {
-        const container = $(this).closest('.featured-icon-wrapper');
+    $(document).on('change', '.icon-type-radio', function() {
+        const container = $(this).closest('.featured-icon-wrapper, .field-custom');
         const uploadSection = container.find('.icon-upload-section');
         const dashiconSection = container.find('.dashicon-selection-section');
         
@@ -174,20 +173,69 @@ jQuery(document).ready(function($) {
         customUploader.open();
     });
 
-    // Dashicon selection
-    $('.dashicon-grid').on('click', '.dashicon-option', function() {
-        const container = $(this).closest('.featured-icon-wrapper');
+    // Dashicon selection handler
+    $(document).on('click', '.dashicon-option', function() {
+        const container = $(this).closest('.featured-icon-wrapper, .field-custom');
         const selectedIcon = $(this).data('icon');
+        const dashiconInput = container.find('.selected-dashicon');
         const previewContainer = container.find('.icon-preview');
         const featuredIconContainer = $('.preview-frame .tm-featured-icon');
         const dashiconHtml = `<span class="dashicons dashicons-${selectedIcon}"></span>`;
         
-        previewContainer.html(dashiconHtml);
+        // Remove selected class from all icons in this container
         container.find('.dashicon-option').removeClass('selected');
+        // Add selected class to clicked icon
         $(this).addClass('selected');
-        container.find('.selected-dashicon').val(selectedIcon);
-        featuredIconContainer.html(dashiconHtml);
-        container.find('input[value="dashicon"]').prop('checked', true).trigger('change');
+        
+        // Update the hidden input with the selected icon
+        dashiconInput.val(selectedIcon);
+        
+        // Update preview if it exists
+        if (previewContainer.length) {
+            previewContainer.html(dashiconHtml);
+        }
+        
+        // Update featured icon if this is the featured icon selector
+        if (container.hasClass('featured-icon-wrapper') && featuredIconContainer.length) {
+            featuredIconContainer.html(dashiconHtml);
+        }
+        
+        // Ensure dashicon radio is selected
+        container.find('input[value="dashicon"]').prop('checked', true);
+    });
+
+    // Search dashicons - improved version
+    $(document).on('input', '.dashicon-search', function() {
+        const container = $(this).closest('.dashicon-selection-section');
+        const searchTerm = $(this).val().toLowerCase();
+        const grid = container.find('.dashicon-grid');
+        
+        // Handle each category section
+        grid.find('.dashicon-category-header').each(function() {
+            const header = $(this);
+            let hasVisibleIcons = false;
+            
+            // Find all icons until next header
+            let currentElement = header.next();
+            while (currentElement.length && !currentElement.hasClass('dashicon-category-header')) {
+                if (currentElement.hasClass('dashicon-option')) {
+                    const iconName = currentElement.data('icon') || '';
+                    const iconTitle = currentElement.attr('title') || '';
+                    const matches = iconName.toLowerCase().includes(searchTerm) || 
+                                  iconTitle.toLowerCase().includes(searchTerm);
+                    
+                    currentElement.toggle(matches);
+                    if (matches) hasVisibleIcons = true;
+                }
+                currentElement = currentElement.next();
+            }
+            
+            // Show/hide header based on whether category has visible icons
+            header.toggle(hasVisibleIcons);
+        });
+        
+        // Handle separators
+        grid.find('.dashicon-separator').toggle(!searchTerm);
     });
 
     // Initialize tabs

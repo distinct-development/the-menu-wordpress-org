@@ -2,10 +2,12 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 ?>
 <div class="preview-container">
+<p class="addon-message"><?php echo __('view add-on menu', 'the-menu'); ?></p>
     <div class="preview-header"><span class="dashicons dashicons-visibility"
-            style="color:var(--tm-secondary-color);"></span> Live preview</div>
+            style="color:var(--tm-secondary-color);"></span> <?php echo __('Live preview', 'the-menu'); ?></div>
     <div class="preview-frame">
         <div class="preview-content">
+            
             <iframe src="<?php echo esc_url(home_url('/')); ?>"
                 style="width: 100%; height: 100%; border: none; transform: scale(1); transform-origin: 0 0;" loading="lazy"></iframe>
             <div
@@ -394,7 +396,7 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
             $output .= '<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>';
             
             if (!$hide_text) {
-                $message = __('Add Item', 'the-menu');
+                $message = __('Add item', 'the-menu');
                 $output .= '<span class="tm-menu-item-title">' . esc_html($message) . '</span>';
             }
             
@@ -451,7 +453,7 @@ function distm_preview_menu_fallback($args) {
     $output .= '<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>';
     
     if (!$hide_text) {
-        $message = $menu_exists ? __('Add First Item', 'the-menu') : __('Create Menu', 'the-menu');
+        $message = $menu_exists ? __('Add first item', 'the-menu') : __('Create menu', 'the-menu');
         $output .= '<span class="tm-menu-item-title">' . esc_html($message) . '</span>';
     }
     
