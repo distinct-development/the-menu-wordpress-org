@@ -371,3 +371,4 @@ function distm_sanitize_svg_content($svg_content) {
     
     return wp_kses($svg_content, $allowed_tags);
 }
+

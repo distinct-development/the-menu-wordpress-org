@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.7
-Stable tag: 1.2.14
+Stable tag: 1.2.15
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -154,6 +154,12 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.15 - 17/02/2025 =
+
+- WP version check.
+- ADDED: If you add custom classes to a menu item they will now display for the menu item.
+- ADDED: If you add a WooCommerce cart menu item a cart count now displays.
 
 = 1.2.14 - 20/11/2024 =
 

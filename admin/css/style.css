@@ -1006,3 +1006,4 @@ input[type=checkbox]:checked, input[type=radio]:checked{
 .step-list li:before { content: counter(step-counter); counter-increment: step-counter; position: absolute; left: 0; top: 0; background: #f79431; color: white; width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-size: 12px; }
 .tip-box { background: #fff7e6; border-left: 4px solid #f79431; padding: 15px; margin: 15px 0 0; }
 .warning-box { background: #ffe6e6; border-left: 4px solid #dc3545; padding: 15px; margin: 15px 0 0; }
+

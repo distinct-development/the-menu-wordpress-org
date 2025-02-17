@@ -406,20 +406,35 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         if ($depth !== 0) {
             return;
         }
+
         $icon_type = get_post_meta($item->ID, '_menu_item_icon_type', true);
         if (!in_array($icon_type, ['dashicon', 'upload'])) {
-            $icon_type = 'dashicon'; // Default fallback
+            $icon_type = 'dashicon';
         }
         
         $dashicon = get_post_meta($item->ID, '_menu_item_dashicon', true);
         if (empty($dashicon)) {
-            $dashicon = 'menu'; // Default fallback
+            $dashicon = 'menu';
         }
         
         $icon_url = esc_url(get_post_meta($item->ID, '_menu_item_icon', true));
         $title = apply_filters('the_title', $item->title, $item->ID);
         $url = $item->url;
         $icon_html = '';
+
+        // Get custom menu classes
+        $classes = empty($item->classes) ? array() : (array) $item->classes;
+        
+        // Add cart class if this is the cart page
+        if (class_exists('WooCommerce') && is_object($item) && isset($item->object_id)) {
+            $cart_page_id = wc_get_page_id('cart');
+            if ($item->object_id == $cart_page_id || (isset($item->url) && trailingslashit($item->url) === trailingslashit(wc_get_cart_url()))) {
+                $classes[] = 'menu-item-type-cart';
+            }
+        }
+        
+        $classes[] = 'tm-menu-item-' . $item->ID;
+        $class_names = join(' ', array_filter($classes));
 
         if ($icon_type === 'dashicon') {
             $icon_html = sprintf(
@@ -471,11 +486,20 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         }
 
         if ($show_item) {
-            $output .= '<li class="tm-menu-item-' . esc_attr($item->ID) . '">';
+            $output .= '<li class="' . esc_attr($class_names) . '">';
             $options = get_option('distm_settings');
             $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
 
             $output .= '<a href="' . esc_url($url) . '">' . $icon_html;
+            
+            // Check if this is a WooCommerce cart menu item
+            if (class_exists('WooCommerce') && function_exists('WC') && WC()->cart && in_array('menu-item-type-cart', $classes)) {
+                $cart_count = WC()->cart->get_cart_contents_count();
+                if ($cart_count > 0) {
+                    $output .= '<span class="tm-cart-count">' . esc_html($cart_count) . '</span>';
+                }
+            }
+
             if (!$hide_text) {
                 $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
             }
@@ -491,6 +515,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         }
     }
 }
+
 
 /**
  * Handle icon upload via AJAX
@@ -608,3 +633,4 @@ function distm_verify_license() {
     wp_send_json_success($result);
 }
 add_action('wp_ajax_distm_verify_license', 'distm_verify_license');
+

@@ -264,17 +264,14 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
     }
 
     function start_lvl(&$output, $depth = 0, $args = null) {
-        // Don't output submenu wrappers
         return;
     }
 
     function end_lvl(&$output, $depth = 0, $args = null) {
-        // Don't output submenu wrappers
         return;
     }
 
     function start_el(&$output, $item, $depth = 0, $args = null, $id = 0) {
-        // Only process top level items
         if ($depth !== 0) {
             return;
         }
@@ -284,8 +281,18 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
         if ($this->menu_id === null && isset($args->menu)) {
             $this->menu_id = $args->menu->term_id;
         }
+
+        // Add cart class if this is the cart page
+        if (class_exists('WooCommerce') && is_object($item) && isset($item->object_id)) {
+            $cart_page_id = wc_get_page_id('cart');
+            if ($item->object_id == $cart_page_id || (isset($item->url) && trailingslashit($item->url) === trailingslashit(wc_get_cart_url()))) {
+                $classes[] = 'menu-item-type-cart';
+            }
+        }
         
-        // Get icon settings with validation
+        $classes[] = 'tm-menu-item-' . $item->ID;
+        $class_names = join(' ', array_filter($classes));
+        
         $icon_type = get_post_meta($item->ID, '_menu_item_icon_type', true);
         if (!in_array($icon_type, ['dashicon', 'upload'])) {
             $icon_type = 'dashicon';
@@ -299,7 +306,6 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
         $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
         $title = apply_filters('the_title', $item->title, $item->ID);
         
-        // Create edit URL with menu ID
         $edit_url = add_query_arg(
             array(
                 'action' => 'edit',
@@ -339,9 +345,17 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
             $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
         }
 
-        $output .= '<li class="tm-menu-item-' . esc_attr($item->ID) . '">';
+        $output .= '<li class="' . esc_attr($class_names) . '">';
         $output .= '<a href="' . esc_url($edit_url) . '" class="preview-item" target="_blank">' . $icon_html;
         
+        // Check if this is a WooCommerce cart menu item
+        if (class_exists('WooCommerce') && function_exists('WC') && WC()->cart && in_array('menu-item-type-cart', $classes)) {
+            $cart_count = WC()->cart->get_cart_contents_count();
+            if ($cart_count > 0) {
+                $output .= '<span class="tm-cart-count">' . esc_html($cart_count) . '</span>';
+            }
+        }
+
         $options = get_option('distm_settings');
         $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
 
