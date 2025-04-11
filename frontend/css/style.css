@@ -831,13 +831,8 @@ body{
     top: 0;
     left: 0;
     opacity: 0;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.3s ease;
     cursor: pointer;
-}
-
-.tm-folder-content-wrapper.active {
-    display: flex !important;
-    opacity: 1;
 }
 
 .tm-folder-content {
@@ -857,51 +852,24 @@ body{
     flex-direction: column;
     align-items: start;
     justify-content: start;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: transform 0.3s ease;
     cursor: default;
     overflow-y: scroll;
-    transform: scale(0.8);
-    opacity: 0;
-}
-
-/* Folder opening animation */
-.tm-folder-content-wrapper.folder-opening .tm-folder-content {
-    animation: folderOpen 0.5s forwards;
-}
-
-@keyframes folderOpen {
-    0% {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* Folder closing animation */
-.tm-folder-content-wrapper.folder-closing .tm-folder-content {
-    animation: folderClose 0.5s forwards;
-}
-
-@keyframes folderClose {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(0.8);
-        opacity: 0;
-    }
+    
 }
 
 .tm-folder-content * {
     cursor: default;
+    
 }
 
 .tm-folder-item-link {
     cursor: pointer;
+}
+
+.tm-folder-content-wrapper.active {
+    display: flex;
+    opacity: 1;
 }
 
 .tm-folder-header {
@@ -914,24 +882,6 @@ body{
     color: var(--distm-addon-label-color);
     cursor: pointer;
     position: relative;
-    transform: translateY(-20px);
-    opacity: 0;
-}
-
-/* Header animation */
-.tm-folder-content-wrapper.folder-opening .tm-folder-header {
-    animation: headerSlideIn 0.5s forwards;
-}
-
-@keyframes headerSlideIn {
-    0% {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
 }
 
 .tm-folder-header-title {
@@ -962,60 +912,6 @@ body{
     cursor: default;
     padding: 10%;
     box-sizing: border-box;
-}
-
-/* Staggered animation for folder items */
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link {
-    animation: itemAppear 0.5s forwards;
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(1) {
-    animation-delay: 0.1s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(2) {
-    animation-delay: 0.15s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(3) {
-    animation-delay: 0.2s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(4) {
-    animation-delay: 0.25s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(5) {
-    animation-delay: 0.3s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(6) {
-    animation-delay: 0.35s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(7) {
-    animation-delay: 0.4s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(8) {
-    animation-delay: 0.45s;
-}
-
-.tm-folder-content-wrapper.folder-opening .tm-folder-item-link:nth-child(9) {
-    animation-delay: 0.5s;
-}
-
-@keyframes itemAppear {
-    0% {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .tm-folder-item-link {
@@ -1050,6 +946,7 @@ body{
     text-align: center;
     max-width: 100%;
     color: var(--distm-addon-label-color);
+    line-height: 1em;
 }
 
 /* Mobile optimizations for folders */
