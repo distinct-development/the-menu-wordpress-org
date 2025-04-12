@@ -782,8 +782,8 @@ body{
 }
 
 .tm-folder-preview-icon img{
-    width: 20px!important;
-    height: 20px!important;
+    width: 15px!important;
+    height: 15px!important;
 }
 
 .tm-folder-preview-icon svg{
@@ -906,7 +906,7 @@ body{
 .tm-folder-items {
     width: 80%;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     pointer-events: auto;
     cursor: default;
@@ -980,17 +980,13 @@ body{
     /* Folder content modal adjustments */
   
     .tm-folder-items {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         padding: 0;
         width: 100%;
         box-sizing: border-box;
     }
 
-    .tm-folder-items {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 5px;
-    }
     .tm-folder-item-icon{
         margin-bottom: 0;
     }
@@ -1019,7 +1015,7 @@ body{
 
     .tm-folder-content{
         border-radius: 30px;
-        width: calc(100% - 80px);
+        width: calc(100% - 60px);
         height: calc(80svh - 120px);
         padding: 20px;
         box-sizing: border-box;
