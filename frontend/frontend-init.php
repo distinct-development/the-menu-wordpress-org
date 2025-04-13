@@ -79,11 +79,56 @@ function distm_enqueue_frontend_scripts() {
                 wp_add_inline_style('distm-style', $custom_css);
                 wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), $plugin_version, true);
                 wp_enqueue_style('dashicons');
+                
+                // Get SVG URLs for preloading
+                $svg_urls = distm_get_svg_urls();
+                
+                // Pass SVG URLs to JavaScript
+                wp_localize_script('distm-frontend', 'distmSvgData', array(
+                    'svgUrls' => $svg_urls
+                ));
+                
+                // Preload SVGs
+                distm_preload_common_svgs();
             }
         } 
     } 
 }
 add_action('wp_enqueue_scripts', 'distm_enqueue_frontend_scripts', 100);
+
+/**
+ * Preload commonly used SVGs to improve performance
+ */
+function distm_preload_common_svgs() {
+    // Get the default icon URL
+    $default_icon_url = esc_url(plugin_dir_url(dirname(__FILE__)) . 'admin/assets/menu-logo.svg');
+    
+    // Get the featured icon URL if it's an SVG
+    $options = get_option('distm_settings', array());
+    $featured_icon_url = isset($options['distm_featured_icon']) ? esc_url($options['distm_featured_icon']) : '';
+    
+    // Create a list of SVGs to preload
+    $svgs_to_preload = array();
+    
+    // Add default icon if it's an SVG
+    if (substr($default_icon_url, -4) === '.svg') {
+        $svgs_to_preload[] = $default_icon_url;
+    }
+    
+    // Add featured icon if it's an SVG
+    if (!empty($featured_icon_url) && substr($featured_icon_url, -4) === '.svg') {
+        $svgs_to_preload[] = $featured_icon_url;
+    }
+    
+    // Add preload links for each SVG
+    if (!empty($svgs_to_preload)) {
+        add_action('wp_head', function() use ($svgs_to_preload) {
+            foreach ($svgs_to_preload as $svg_url) {
+                echo '<link rel="preload" href="' . esc_url($svg_url) . '" as="image" type="image/svg+xml">';
+            }
+        }, 1);
+    }
+}
 
 // Function to convert hex color to rgba (if this function doesn't exist elsewhere)
 if (!function_exists('distm_hex_to_rgba')) {
@@ -282,7 +327,13 @@ add_action('wp_footer', 'distm_add_fixed_menu');
 
 // Function to get allowed SVG tags for wp_kses
 function distm_get_allowed_svg_tags() {
-    return array(
+    // Cache the allowed tags to avoid recreating the array on every call
+    $cached_tags = wp_cache_get('distm_allowed_svg_tags', 'distm_svg_cache');
+    if ($cached_tags !== false) {
+        return $cached_tags;
+    }
+    
+    $allowed_tags = array(
         'svg' => array(
             'xmlns' => true,
             'viewbox' => true,
@@ -324,12 +375,25 @@ function distm_get_allowed_svg_tags() {
         'title' => array('title' => true),
         'desc' => array(),
     );
+    
+    // Cache the allowed tags for 24 hours
+    wp_cache_set('distm_allowed_svg_tags', $allowed_tags, 'distm_svg_cache', 24 * HOUR_IN_SECONDS);
+    
+    return $allowed_tags;
 }
+
 function distm_sanitize_svg_content($svg_content) {
-    // Remove any script tags and their content
+    // Cache the sanitized content to avoid reprocessing the same SVG
+    $cache_key = 'distm_sanitized_' . md5($svg_content);
+    $cached_content = wp_cache_get($cache_key, 'distm_svg_cache');
+    if ($cached_content !== false) {
+        return $cached_content;
+    }
+    
+    // Remove any script tags and their content - use a more efficient regex
     $svg_content = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $svg_content);
     
-    // Remove onclick and other potentially harmful attributes
+    // Remove onclick and other potentially harmful attributes - use a more efficient regex
     $svg_content = preg_replace('/\bon\w+\s*=\s*([\'"])?[^"\']*\1/i', '', $svg_content);
     
     // Only allow specific SVG elements and attributes
@@ -345,19 +409,19 @@ function distm_sanitize_svg_content($svg_content) {
             'viewBox' => true,
             'preserveAspectRatio' => true,
             'version' => true,
-            'transform' => true // Add transform attribute
+            'transform' => true
         ),
         'path' => array(
             'd' => true,
             'fill' => true,
-            'transform' => true // Add transform attribute
+            'transform' => true
         ),
         'circle' => array(
             'cx' => true,
             'cy' => true,
             'r' => true,
             'fill' => true,
-            'transform' => true // Add transform attribute
+            'transform' => true
         ),
         'rect' => array(
             'x' => true,
@@ -365,10 +429,57 @@ function distm_sanitize_svg_content($svg_content) {
             'width' => true,
             'height' => true,
             'fill' => true,
-            'transform' => true // Add transform attribute
+            'transform' => true
         ),
     );
     
-    return wp_kses($svg_content, $allowed_tags);
+    $sanitized_content = wp_kses($svg_content, $allowed_tags);
+    
+    // Cache the sanitized content for 24 hours
+    wp_cache_set($cache_key, $sanitized_content, 'distm_svg_cache', 24 * HOUR_IN_SECONDS);
+    
+    return $sanitized_content;
+}
+
+// Function to get SVG URLs
+function distm_get_svg_urls() {
+    $svg_urls = array();
+    
+    // Get default icon URL
+    $default_icon_url = get_option('distm_default_icon_url');
+    if ($default_icon_url && distm_is_svg_url($default_icon_url)) {
+        $svg_urls[] = $default_icon_url;
+    }
+    
+    // Get featured icon URL
+    $featured_icon_url = get_option('distm_featured_icon_url');
+    if ($featured_icon_url && distm_is_svg_url($featured_icon_url)) {
+        $svg_urls[] = $featured_icon_url;
+    }
+    
+    // Get menu item icons
+    $menu_items = get_posts(array(
+        'post_type' => 'distm_menu_item',
+        'posts_per_page' => -1,
+        'post_status' => 'publish'
+    ));
+    
+    foreach ($menu_items as $menu_item) {
+        $icon_url = get_post_meta($menu_item->ID, 'distm_icon_url', true);
+        if ($icon_url && distm_is_svg_url($icon_url)) {
+            $svg_urls[] = $icon_url;
+        }
+    }
+    
+    // Remove duplicates
+    $svg_urls = array_unique($svg_urls);
+    
+    return $svg_urls;
+}
+
+// Function to check if URL is an SVG
+function distm_is_svg_url($url) {
+    $file_extension = strtolower(pathinfo($url, PATHINFO_EXTENSION));
+    return $file_extension === 'svg';
 }
 

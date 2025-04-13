@@ -622,7 +622,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
                     }
                     
-                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link">';
+                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
                     $output .= '<div class="tm-folder-item-icon">' . $child_icon_html . '</div>';
                     $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
                     $output .= '</a>';
@@ -631,7 +631,6 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 $output .= '</div>'; // End tm-folder-items
                 $output .= '</div>'; // End tm-folder-content
                 
-                $output .= '</div>'; // End tm-folder-container
                 $output .= '</div>'; // End tm-folder-content-wrapper
                 // Add the folder title
                 $output .= '<div class="tm-folder-title">' . esc_html($title) . '</div>';
@@ -656,9 +655,11 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 
                 
                 $output .= '</a>';
+                $output .= '<a href="' . esc_url($url) . '" class="tm-menu-item-link">';
                 if (!$hide_text) {
                     $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
                 }
+                $output .= '</a>';
                 $output .= '</li>';
             }
         }

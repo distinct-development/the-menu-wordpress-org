@@ -56,7 +56,9 @@ body{
 .rounded #tm-fixed-mobile-menu li a, .flat #tm-fixed-mobile-menu li a{
     padding: 10px 0 0 0;
 }
-
+.rounded #tm-fixed-mobile-menu li a:nth-last-of-type(1), .flat #tm-fixed-mobile-menu li a:nth-last-of-type(1){
+    padding:3px 0 0 0;
+}
 /*END base menu style options*/
 
 /*START FIXED MENU*/
@@ -197,7 +199,7 @@ body{
     gap: 5px;
 }
 
-#tm-fixed-mobile-menu a:hover{
+#tm-fixed-mobile-menu li:hover a{
     background: rgba(0,0,0,0.1);
 }
 
@@ -519,23 +521,23 @@ body{
 /*ANIMATIONS*/
 /* Keyframes for sliding in the menu */
 @keyframes slideIn {
-    from {
-        opacity: 0;
+    0% {
         transform: translateY(100%);
+        opacity: 0;
     }
-    to {
-        opacity: 1;
+    100% {
         transform: translateY(0);
+        opacity: 1;
     }
 }
 @keyframes slideOut {
-    from {
-        opacity: 1;
+    0% {
         transform: translateY(0);
+        opacity: 1;
     }
-    to {
-        opacity: 0;
+    100% {
         transform: translateY(100%);
+        opacity: 0;
     }
 }
 
@@ -585,7 +587,7 @@ body{
     top:0;
     width:100%;
     height:100%;
-    background:rgba(255, 255, 255, 0.8);
+    background:var(--distm-addon-bg-color);
     z-index:1005; 
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
@@ -696,7 +698,6 @@ body{
 .tm-menu-item-title {
     z-index: 1;
     margin-bottom: 20px;
-    font-size: .7em;
 }
 .preview-content .menu-item-type-cart .tm-menu-item-title:before {
     position: absolute;
@@ -782,8 +783,8 @@ body{
 }
 
 .tm-folder-preview-icon img{
-    width: 15px!important;
-    height: 15px!important;
+    width: 20px!important;
+    height: 20px!important;
 }
 
 .tm-folder-preview-icon svg{
@@ -885,7 +886,7 @@ body{
 }
 
 .tm-folder-header-title {
-    font-size: 3em;
+    font-size: 2em;
     font-weight: bold;
     pointer-events: none;
     line-height: 1em;
@@ -925,6 +926,7 @@ body{
     width: 90px;
     height: 90px;
     margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .tm-folder-item-icon img,
@@ -991,17 +993,16 @@ body{
         margin-bottom: 0;
     }
     .tm-folder-item-icon img, .tm-folder-item-icon svg, .tm-folder-item-icon .dashicons{
-        width: 100%;
-        height: 100%;
+        width: 15px;
+        height: 15px;
     }
     .tm-folder-item-icon img{
         padding: 0!important;
     }
-
     
- .tm-folder-header{
-    font-size: .7em;
- }
+    .tm-folder-header{
+        font-size: .7em;
+    }
 
     .tm-folder-item-title {
         font-size: 12px;
@@ -1014,11 +1015,42 @@ body{
     }
 
     .tm-folder-content{
-        border-radius: 30px;
+        border-radius: 40px;
         width: calc(100% - 60px);
         height: calc(80svh - 120px);
         padding: 20px;
         box-sizing: border-box;
     }
     
+}
+
+/* Animation classes for menu transitions */
+.tm-addon-menu-wrapper.opening {
+    animation: slideIn 0.5s forwards;
+}
+
+.tm-addon-menu-wrapper.closing {
+    animation: slideOut 0.5s forwards;
+}
+
+@keyframes slideIn {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
 }
