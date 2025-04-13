@@ -498,6 +498,9 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 // This is a parent menu item in the addon menu with app-icon style
                 $output .= '<li class="' . esc_attr($class_names) . ' tm-folder-item">';
                 
+                // Get the hide_text option
+                $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
+                
                 // Create a folder-like container
                 $output .= '<div class="tm-folder-container">';
                 
@@ -569,7 +572,9 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 // Add a hidden container for the submenu items
                 $output .= '<div class="tm-folder-content-wrapper" data-parent-id="' . esc_attr($item->ID) . '">';
                 $output .= '<div class="tm-folder-header">';
-                $output .= '<div class="tm-folder-header-title">' . esc_html($title) . '</div>';
+                if (!$hide_text) {
+                    $output .= '<div class="tm-folder-header-title">' . esc_html($title) . '</div>';
+                }
                 $output .= '<button class="tm-folder-close">×</button>';
                 $output .= '</div>';
                 $output .= '<div class="tm-folder-content">';
@@ -624,7 +629,9 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     
                     $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
                     $output .= '<div class="tm-folder-item-icon">' . $child_icon_html . '</div>';
-                    $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
+                    if (!$hide_text) {
+                        $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
+                    }
                     $output .= '</a>';
                 }
                 
@@ -633,7 +640,9 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 
                 $output .= '</div>'; // End tm-folder-content-wrapper
                 // Add the folder title
-                $output .= '<div class="tm-folder-title">' . esc_html($title) . '</div>';
+                if (!$hide_text) {
+                    $output .= '<div class="tm-folder-title">' . esc_html($title) . '</div>';
+                }
                 $output .= '</li>';
             } else {
                 // Regular menu item
