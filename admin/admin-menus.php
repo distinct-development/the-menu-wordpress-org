@@ -575,7 +575,6 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 if (!$hide_text) {
                     $output .= '<div class="tm-folder-header-title">' . esc_html($title) . '</div>';
                 }
-                $output .= '<button class="tm-folder-close">×</button>';
                 $output .= '</div>';
                 $output .= '<div class="tm-folder-content">';
                 

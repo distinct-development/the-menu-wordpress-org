@@ -118,19 +118,31 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (folderContent) {
                     folderContent.classList.add('active');
                     document.body.style.overflow = 'hidden'; // Prevent scrolling when folder is open
+                    
+                    // Remove backdrop filter blur from main menu wrapper when submenu is active
+                    const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
+                    if (menuWrapper) {
+                        menuWrapper.style.backdropFilter = 'none';
+                    }
                 }
             }
             
-            // Handle folder close buttons with the same delegation
-            const closeButton = e.target.closest('.tm-folder-close');
-            if (closeButton) {
+            // Handle folder content wrapper clicks
+            const contentWrapper = e.target.closest('.tm-folder-content-wrapper');
+            if (contentWrapper && contentWrapper.classList.contains('active')) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const folderContent = closeButton.closest('.tm-folder-content-wrapper');
-                if (folderContent) {
-                    folderContent.classList.remove('active');
+                // Only close if clicking directly on the wrapper or header
+                if (e.target === contentWrapper || e.target.closest('.tm-folder-header')) {
+                    contentWrapper.classList.remove('active');
                     document.body.style.overflow = ''; // Restore scrolling
+                    
+                    // Restore backdrop filter blur on main menu wrapper when submenu is closed
+                    const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
+                    if (menuWrapper) {
+                        menuWrapper.style.backdropFilter = ''; // Reset to default value
+                    }
                 }
             }
         });
@@ -156,6 +168,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 folderContent.classList.remove('active');
             });
             document.body.style.overflow = ''; // Restore scrolling
+            
+            // Restore backdrop filter blur on main menu wrapper when submenu is closed
+            const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
+            if (menuWrapper) {
+                menuWrapper.style.backdropFilter = ''; // Reset to default value
+            }
         }
     });
 
