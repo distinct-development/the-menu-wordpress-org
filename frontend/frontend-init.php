@@ -298,10 +298,11 @@ function distm_add_fixed_menu() {
                                     }
                                 }
                             } else {
-                                printf(
-                                    '<img src="%s" alt="%s" />',
-                                    esc_url($icon_url),
-                                    esc_attr__('Featured Icon', 'the-menu')
+                                echo wp_get_attachment_image(
+                                    attachment_url_to_postid($icon_url),
+                                    'full',
+                                    false,
+                                    array('alt' => esc_attr__('Featured Icon', 'the-menu'))
                                 );
                             }
                         } else {

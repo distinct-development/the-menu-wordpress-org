@@ -245,8 +245,9 @@ body{
     column-gap: 5%;
     row-gap: 20px;
     padding-left: 0;
-    padding: 70px 5% 150px!important;
+    padding: 70px 0 150px!important;
     height: auto;
+    margin: 0 auto;
 }
 .list #tm-addon-menu ul{
     width:100%;
@@ -255,12 +256,12 @@ body{
 #tm-addon-menu li{
     border:none;
     display: flex;
-    flex-direction: column;
     align-items: start;
     justify-content: start;
     position: relative;
     text-align: center;
     width:12.5%;
+    font-size: .7em;
 }
 #tm-addon-menu li .tm-cart-count{
     width: fit-content;
@@ -268,16 +269,14 @@ body{
 }
 
 #tm-addon-menu *, #tm-addon-menu :after,#tm-addon-menu :before,#tm-addon-menu html :before{
-    box-sizing: content-box!important;
+    /* box-sizing: border-box; */
 }
 
 #tm-addon-menu span{
     width: 100%;
-    display: block!important;
+    display: block;
 }
-.list #tm-addon-menu span{
-    position: absolute;
-}
+
 #tm-addon-menu a{
     width:90px;
     
@@ -314,19 +313,16 @@ body{
     align-items: center;
     justify-content: start;
     text-decoration: none;
-    margin: 0 auto;
+    margin: 0 auto 10px auto;
     padding-bottom: 0;
 
 }
 
 #tm-addon-menu .tm-menu-item-title{
     margin-top: 10px;
-
-    font-size: .7em;
     line-height: 1em;
     width: 100%;
     color: var(--distm-addon-label-color);
- 
 }
 
 /* addon menu options */
@@ -335,10 +331,12 @@ body{
     background-color: transparent!important;
     padding: 0!important;
     width: 70px;
-    height: 90px!important;
-    line-height: 90px!important;
-    object-fit: contain;
-    margin-bottom: 10px;
+    height: 70px;
+    line-height: 70px;
+    object-fit: cover;
+    border-radius: 25%;
+    margin-bottom: 7px;
+    
 }
 .icon #tm-addon-menu svg:hover :is(path,rect,circle,ellipse,polygon,polyline,line), .icon #tm-addon-menu .dashicons:hover{
     fill: var(--distm-featured-background-color);
@@ -362,15 +360,11 @@ body{
 }
 .app-icon #tm-addon-menu img:hover{
     opacity: 0.8;
-    background: var(--distm-featured-background-color);
+    cursor: pointer;
 }
 
 .list #tm-addon-menu li{
-    border-bottom:1px solid rgba(255,255,255,0.5);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
+    border-bottom:1px solid var(--distm-addon-label-color);
     margin: 0;
     width: 100%;
 
@@ -380,14 +374,14 @@ body{
 }
 .list #tm-addon-menu li a{
     display: flex;
-    justify-content: space-around;
     align-items: center;
-    text-align: center;
-    font-size: 1em;
-    height: 50px;
-    width: 100%;
-    position: relative;
+    text-decoration: none;
+    color: var(--distm-addon-label-color);
+    transition: all 0.3s ease;
+    padding: 20px 0;
+    height: 100%;
 }
+
 .list #tm-addon-menu li a:hover{
     background: var(--distm-featured-background-color);
 }
@@ -406,17 +400,20 @@ body{
     margin-top: 0!important;
     text-align: center;
     display: inline-block!important;
+    margin: 0!important;
+}
+.list #tm-addon-menu li a{
+    margin: 0!important;
+    width: 100%;
 }
 @media screen and (max-width: 768px) {
     #tm-addon-menu li{
         width:21.25%;
     }
-    #tm-addon-menu a{
-        width:70px;
-    }
     #tm-addon-menu img{
         height: 70px;
         width: 70px;
+        object-fit: cover;
     }
     #tm-addon-menu svg, #tm-addon-menu .dashicons{
         width: 40px;
@@ -746,8 +743,6 @@ body{
 
 .tm-folder-background {
     position: relative;
-    width: 70px;
-    height: 70px;
     background-color: var(--distm-addon-bg-color);
     border-radius: 25%;
     box-sizing: border-box;
@@ -806,7 +801,6 @@ body{
     position: relative;
     width: 100%;
     margin-top: 5px;
-    font-size: .7em;
     text-align: center;
     color: var(--distm-addon-label-color);
     z-index: 2;
@@ -940,8 +934,8 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 90px;
-    height: 90px;
+    width: 70px;
+    height: 70px;
     margin-bottom: 10px;
     cursor: pointer;
 }
@@ -970,10 +964,6 @@ body{
 
 /* Mobile optimizations for folders */
 @media (max-width: 768px) {
-    .tm-folder-background{
-        width: 51px;
-        height: 51px;
-    }
 
     .tm-folder-preview {
         width: 51px;
@@ -1001,7 +991,23 @@ body{
 
     .tm-folder-title {
         margin-top: 5px;
-        font-size: .7em;
+    }
+    .tm-addon-menu-wrapper.icon .tm-folder-preview-icon img, .tm-addon-menu-wrapper.icon .tm-folder-preview-icon svg, .tm-addon-menu-wrapper.icon .tm-folder-preview-icon .dashicons{
+        width: 9px!important;
+        height: 9px!important;
+        min-width: 9px!important;
+        min-height: 9px!important;
+        font-size: 9px!important;
+        line-height: 9px!important;
+    }
+    .tm-addon-menu-wrapper.icon .tm-folder-preview-icon{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tm-addon-menu-wrapper.icon .tm-folder-preview-icon svg{
+        width: 9px!important;
+        height: 9px!important;
     }
 
     /* Folder content modal adjustments */
@@ -1080,5 +1086,433 @@ body{
     100% {
         transform: translateY(100%);
         opacity: 0;
+    }
+}
+
+/* Icon style for folders - same as app-icon but without background color */
+.icon .tm-folder-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    width: 100%;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.icon .tm-folder-background {
+    position: relative;
+    background-color: var(--distm-addon-bg-color);
+    box-sizing: border-box;
+    padding: 10px;
+    z-index: 1;
+}
+
+.icon .tm-folder-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 3px;
+    width: 70px;
+    height: 70px;
+    z-index: 2;
+}
+
+.icon .tm-folder-preview-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.icon .tm-folder-preview-icon img,
+.icon .tm-folder-preview-icon svg,
+.icon .tm-folder-preview-icon .dashicons {
+    width: 100%;
+    color: var(--distm-addon-icon-color);
+}
+
+.icon .tm-folder-preview-icon img{
+    width: 20px!important;
+    height: 20px!important;
+}
+
+.icon .tm-folder-preview-icon svg{
+    padding: 3px!important;
+}
+
+.icon .tm-folder-preview-icon .dashicons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px!important;
+    line-height: 15px!important;
+    width: 15px!important;
+    height: 15px!important;
+    padding: 5px!important;
+}
+
+.icon .tm-folder-title {
+    position: relative;
+    width: 100%;
+    margin-top: 5px;
+    text-align: center;
+    color: var(--distm-addon-label-color);
+    z-index: 2;
+    max-width: 100%;
+}
+
+/* Mobile optimizations for icon folders */
+@media (max-width: 768px) {
+
+    .icon .tm-folder-preview {
+        width: 51px;
+        height: 51px;
+        gap: 3px;
+        box-sizing: border-box;
+    }
+    
+    .icon .tm-folder-preview-icon{
+        width: 15px!important;
+        height: 15px!important;
+    }
+    
+    .icon .tm-folder-preview-icon img,
+    .icon .tm-folder-preview-icon svg,
+    .icon .tm-folder-preview-icon .dashicons {
+        width: 8px;
+        height: 8px;
+        min-width: 8px;
+        min-height: 8px;
+        font-size: 8px!important;
+    }
+    
+    .icon .tm-folder-preview-icon img{
+        width: 15px!important;
+        height: 15px!important;
+    }
+}
+
+/* Accordion Menu Styles */
+.list #tm-addon-menu ul {
+    width: 100%;
+    display: block;
+    padding: 120px 0 120px!important;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.tm-accordion-item {
+    margin: 0 15px 8px;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.tm-accordion-item:last-child {
+    margin-bottom: 0;
+}
+
+.tm-accordion-header {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tm-accordion-header:hover {
+    background-color: var(--distm-addon-bg-color);
+}
+
+.tm-accordion-icon {
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--distm-addon-icon-bg);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.tm-accordion-icon .dashicons,
+.tm-accordion-icon img,
+.tm-accordion-icon svg {
+    width: 20px;
+    height: 20px;
+    color: var(--distm-addon-icon-color);
+}
+
+.tm-accordion-title {
+    flex-grow: 1;
+    color: var(--distm-addon-label-color);
+}
+
+.tm-accordion-toggle {
+    margin-left: 15px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tm-accordion-toggle .dashicons {
+    color: var(--distm-addon-icon-color);
+    transition: transform 0.3s ease;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+}
+
+.tm-accordion-item.active {
+    background-color: rgba(255, 255, 255, 0.08);
+    margin-bottom: 16px;
+}
+
+.tm-accordion-item.active .tm-accordion-header {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.tm-accordion-item.active .tm-accordion-toggle .dashicons {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.tm-accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background-color: transparent;
+}
+
+.tm-accordion-item.active .tm-accordion-content {
+    max-height: 500px;
+    padding-bottom: 8px;
+}
+
+.tm-accordion-item-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px 12px 67px;
+    text-decoration: none;
+    color: var(--distm-addon-label-color);
+    transition: all 0.2s ease;
+    position: relative;
+    opacity: 0.8;
+}
+
+.tm-accordion-item-link:hover {
+    opacity: 1;
+}
+
+.tm-accordion-item-icon {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: var(--distm-addon-icon-bg);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.tm-accordion-item-icon .dashicons,
+.tm-accordion-item-icon img,
+.tm-accordion-item-icon svg {
+    width: 16px;
+    height: 16px;
+    color: var(--distm-addon-icon-color);
+}
+
+.tm-accordion-item-title {
+    flex-grow: 1;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+}
+
+@media (max-width: 768px) {
+    .tm-accordion-item {
+        margin: 0 12px 6px;
+    }
+
+    .tm-accordion-header {
+        padding: 15px 16px;
+    }
+    
+    .tm-accordion-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+    }
+    
+    .tm-accordion-icon .dashicons,
+    .tm-accordion-icon img,
+    .tm-accordion-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .tm-accordion-title {
+        font-size: 15px;
+    }
+    
+    .tm-accordion-toggle {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .tm-accordion-toggle .dashicons {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+    }
+    
+    .tm-accordion-item-link {
+        padding: 10px 16px 10px 56px;
+    }
+    
+    .tm-accordion-item-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+    }
+    
+    .tm-accordion-item-icon .dashicons,
+    .tm-accordion-item-icon img,
+    .tm-accordion-item-icon svg {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .tm-accordion-item-title {
+        font-size: 13px;
+    }
+}
+
+/* Override the default list styles for accordion */
+.list #tm-addon-menu li.tm-accordion-item {
+    border-bottom: none;
+    width: 100%;
+    display: block;
+}
+
+.list #tm-addon-menu li.tm-accordion-item:last-child {
+    margin-bottom: 0;
+}
+
+.list #tm-addon-menu .tm-accordion-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--distm-addon-label-color);
+}
+
+.list #tm-addon-menu .tm-accordion-icon {
+    display: none !important;
+}
+
+.list #tm-addon-menu .tm-accordion-title {
+    margin: 0 !important;
+    display: block !important;
+    color: var(--distm-addon-label-color);
+    margin-right: -35px!important;
+}
+
+.list #tm-addon-menu .tm-accordion-toggle {
+    margin-left: 15px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: content-box!important;
+}
+
+.list #tm-addon-menu .tm-accordion-toggle .dashicons {
+    color: var(--distm-addon-label-color);
+    transition: transform 0.3s ease;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+    background: none;
+}
+
+.list #tm-addon-menu .tm-accordion-item.active .tm-accordion-toggle .dashicons {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.list #tm-addon-menu .tm-accordion-item-link {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 25px !important;
+    margin: 0 !important;
+    height: auto !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    text-align: left !important;
+    text-decoration: none;
+    color: var(--distm-addon-label-color);
+    transition: all 0.2s ease;
+    position: relative;
+    opacity: 0.8;
+}
+
+.list #tm-addon-menu .tm-accordion-item-icon {
+    display: none !important;
+}
+
+.list #tm-addon-menu .tm-accordion-item-title {
+    margin: 0 !important;
+    text-align: left !important;
+    display: block !important;
+    font-size: 14px !important;
+    letter-spacing: 0.2px;
+}
+
+.list #tm-addon-menu .tm-accordion-content {
+    background-color: var(--distm-addon-bg-color);
+}
+
+@media (max-width: 768px) {
+    .list #tm-addon-menu .tm-accordion-header {
+        padding: 20px;
+    }
+    
+    .list #tm-addon-menu .tm-accordion-title {
+        font-size: 14px !important;
+    }
+    
+    .list #tm-addon-menu .tm-accordion-toggle {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .list #tm-addon-menu .tm-accordion-toggle .dashicons {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+    }
+    
+    .list #tm-addon-menu .tm-accordion-item-link {
+        padding: 10px 20px !important;
+    }
+    
+    .list #tm-addon-menu .tm-accordion-item-title {
+        font-size: 13px !important;
     }
 }

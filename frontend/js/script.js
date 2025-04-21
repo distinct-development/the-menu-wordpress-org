@@ -306,4 +306,32 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     });
+
+    // Accordion Menu Functionality
+    function initAccordionMenu() {
+        const accordionItems = document.querySelectorAll('.tm-accordion-item');
+        
+        accordionItems.forEach(item => {
+            const header = item.querySelector('.tm-accordion-header');
+            
+            if (header) {
+                header.addEventListener('click', () => {
+                    // Close all other accordion items
+                    accordionItems.forEach(otherItem => {
+                        if (otherItem !== item && otherItem.classList.contains('active')) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle the clicked accordion item
+                    item.classList.toggle('active');
+                });
+            }
+        });
+    }
+
+    // Initialize accordion menu if it exists
+    if (document.querySelector('.tm-accordion-item')) {
+        initAccordionMenu();
+    }
 });

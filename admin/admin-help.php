@@ -2,6 +2,9 @@
 if (!defined('ABSPATH')) exit;
 
 function distm_add_help_submenu() {
+    // No need to get the text domain from the class
+    // Use the string literal directly
+    
     add_submenu_page(
         'the-menu',
         __('Help', 'the-menu'),
@@ -16,6 +19,9 @@ add_action('admin_menu', 'distm_add_help_submenu');
 
 
 function distm_help_page() {
+    // No need to get the text domain from the class
+    // Use the string literal directly
+    
     if (!current_user_can('manage_options')) {
         wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'the-menu'));
     }

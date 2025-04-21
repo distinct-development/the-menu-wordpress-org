@@ -2,7 +2,7 @@
 Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.8
 Stable tag: 1.2.15
 Requires PHP: 7.0
 License: GPLv2 or later
