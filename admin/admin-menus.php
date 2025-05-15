@@ -426,7 +426,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         $classes = empty($item->classes) ? array() : (array) $item->classes;
         
         // Add cart class if this is the cart page
-        if (class_exists('WooCommerce') && is_object($item) && isset($item->object_id)) {
+        if (distm_is_woocommerce_loaded() && is_object($item) && isset($item->object_id)) {
             $cart_page_id = wc_get_page_id('cart');
             if ($item->object_id == $cart_page_id || (isset($item->url) && trailingslashit($item->url) === trailingslashit(wc_get_cart_url()))) {
                 $classes[] = 'menu-item-type-cart';
@@ -486,26 +486,463 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         }
 
         if ($show_item) {
-            $output .= '<li class="' . esc_attr($class_names) . '">';
-            $options = get_option('distm_settings');
-            $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
-
-            $output .= '<a href="' . esc_url($url) . '">' . $icon_html;
+            // Check if this is an addon menu item with submenu items
+            $options = get_option('distm_settings', array());
+            $addon_menu_style = isset($options['distm_addon_menu_style']) ? $options['distm_addon_menu_style'] : 'app-icon';
+            $is_addon_menu = isset($args->theme_location) && $args->theme_location === 'addon-menu';
             
-            // Check if this is a WooCommerce cart menu item
-            if (class_exists('WooCommerce') && function_exists('WC') && WC()->cart && in_array('menu-item-type-cart', $classes)) {
-                $cart_count = WC()->cart->get_cart_contents_count();
-                if ($cart_count > 0) {
-                    $output .= '<span class="tm-cart-count">' . esc_html($cart_count) . '</span>';
+            // Check if this item has children
+            $has_children = in_array('menu-item-has-children', $classes);
+            
+            if ($is_addon_menu && $addon_menu_style === 'app-icon' && $has_children) {
+                // This is a parent menu item in the addon menu with app-icon style
+                $output .= '<li class="' . esc_attr($class_names) . ' tm-folder-item">';
+                
+                // Get the hide_text option
+                $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
+                
+                // Create a folder-like container
+                $output .= '<div class="tm-folder-container">';
+                
+                // Add the folder background
+                $output .= '<div class="tm-folder-background">';
+                
+                // Add up to 9 preview icons
+                $output .= '<div class="tm-folder-preview">';
+                
+                // Get the children of this menu item
+                $children = $this->get_children($item, $args);
+                $preview_count = 0;
+                
+                foreach ($children as $child) {
+                    if ($preview_count >= 9) break;
+                    
+                    $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
+                    if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
+                        $child_icon_type = 'dashicon';
+                    }
+                    
+                    $child_dashicon = get_post_meta($child->ID, '_menu_item_dashicon', true);
+                    if (empty($child_dashicon)) {
+                        $child_dashicon = 'menu';
+                    }
+                    
+                    $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    $child_title = apply_filters('the_title', $child->title, $child->ID);
+                    
+                    $child_icon_html = '';
+                    
+                    if ($child_icon_type === 'dashicon') {
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            esc_attr($child_dashicon)
+                        );
+                    } elseif ($child_icon_type === 'upload' && !empty($child_icon_url)) {
+                        if (substr($child_icon_url, -4) === '.svg') {
+                            $svg_content = distm_get_svg_content($child_icon_url);
+                            if ($svg_content !== false) {
+                                $child_icon_html = $svg_content;
+                            } else {
+                                $child_icon_html = sprintf(
+                                    '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                    'menu'
+                                );
+                            }
+                        } else {
+                            $child_icon_html = sprintf(
+                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                                esc_url($child_icon_url),
+                                esc_attr($child_title),
+                                esc_attr__('Icon', 'the-menu')
+                            );
+                        }
+                    } else {
+                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                    }
+                    
+                    $output .= '<div class="tm-folder-preview-icon">' . $child_icon_html . '</div>';
+                    $preview_count++;
                 }
-            }
+                
+                $output .= '</div>'; // End tm-folder-preview
+                $output .= '</div>'; // End tm-folder-background
+                
+               
+                
+                // Add a hidden container for the submenu items
+                $output .= '<div class="tm-folder-content-wrapper" data-parent-id="' . esc_attr($item->ID) . '">';
+                $output .= '<div class="tm-folder-header">';
+                if (!$hide_text) {
+                    $output .= '<div class="tm-folder-header-title">' . esc_html($title) . '</div>';
+                }
+                $output .= '</div>';
+                $output .= '<div class="tm-folder-content">';
+                
+                $output .= '<div class="tm-folder-items">';
+                
+                // Add the submenu items
+                foreach ($children as $child) {
+                    $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
+                    if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
+                        $child_icon_type = 'dashicon';
+                    }
+                    
+                    $child_dashicon = get_post_meta($child->ID, '_menu_item_dashicon', true);
+                    if (empty($child_dashicon)) {
+                        $child_dashicon = 'menu';
+                    }
+                    
+                    $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    $child_title = apply_filters('the_title', $child->title, $child->ID);
+                    $child_url = $child->url;
+                    
+                    $child_icon_html = '';
+                    
+                    if ($child_icon_type === 'dashicon') {
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            esc_attr($child_dashicon)
+                        );
+                    } elseif ($child_icon_type === 'upload' && !empty($child_icon_url)) {
+                        if (substr($child_icon_url, -4) === '.svg') {
+                            $svg_content = distm_get_svg_content($child_icon_url);
+                            if ($svg_content !== false) {
+                                $child_icon_html = $svg_content;
+                            } else {
+                                $child_icon_html = sprintf(
+                                    '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                    'menu'
+                                );
+                            }
+                        } else {
+                            $child_icon_html = sprintf(
+                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                                esc_url($child_icon_url),
+                                esc_attr($child_title),
+                                esc_attr__('Icon', 'the-menu')
+                            );
+                        }
+                    } else {
+                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                    }
+                    
+                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
+                    $output .= '<div class="tm-folder-item-icon">' . $child_icon_html . '</div>';
+                    if (!$hide_text) {
+                        $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
+                    }
+                    $output .= '</a>';
+                }
+                
+                $output .= '</div>'; // End tm-folder-items
+                $output .= '</div>'; // End tm-folder-content
+                
+                $output .= '</div>'; // End tm-folder-content-wrapper
+                // Add the folder title
+                if (!$hide_text) {
+                    $output .= '<div class="tm-folder-title">' . esc_html($title) . '</div>';
+                }
+                $output .= '</li>';
+            } elseif ($is_addon_menu && $addon_menu_style === 'icon' && $has_children) {
+                // This is a parent menu item in the addon menu with icon style
+                $output .= '<li class="' . esc_attr($class_names) . ' tm-folder-item">';
+                
+                // Get the hide_text option
+                $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
+                
+                // Create a folder-like container
+                $output .= '<div class="tm-folder-container">';
+                
+                // Add the folder background
+                $output .= '<div class="tm-folder-background">';
+                
+                // Add up to 9 preview icons
+                $output .= '<div class="tm-folder-preview">';
+                
+                // Get the children of this menu item
+                $children = $this->get_children($item, $args);
+                $preview_count = 0;
+                
+                foreach ($children as $child) {
+                    if ($preview_count >= 9) break;
+                    
+                    $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
+                    if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
+                        $child_icon_type = 'dashicon';
+                    }
+                    
+                    $child_dashicon = get_post_meta($child->ID, '_menu_item_dashicon', true);
+                    if (empty($child_dashicon)) {
+                        $child_dashicon = 'menu';
+                    }
+                    
+                    $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    $child_title = apply_filters('the_title', $child->title, $child->ID);
+                    
+                    $child_icon_html = '';
+                    
+                    if ($child_icon_type === 'dashicon') {
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            esc_attr($child_dashicon)
+                        );
+                    } elseif ($child_icon_type === 'upload' && !empty($child_icon_url)) {
+                        if (substr($child_icon_url, -4) === '.svg') {
+                            $svg_content = distm_get_svg_content($child_icon_url);
+                            if ($svg_content !== false) {
+                                $child_icon_html = $svg_content;
+                            } else {
+                                $child_icon_html = sprintf(
+                                    '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                    'menu'
+                                );
+                            }
+                        } else {
+                            $child_icon_html = sprintf(
+                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                                esc_url($child_icon_url),
+                                esc_attr($child_title),
+                                esc_attr__('Icon', 'the-menu')
+                            );
+                        }
+                    } else {
+                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                    }
+                    
+                    $output .= '<div class="tm-folder-preview-icon">' . $child_icon_html . '</div>';
+                    $preview_count++;
+                }
+                
+                $output .= '</div>'; // End tm-folder-preview
+                $output .= '</div>'; // End tm-folder-background
+                
+                // Add a hidden container for the submenu items
+                $output .= '<div class="tm-folder-content-wrapper" data-parent-id="' . esc_attr($item->ID) . '">';
+                $output .= '<div class="tm-folder-header">';
+                if (!$hide_text) {
+                    $output .= '<div class="tm-folder-header-title">' . esc_html($title) . '</div>';
+                }
+                $output .= '</div>';
+                $output .= '<div class="tm-folder-content">';
+                
+                $output .= '<div class="tm-folder-items">';
+                
+                // Add the submenu items
+                foreach ($children as $child) {
+                    $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
+                    if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
+                        $child_icon_type = 'dashicon';
+                    }
+                    
+                    $child_dashicon = get_post_meta($child->ID, '_menu_item_dashicon', true);
+                    if (empty($child_dashicon)) {
+                        $child_dashicon = 'menu';
+                    }
+                    
+                    $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    $child_title = apply_filters('the_title', $child->title, $child->ID);
+                    $child_url = $child->url;
+                    
+                    $child_icon_html = '';
+                    
+                    if ($child_icon_type === 'dashicon') {
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            esc_attr($child_dashicon)
+                        );
+                    } elseif ($child_icon_type === 'upload' && !empty($child_icon_url)) {
+                        if (substr($child_icon_url, -4) === '.svg') {
+                            $svg_content = distm_get_svg_content($child_icon_url);
+                            if ($svg_content !== false) {
+                                $child_icon_html = $svg_content;
+                            } else {
+                                $child_icon_html = sprintf(
+                                    '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                    'menu'
+                                );
+                            }
+                        } else {
+                            $child_icon_html = sprintf(
+                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                                esc_url($child_icon_url),
+                                esc_attr($child_title),
+                                esc_attr__('Icon', 'the-menu')
+                            );
+                        }
+                    } else {
+                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                    }
+                    
+                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
+                    $output .= '<div class="tm-folder-item-icon">' . $child_icon_html . '</div>';
+                    if (!$hide_text) {
+                        $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
+                    }
+                    $output .= '</a>';
+                }
+                
+                $output .= '</div>'; // End tm-folder-items
+                $output .= '</div>'; // End tm-folder-content
+                
+                $output .= '</div>'; // End tm-folder-content-wrapper
+                // Add the folder title
+                if (!$hide_text) {
+                    $output .= '<div class="tm-folder-title">' . esc_html($title) . '</div>';
+                }
+                $output .= '</li>';
+            } elseif ($is_addon_menu && $addon_menu_style === 'list' && $has_children) {
+                // This is a parent menu item in the addon menu with list/accordion style
+                $output .= '<li class="' . esc_attr($class_names) . ' tm-accordion-item">';
+                
+                // Get the hide_text option
+                $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
+                
+                // Create the accordion header
+                $output .= '<div class="tm-accordion-header">';
+                
+                // Add the parent icon
+                $icon_type = get_post_meta($item->ID, '_menu_item_icon_type', true);
+                if (!in_array($icon_type, ['dashicon', 'upload'])) {
+                    $icon_type = 'dashicon';
+                }
+                
+                $dashicon = get_post_meta($item->ID, '_menu_item_dashicon', true);
+                if (empty($dashicon)) {
+                    $dashicon = 'menu';
+                }
+                
+                $icon_url = esc_url(get_post_meta($item->ID, '_menu_item_icon', true));
+                
+                $icon_html = '';
+                
+                if ($icon_type === 'dashicon') {
+                    $icon_html = sprintf(
+                        '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                        esc_attr($dashicon)
+                    );
+                } elseif ($icon_type === 'upload' && !empty($icon_url)) {
+                    if (substr($icon_url, -4) === '.svg') {
+                        $svg_content = distm_get_svg_content($icon_url);
+                        if ($svg_content !== false) {
+                            $icon_html = $svg_content;
+                        } else {
+                            $icon_html = sprintf(
+                                '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                'menu'
+                            );
+                        }
+                    } else {
+                        $icon_html = sprintf(
+                            '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                            esc_url($icon_url),
+                            esc_attr($title),
+                            esc_attr__('Icon', 'the-menu')
+                        );
+                    }
+                } else {
+                    $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                }
+                
+                $output .= '<div class="tm-accordion-icon">' . $icon_html . '</div>';
+                
+                // Add the title if not hidden
+                if (!$hide_text) {
+                    $output .= '<div class="tm-accordion-title">' . esc_html($title) . '</div>';
+                }
+                
+                // Add the toggle button
+                $output .= '<div class="tm-accordion-toggle"><span class="dashicons dashicons-arrow-down-alt2"></span></div>';
+                
+                $output .= '</div>'; // End tm-accordion-header
+                
+                // Add the accordion content
+                $output .= '<div class="tm-accordion-content">';
+                
+                // Get the children of this menu item
+                $children = $this->get_children($item, $args);
+                
+                // Add the submenu items
+                foreach ($children as $child) {
+                    $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
+                    if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
+                        $child_icon_type = 'dashicon';
+                    }
+                    
+                    $child_dashicon = get_post_meta($child->ID, '_menu_item_dashicon', true);
+                    if (empty($child_dashicon)) {
+                        $child_dashicon = 'menu';
+                    }
+                    
+                    $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    $child_title = apply_filters('the_title', $child->title, $child->ID);
+                    $child_url = $child->url;
+                    
+                    $child_icon_html = '';
+                    
+                    if ($child_icon_type === 'dashicon') {
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            esc_attr($child_dashicon)
+                        );
+                    } elseif ($child_icon_type === 'upload' && !empty($child_icon_url)) {
+                        if (substr($child_icon_url, -4) === '.svg') {
+                            $svg_content = distm_get_svg_content($child_icon_url);
+                            if ($svg_content !== false) {
+                                $child_icon_html = $svg_content;
+                            } else {
+                                $child_icon_html = sprintf(
+                                    '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                    'menu'
+                                );
+                            }
+                        } else {
+                            $child_icon_html = sprintf(
+                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
+                                esc_url($child_icon_url),
+                                esc_attr($child_title),
+                                esc_attr__('Icon', 'the-menu')
+                            );
+                        }
+                    } else {
+                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                    }
+                    
+                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-accordion-item-link">';
+                    $output .= '<div class="tm-accordion-item-icon">' . $child_icon_html . '</div>';
+                    if (!$hide_text) {
+                        $output .= '<div class="tm-accordion-item-title">' . esc_html($child_title) . '</div>';
+                    }
+                    $output .= '</a>';
+                }
+                
+                $output .= '</div>'; // End tm-accordion-content
+                $output .= '</li>';
+            } else {
+                // Regular menu item
+                $output .= '<li class="' . esc_attr($class_names) . '">';
+                $options = get_option('distm_settings');
+                $hide_text = isset($options['distm_disable_menu_text']) && $options['distm_disable_menu_text'];
 
-            if (!$hide_text) {
-                $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
+                // Combine icon and title into a single link
+                $output .= '<a href="' . esc_url($url) . '">' . $icon_html;
+                
+                // Check if this is a WooCommerce cart menu item
+                $wc_cart = distm_get_wc_cart();
+                if (distm_is_woocommerce_loaded() && $wc_cart && in_array('menu-item-type-cart', $classes)) {
+                    $cart_count = $wc_cart->get_cart_contents_count();
+                    if ($cart_count > 0) {
+                        $output .= '<span class="tm-cart-count">' . esc_html($cart_count) . '</span>';
+                    }
+                }
+                
+                // Add the title if not hidden
+                if (!$hide_text) {
+                    $output .= '<span class="tm-menu-item-title">' . esc_html($title) . '</span>';
+                }
+                
+                $output .= '</a>';
+                $output .= '</li>';
             }
-            
-            $output .= '</a>';
-            $output .= '</li>';
         }
     }
 
@@ -513,6 +950,28 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         if ($depth === 0) {
             return;
         }
+    }
+    
+    // Helper function to get children of a menu item
+    function get_children($item, $args) {
+        $children = array();
+        
+        if (empty($args->menu)) {
+            return $children;
+        }
+        
+        $menu_items = wp_get_nav_menu_items($args->menu);
+        if (!$menu_items) {
+            return $children;
+        }
+        
+        foreach ($menu_items as $menu_item) {
+            if ($menu_item->menu_item_parent == $item->ID) {
+                $children[] = $menu_item;
+            }
+        }
+        
+        return $children;
     }
 }
 
@@ -633,4 +1092,20 @@ function distm_verify_license() {
     wp_send_json_success($result);
 }
 add_action('wp_ajax_distm_verify_license', 'distm_verify_license');
+
+// Add a helper function to check if WooCommerce is fully loaded
+function distm_is_woocommerce_loaded() {
+    return class_exists('WooCommerce') && function_exists('WC') && function_exists('wc_get_page_id') && function_exists('wc_get_cart_url');
+}
+
+// Add a helper function to get the WooCommerce cart
+function distm_get_wc_cart() {
+    if (class_exists('WooCommerce')) {
+        global $woocommerce;
+        if (isset($woocommerce) && is_object($woocommerce) && isset($woocommerce->cart)) {
+            return $woocommerce->cart;
+        }
+    }
+    return null;
+}
 

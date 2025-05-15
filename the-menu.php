@@ -11,12 +11,25 @@ Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://plugins.distinct.africa
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.8
 Stable tag: 4.3
 Requires PHP: 7.0
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Function-based approach for text domain loading
+function the_menu_load_textdomain() {
+    // Use load_plugin_textdomain which is the recommended way for plugins
+    load_plugin_textdomain(
+        'the-menu',
+        false,
+        dirname(plugin_basename(dirname(__FILE__))) . '/languages'
+    );
+}
+
+// Hook the text domain loading to the setup_theme action, which runs after init
+add_action('setup_theme', __NAMESPACE__ . '\\the_menu_load_textdomain');
 
 function distm_activate_plugin() {
     if (!current_user_can('activate_plugins')) {

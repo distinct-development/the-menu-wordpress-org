@@ -135,34 +135,10 @@ function distm_get_svg_content($url) {
         return false;
     }
 
-    // Generate a unique cache key based on the URL
-    $cache_key = 'distm_svg_' . md5($url);
-    
-    // Try to get the SVG content from cache first
-    $cached_svg = wp_cache_get($cache_key, 'distm_svg_cache');
-    if ($cached_svg !== false) {
-        return $cached_svg;
+    $response = wp_remote_get($url);
+    if (is_wp_error($response)) {
+        return false;
     }
-    
-    // Check if this is a local file in the WordPress media library
-    $attachment_id = attachment_url_to_postid($url);
-    if ($attachment_id) {
-        $file_path = get_attached_file($attachment_id);
-        if ($file_path && file_exists($file_path)) {
-            $svg_content = file_get_contents($file_path);
-        } else {
-            return false;
-        }
-    } else {
-        // Handle remote URLs
-        $response = wp_remote_get($url, array(
-            'timeout' => 15, // Increased timeout
-            'sslverify' => true // Enable SSL verification
-        ));
-        
-        if (is_wp_error($response)) {
-            return false;
-        }
 
         $svg_content = wp_remote_retrieve_body($response);
         if (empty($svg_content)) {
@@ -203,6 +179,6 @@ function distm_optimize_svg($svg_content) {
         $height = $matches[2];
         $svg_content = preg_replace('/<svg/', '<svg viewBox="0 0 ' . $width . ' ' . $height . '"', $svg_content, 1);
     }
-    
+
     return $svg_content;
 }
