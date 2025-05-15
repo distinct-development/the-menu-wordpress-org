@@ -33,8 +33,8 @@ function distm_check_required_files() {
         deactivate_plugins(plugin_basename(__FILE__));
         wp_die(
             '<p>' . wp_kses_post(implode('</p><p>', array_map('esc_html', $errors))) . '</p>' .
-            '<p>' . esc_html__('The Menu plugin cannot be activated. Please fix the issues above and try again.', 'the-menu') . '</p>',
-            esc_html__('Plugin Activation Error', 'the-menu'),
+            '<p>The Menu plugin cannot be activated. Please fix the issues above and try again.</p>',
+            'Plugin Activation Error',
             array('back_link' => true)
         );
     }
@@ -144,19 +144,30 @@ function distm_get_svg_content($url) {
         return $cached_svg;
     }
     
-    // If not in cache, fetch the SVG
-    $response = wp_remote_get($url, array(
-        'timeout' => 5, // Reduce timeout to 5 seconds
-        'sslverify' => false // Skip SSL verification for better performance
-    ));
-    
-    if (is_wp_error($response)) {
-        return false;
-    }
+    // Check if this is a local file in the WordPress media library
+    $attachment_id = attachment_url_to_postid($url);
+    if ($attachment_id) {
+        $file_path = get_attached_file($attachment_id);
+        if ($file_path && file_exists($file_path)) {
+            $svg_content = file_get_contents($file_path);
+        } else {
+            return false;
+        }
+    } else {
+        // Handle remote URLs
+        $response = wp_remote_get($url, array(
+            'timeout' => 15, // Increased timeout
+            'sslverify' => true // Enable SSL verification
+        ));
+        
+        if (is_wp_error($response)) {
+            return false;
+        }
 
-    $svg_content = wp_remote_retrieve_body($response);
-    if (empty($svg_content)) {
-        return false;
+        $svg_content = wp_remote_retrieve_body($response);
+        if (empty($svg_content)) {
+            return false;
+        }
     }
     
     // Basic optimization of SVG content

@@ -446,6 +446,7 @@ body{
 .tm-featured .tm-icon-wrapper img{
     object-fit: cover;
     height: 70px;
+    width: 70px;
     box-shadow:inset -5px -5px 10px rgba(0,0,0,0.3), inset 5px 5px 10px rgba(255,255,255,0.3), 0 5px 10px rgba(0,0,0,0.3)
 }
 .tm-featured .tm-icon-wrapper svg{
@@ -778,19 +779,19 @@ body{
 }
 
 .tm-folder-preview-icon img{
-    width: 20px!important;
-    height: 20px!important;
+    width: 100%!important;
+    height: 100%!important;
 }
 
 .tm-folder-preview-icon svg{
-    padding: 3px!important;
+    padding: 5px!important;
 }
 
 .tm-folder-preview-icon .dashicons {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px!important;
+    font-size: 10px!important;
     line-height: 15px!important;
     width: 15px!important;
     height: 15px!important;
@@ -966,8 +967,8 @@ body{
 @media (max-width: 768px) {
 
     .tm-folder-preview {
-        width: 51px;
-        height: 51px;
+        width: 50px!important;
+        height: 50px!important;
         gap: 3px;
         box-sizing: border-box;
     }

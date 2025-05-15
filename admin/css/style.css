@@ -800,6 +800,11 @@ input[type=checkbox]:checked, input[type=radio]:checked{
     border-radius: 3px;
 }
 
+.preview-frame .tm-folder-preview{
+    width: 50px;
+    height: 50px;
+}
+
 @media screen {
     #tm-addon-menu li{
         width:21.25%;
@@ -808,19 +813,25 @@ input[type=checkbox]:checked, input[type=radio]:checked{
         width:70px;
     }
     #tm-addon-menu img{
-        height: 70px!important;
-        width: 70px!important;
+        height: 70px;
+        width: 70px;
     }
     #tm-addon-menu svg, #tm-addon-menu .dashicons{
-        width: 40px !important;;
-        height: 40px!important;
-        font-size: 40px!important;
+        width: 40px;
+        height: 40px;
+        font-size: 40px;
     }
     #tm-addon-menu .tm-menu-item-title{
         margin-top: 10px;
         line-height: 1.2em;
         font-size: 1em;
     }
+}
+
+.preview-frame #tm-addon-menu .tm-folder-preview .dashicons{
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
 }
 
 .preview-item-add {
