@@ -253,11 +253,13 @@ function distm_add_fixed_menu() {
                                     }
                                 }
                             } else {
-                                printf(
-                                    '<img src="%s" alt="%s" />',
-                                    esc_url($icon_url),
-                                    esc_attr__('Featured Icon', 'the-menu')
-                                );
+                                // Get attachment ID from URL if possible
+                                $attachment_id = attachment_url_to_postid($icon_url);
+                                if ($attachment_id) {
+                                    echo wp_get_attachment_image($attachment_id, 'full', false, array(
+                                        'alt' => esc_attr__('Featured Icon', 'the-menu')
+                                    ));
+                                } 
                             }
                         } else {
                             // Use default SVG

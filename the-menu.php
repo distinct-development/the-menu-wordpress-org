@@ -31,6 +31,7 @@ function distm_activate_plugin() {
     wp_cache_flush();
 
     distm_check_required_files();
+    distm_check_languages_directory();
     
     // Get the current version from options
     $current_version = get_option('distm_plugin_version', '0');
@@ -39,6 +40,52 @@ function distm_activate_plugin() {
     if (version_compare($current_version, '1.2.8', '<')) {
         distm_migrate_menu_item_icon_types();
     }
+}
+
+// Check if languages directory exists and create it if it doesn't
+function distm_check_languages_directory() {
+    $languages_dir = plugin_dir_path(__FILE__) . 'languages';
+    if (!file_exists($languages_dir)) {
+        wp_mkdir_p($languages_dir);
+    }
+}
+
+// Check for required files on plugin activation
+function distm_check_required_files() {
+    // Verify requirements
+    $requirements_met = true;
+    $errors = array();
+
+    // Check required files
+    $required_files = array(
+        'admin/admin-init.php',
+        'admin/admin-pages.php',
+        'admin/admin-menus.php',
+        'admin/admin-help.php',
+        'frontend/frontend-init.php',
+        'admin/assets/menu-logo.svg'
+    );
+
+    foreach ($required_files as $file) {
+        $file_path = plugin_dir_path(__FILE__) . $file;
+        if (!file_exists($file_path)) {
+            $requirements_met = false;
+            $errors[] = sprintf('Required file missing: %s', $file);
+        }
+    }
+
+    // If requirements aren't met, deactivate the plugin and show error
+    if (!$requirements_met) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        wp_die(
+            '<p>' . wp_kses_post(implode('</p><p>', array_map('esc_html', $errors))) . '</p>' .
+            '<p>' . esc_html__('The Menu plugin cannot be activated. Please fix the issues above and try again.', 'the-menu') . '</p>',
+            esc_html__('Plugin Activation Error', 'the-menu'),
+            array('back_link' => true)
+        );
+    }
+    
+    return $requirements_met;
 }
 
 function distm_deactivate_plugin() {
@@ -56,12 +103,61 @@ function distm_deactivate_plugin() {
 register_activation_hook(__FILE__, __NAMESPACE__ . '\\distm_activate_plugin');
 register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\distm_deactivate_plugin');
 
-// Include the plugin files
-include_once(__DIR__ . '/admin/admin-init.php');
-include_once(__DIR__ . '/admin/admin-pages.php');
-include_once(__DIR__ . '/admin/admin-menus.php');
-include_once(__DIR__ . '/admin/admin-help.php');
-include_once(__DIR__ . '/frontend/frontend-init.php');
+// Early loading of plugin textdomain (attempt to load it as early as possible)
+function distm_load_textdomain_early() {
+    // Try to load the textdomain as early as possible for core function calls
+    // This is a fallback measure - proper loading should happen on after_setup_theme
+    load_plugin_textdomain('the-menu', false, dirname(plugin_basename(__FILE__)) . '/languages');
+}
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_load_textdomain_early');
+
+// Load plugin textdomain for translations (proper timing)
+function distm_load_textdomain() {
+    load_plugin_textdomain('the-menu', false, dirname(plugin_basename(__FILE__)) . '/languages');
+}
+add_action('after_setup_theme', __NAMESPACE__ . '\\distm_load_textdomain');
+
+// Function to include all plugin files
+function distm_include_files() {
+    // Include the plugin files
+    include_once(__DIR__ . '/admin/admin-init.php');
+    include_once(__DIR__ . '/admin/admin-pages.php');
+    include_once(__DIR__ . '/admin/admin-menus.php');
+    include_once(__DIR__ . '/admin/admin-help.php');
+    include_once(__DIR__ . '/frontend/frontend-init.php');
+}
+add_action('init', __NAMESPACE__ . '\\distm_include_files');
+
+/**
+ * Generate .pot file for translations (development only)
+ * 
+ * This function is intended for plugin developers only
+ * Requires WP-CLI to be installed
+ * 
+ * @return bool Success status
+ */
+function distm_generate_pot_file() {
+    if (!defined('WP_CLI')) {
+        return false;
+    }
+    
+    $plugin_dir = plugin_dir_path(__FILE__);
+    $languages_dir = $plugin_dir . 'languages';
+    
+    if (!file_exists($languages_dir)) {
+        wp_mkdir_p($languages_dir);
+    }
+    
+    $command = sprintf(
+        'wp i18n make-pot %s %s/the-menu.pot --domain=the-menu',
+        escapeshellarg($plugin_dir),
+        escapeshellarg($languages_dir)
+    );
+    
+    exec($command, $output, $return_var);
+    
+    return $return_var === 0;
+}
 
 function distm_migrate_menu_item_icon_types() {
     // Get all menu items
@@ -94,11 +190,7 @@ function distm_check_for_updates() {
         distm_migrate_menu_item_icon_types();
     }
 }
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_check_for_updates');
-
-if (!function_exists('get_plugin_data')) {
-    require_once(ABSPATH . 'wp-admin/includes/plugin.php');
-}
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_check_for_updates', 15);
 
 // License validator class
 class Plugin_License_Validator {
@@ -344,6 +436,10 @@ class Plugin_License_Validator {
 
 // Load the license validator
 function distm_load_the_menu() {
+    // Check if we need the plugin.php file
+    if (!function_exists('get_plugin_data')) {
+        require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+    }
     Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
 }
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_load_the_menu');
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_load_the_menu', 10);
