@@ -18,31 +18,33 @@ Requires PHP: 7.0
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Function-based approach for text domain loading
-function the_menu_load_textdomain() {
-    // Use load_plugin_textdomain which is the recommended way for plugins
-    load_plugin_textdomain(
-        'the-menu',
-        false,
-        dirname(plugin_basename(dirname(__FILE__))) . '/languages'
-    );
-}
+// Define plugin constants
+define('DISTM_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('DISTM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Hook the text domain loading to the setup_theme action, which runs after init
-add_action('setup_theme', __NAMESPACE__ . '\\the_menu_load_textdomain');
+// =============================================
+// CORE PLUGIN INITIALIZATION - NO TRANSLATIONS
+// =============================================
+
+// Register the activation/deactivation hooks
+register_activation_hook(__FILE__, __NAMESPACE__ . '\\distm_activate_plugin');
+register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\distm_deactivate_plugin');
 
 function distm_activate_plugin() {
     if (!current_user_can('activate_plugins')) {
-        wp_die(esc_html__('Sorry, you do not have sufficient permissions to activate plugins.', 'the-menu'));
+        wp_die('Sorry, you do not have sufficient permissions to activate plugins.');
     }
 
     if (!wp_doing_ajax() && !in_array($GLOBALS['pagenow'], array('plugins.php', 'update.php'))) {
         return;
     }
+    
     // Flush rewrite rules and clear any cached styles
     flush_rewrite_rules();
     wp_cache_flush();
 
+    // Include the file with the check function
+    require_once(DISTM_PLUGIN_DIR . 'admin/admin-init.php');
     distm_check_required_files();
     distm_check_languages_directory();
     
@@ -112,65 +114,6 @@ function distm_deactivate_plugin() {
 
     delete_transient('the-menu_license_status');
 }
-// Register the activation/deactivation hooks
-register_activation_hook(__FILE__, __NAMESPACE__ . '\\distm_activate_plugin');
-register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\distm_deactivate_plugin');
-
-// Early loading of plugin textdomain (attempt to load it as early as possible)
-function distm_load_textdomain_early() {
-    // Try to load the textdomain as early as possible for core function calls
-    // This is a fallback measure - proper loading should happen on after_setup_theme
-    load_plugin_textdomain('the-menu', false, dirname(plugin_basename(__FILE__)) . '/languages');
-}
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_load_textdomain_early');
-
-// Load plugin textdomain for translations (proper timing)
-function distm_load_textdomain() {
-    load_plugin_textdomain('the-menu', false, dirname(plugin_basename(__FILE__)) . '/languages');
-}
-add_action('after_setup_theme', __NAMESPACE__ . '\\distm_load_textdomain');
-
-// Function to include all plugin files
-function distm_include_files() {
-    // Include the plugin files
-    include_once(__DIR__ . '/admin/admin-init.php');
-    include_once(__DIR__ . '/admin/admin-pages.php');
-    include_once(__DIR__ . '/admin/admin-menus.php');
-    include_once(__DIR__ . '/admin/admin-help.php');
-    include_once(__DIR__ . '/frontend/frontend-init.php');
-}
-add_action('init', __NAMESPACE__ . '\\distm_include_files');
-
-/**
- * Generate .pot file for translations (development only)
- * 
- * This function is intended for plugin developers only
- * Requires WP-CLI to be installed
- * 
- * @return bool Success status
- */
-function distm_generate_pot_file() {
-    if (!defined('WP_CLI')) {
-        return false;
-    }
-    
-    $plugin_dir = plugin_dir_path(__FILE__);
-    $languages_dir = $plugin_dir . 'languages';
-    
-    if (!file_exists($languages_dir)) {
-        wp_mkdir_p($languages_dir);
-    }
-    
-    $command = sprintf(
-        'wp i18n make-pot %s %s/the-menu.pot --domain=the-menu',
-        escapeshellarg($plugin_dir),
-        escapeshellarg($languages_dir)
-    );
-    
-    exec($command, $output, $return_var);
-    
-    return $return_var === 0;
-}
 
 function distm_migrate_menu_item_icon_types() {
     // Get all menu items
@@ -194,7 +137,7 @@ function distm_migrate_menu_item_icon_types() {
     update_option('distm_plugin_version', '1.2.8');
 }
 
-// Add a function to handle plugin updates
+// Add a function to handle plugin updates - NO translations here
 function distm_check_for_updates() {
     $current_version = get_option('distm_plugin_version', '0');
     
@@ -203,9 +146,63 @@ function distm_check_for_updates() {
         distm_migrate_menu_item_icon_types();
     }
 }
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_check_for_updates', 15);
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_check_for_updates');
 
-// License validator class
+// Load required WordPress files
+if (!function_exists('get_plugin_data')) {
+    require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+}
+
+// Include only essential non-translatable admin functions with no translation strings
+function distm_include_essential_files() {
+    require_once(DISTM_PLUGIN_DIR . 'admin/admin-init.php');
+}
+add_action('plugins_loaded', __NAMESPACE__ . '\\distm_include_essential_files', 5);
+
+// =========================================
+// TEXT DOMAIN LOADING - INIT HOOK PRIORITY 1
+// =========================================
+function the_menu_load_textdomain() {
+    load_plugin_textdomain(
+        'the-menu',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}
+add_action('init', __NAMESPACE__ . '\\the_menu_load_textdomain', 1);
+
+// =========================================
+// MAIN PLUGIN LOADING - AFTER TRANSLATIONS
+// =========================================
+function distm_plugin_init() {
+    // Now that translations are loaded, we can include files with translatable strings
+    require_once(DISTM_PLUGIN_DIR . 'admin/admin-pages.php');
+    require_once(DISTM_PLUGIN_DIR . 'admin/admin-menus.php'); 
+    require_once(DISTM_PLUGIN_DIR . 'admin/admin-help.php');
+    require_once(DISTM_PLUGIN_DIR . 'frontend/frontend-init.php');
+    
+    // Initialize license validator
+    Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
+}
+add_action('init', __NAMESPACE__ . '\\distm_plugin_init', 5);
+
+// Register menus without translations - must happen on init but before translation files are needed
+function distm_register_my_menus() {
+    register_nav_menus(
+        array(
+            'left-menu' => '[THE MENU] Left menu',
+            'right-menu' => '[THE MENU] Right menu',
+            'addon-menu' => '[THE MENU] Add-on menu'
+        )
+    );
+}
+add_action('init', __NAMESPACE__ . '\\distm_register_my_menus', 2); // Priority 2 to run right after textdomain loading
+
+// ===========================
+// LICENSE VALIDATOR CLASS
+// ===========================
+
+// Only define the class, but don't instantiate until init runs
 class Plugin_License_Validator {
     private static $instance = null;
     private $plugin_slug;
@@ -221,17 +218,20 @@ class Plugin_License_Validator {
         $this->text_domain = $text_domain;
         $this->api_endpoint = 'https://plugins.distinct.africa/api/register-plugin.php';
 
+        // Setup all hooks after init
+        $this->setup_hooks();
+    }
+    
+    public function setup_hooks() {
         add_action('admin_notices', array($this, 'license_status_notice'));
         add_action('admin_init', array($this, 'clear_license_cache'));
         add_filter('plugin_row_meta', array($this, 'modify_plugin_meta'), 10, 2);
         add_action('admin_menu', array($this, 'add_license_submenu'));
         add_action('admin_init', array($this, 'register_license_settings'));
-        
-        // Hook the license check handler
         add_action('admin_post_the_menu_check_license', array($this, 'handle_license_check'));
     }
 
-    // Get the instance
+    // Get the instance - this is only called after init
     public static function get_instance($plugin_slug, $plugin_name, $text_domain) {
         if (self::$instance === null) {
             self::$instance = new self($plugin_slug, $plugin_name, $text_domain);
@@ -249,7 +249,7 @@ class Plugin_License_Validator {
     
         $license_key = sanitize_text_field(get_option($this->license_option_key, ''));
         $site_url = esc_url_raw(get_site_url());
-        $plugin_data = get_plugin_data(__DIR__ . '/' . $this->plugin_slug . '.php');
+        $plugin_data = get_plugin_data(DISTM_PLUGIN_DIR . '/' . $this->plugin_slug . '.php');
         $version = sanitize_text_field($plugin_data['Version']);
     
         $response = wp_safe_remote_post($this->api_endpoint, array(
@@ -357,10 +357,20 @@ class Plugin_License_Validator {
 
     // Modify the plugin meta
     public function modify_plugin_meta($plugin_meta, $plugin_file) {
-        if ($plugin_file == plugin_basename(__FILE__)) {
+        $main_file = plugin_basename(DISTM_PLUGIN_DIR . $this->plugin_slug . '.php');
+        $main_file = str_replace('\\', '/', $main_file); // Normalize path for Windows compatibility
+        $plugin_file = str_replace('\\', '/', $plugin_file); // Normalize path
+        
+        if ($plugin_file == $main_file) {
             $is_registered = $this->validate_license();
             $clear_cache_url = wp_nonce_url(admin_url('plugins.php?action=the_menu_check_license'), 'the_menu_check_license_nonce');
-            $status = $is_registered ? '<span style="color: green;"><span class="dashicons dashicons-yes-alt"></span> Registered</span>' : '<span>Unlicensed:</span> Premium features planned <a href="admin.php?page=the-menu-license-settings">Manage license</a> <a href="' . $clear_cache_url . '" title="Refresh License Status"><span class="dashicons dashicons-image-rotate" style="font-size:1.2em;margin-top:2px;"></span></a>';
+            
+            // No translation functions here to avoid early loading
+            $registered_text = '<span style="color: green;"><span class="dashicons dashicons-yes-alt"></span> Registered</span>';
+            $unregistered_text = '<span>Unlicensed:</span> Premium features planned <a href="admin.php?page=the-menu-license-settings">Manage license</a> <a href="' . $clear_cache_url . '" title="Refresh License Status"><span class="dashicons dashicons-image-rotate" style="font-size:1.2em;margin-top:2px;"></span></a>';
+            
+            $status = $is_registered ? $registered_text : $unregistered_text;
+            
             foreach ($plugin_meta as &$meta) {
                 if (strpos($meta, 'Version') !== false) {
                     $meta .= ' | ' . $status;
@@ -446,13 +456,3 @@ class Plugin_License_Validator {
         return substr($sanitized, 0, 56);
     }
 }
-
-// Load the license validator
-function distm_load_the_menu() {
-    // Check if we need the plugin.php file
-    if (!function_exists('get_plugin_data')) {
-        require_once(ABSPATH . 'wp-admin/includes/plugin.php');
-    }
-    Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
-}
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_load_the_menu', 10);

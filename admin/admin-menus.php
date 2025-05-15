@@ -6,13 +6,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function distm_register_my_menus() {
     register_nav_menus(
         array(
-            'left-menu' => esc_html__('[THE MENU] Left menu', 'the-menu'),
-            'right-menu' => esc_html__('[THE MENU] Right menu', 'the-menu'),
-            'addon-menu' => esc_html__('[THE MENU] Add-on menu', 'the-menu')
+            'left-menu' => '[THE MENU] Left menu',
+            'right-menu' => '[THE MENU] Right menu',
+            'addon-menu' => '[THE MENU] Add-on menu'
         )
     );
 }
-add_action('after_setup_theme', 'distm_register_my_menus');
+add_action('init', 'distm_register_my_menus');
 
 // Add custom fields to the menu items
 function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
