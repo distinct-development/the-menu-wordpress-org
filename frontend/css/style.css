@@ -917,7 +917,7 @@ body{
 }
 
 .tm-folder-items {
-    width: 80%;
+    width: 10%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
@@ -935,8 +935,8 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
     margin-bottom: 10px;
     cursor: pointer;
 }
@@ -988,6 +988,10 @@ body{
     .tm-folder-preview-icon img{
         width: 15px!important;
         height: 15px!important;
+    }
+    .tm-folder-items {
+        grid-template-columns: repeat(3, 1fr)!important;
+        gap: 10px!important;
     }
 
     .tm-folder-title {
@@ -1053,7 +1057,7 @@ body{
         width: calc(100% - 60px);
         height: auto;
         max-width: 60svh;
-        padding: 20px;
+        padding: 10px;
         box-sizing: border-box;
     }
     
