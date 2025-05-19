@@ -63,7 +63,7 @@ function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
         <div class="icon-upload-section" style="<?php echo $icon_type === 'dashicon' ? 'display: none;' : ''; ?>">
             <div class="icon-preview" style="margin-bottom: 10px;">
                 <?php if (!empty($icon) && $icon_type === 'upload'): ?>
-                    <img src="<?php echo esc_url($icon); ?>" style="max-width: 40px; height: auto;">
+                    <?php echo wp_get_attachment_image(attachment_url_to_postid($icon), array(40, 40), false, array('style' => 'max-width: 40px; height: auto;')); ?>
                 <?php endif; ?>
             </div>
             <input type="text" 
@@ -311,6 +311,16 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
         $roles = array();
     }
     
+    $capabilities = get_post_meta($item_id, '_menu_item_capabilities', true);
+    if (!is_array($capabilities)) {
+        $capabilities = array();
+    }
+    
+    $filter_by = get_post_meta($item_id, '_menu_item_filter_by', true);
+    if (empty($filter_by)) {
+        $filter_by = 'role'; // Default to role-based filtering
+    }
+    
     $visibility_options = array(
         'everyone' => __('Everyone', 'the-menu'),
         'logged_in' => __('Logged in users', 'the-menu'),
@@ -318,6 +328,21 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
     );
 
     $available_roles = wp_roles()->roles;
+    
+    // Get all WordPress capabilities
+    $all_capabilities = array();
+    foreach ($available_roles as $role) {
+        if (isset($role['capabilities']) && is_array($role['capabilities'])) {
+            foreach ($role['capabilities'] as $cap => $val) {
+                if ($val) {
+                    $all_capabilities[$cap] = $cap;
+                }
+            }
+        }
+    }
+    
+    // Sort capabilities alphabetically
+    ksort($all_capabilities);
     ?>
     <p class="field-visibility description description-wide">
         <label for="edit-menu-item-visibility-<?php echo esc_attr($item_id); ?>">
@@ -334,7 +359,20 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
         </label>
     </p>
 
-    <div class="field-roles description description-wide" style="<?php echo $visibility === 'logged_in' ? '' : 'display:none;'; ?>">
+    <div class="field-filter-type description description-wide" style="<?php echo $visibility === 'logged_in' ? '' : 'display:none;'; ?>">
+        <label>
+            <?php esc_html_e('Filter by:', 'the-menu'); ?><br />
+            <input type="radio" name="menu-item-filter-by[<?php echo esc_attr($item_id); ?>]" 
+                   value="role" <?php checked($filter_by === 'role'); ?> class="filter-type-radio">
+            <?php esc_html_e('User Roles', 'the-menu'); ?>
+            
+            <input type="radio" name="menu-item-filter-by[<?php echo esc_attr($item_id); ?>]" 
+                   value="capability" <?php checked($filter_by === 'capability'); ?> class="filter-type-radio" style="margin-left: 15px;">
+            <?php esc_html_e('User Capabilities', 'the-menu'); ?>
+        </label>
+    </div>
+
+    <div class="field-roles description description-wide" style="<?php echo ($visibility === 'logged_in' && $filter_by === 'role') ? '' : 'display:none;'; ?>">
         <label>
             <?php esc_html_e('User Roles (for logged in users)', 'the-menu'); ?><br />
             <?php foreach ($available_roles as $role_key => $role) : ?>
@@ -345,7 +383,29 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
                 <?php echo esc_html($role['name']); ?><br>
             <?php endforeach; ?>
             <small><i style="opacity: 0.5;line-height:1em;">
-                <?php esc_html_e('Select who can see this menu item. If none are selected, all roles can see it.', 'the-menu'); ?>
+                <?php esc_html_e('Select which roles can see this menu item. If none are selected, all roles can see it.', 'the-menu'); ?>
+            </i></small>
+        </label>
+    </div>
+    
+    <div class="field-capabilities description description-wide" style="<?php echo ($visibility === 'logged_in' && $filter_by === 'capability') ? '' : 'display:none;'; ?>">
+        <label>
+            <?php esc_html_e('User Capabilities (for logged in users)', 'the-menu'); ?><br />
+            <input type="text" class="capability-search" placeholder="<?php esc_attr_e('Search capabilities...', 'the-menu'); ?>" style="width: 100%; margin-bottom: 5px;">
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px;" class="capability-list">
+                <?php foreach ($all_capabilities as $cap) : ?>
+                    <div class="capability-item">
+                        <input type="checkbox" 
+                               name="menu-item-capabilities[<?php echo esc_attr($item_id); ?>][]" 
+                               id="capability-<?php echo esc_attr($item_id); ?>-<?php echo esc_attr($cap); ?>"
+                               value="<?php echo esc_attr($cap); ?>" 
+                               <?php checked(in_array($cap, $capabilities)); ?>>
+                        <label for="capability-<?php echo esc_attr($item_id); ?>-<?php echo esc_attr($cap); ?>"><?php echo esc_html($cap); ?></label>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <small><i style="opacity: 0.5;line-height:1em;">
+                <?php esc_html_e('Select which capabilities are required to see this menu item. If none are selected, all users can see it.', 'the-menu'); ?>
             </i></small>
         </label>
     </div>
@@ -353,11 +413,61 @@ function distm_add_custom_visibility_field($item_id, $item, $depth, $args) {
     <script type="text/javascript">
         jQuery(document).ready(function($) {
             $('#edit-menu-item-visibility-<?php echo esc_js($item_id); ?>').on('change', function() {
+                var $filterTypeField = $(this).closest('.menu-item-settings').find('.field-filter-type');
                 var $rolesField = $(this).closest('.menu-item-settings').find('.field-roles');
+                var $capabilitiesField = $(this).closest('.menu-item-settings').find('.field-capabilities');
+                
                 if ($(this).val() === 'logged_in') {
+                    $filterTypeField.slideDown();
+                    
+                    // Show the appropriate field based on the filter type selection
+                    var filterType = $('input[name="menu-item-filter-by[<?php echo esc_js($item_id); ?>]"]:checked').val();
+                    if (filterType === 'role') {
+                        $rolesField.slideDown();
+                        $capabilitiesField.slideUp();
+                    } else {
+                        $rolesField.slideUp();
+                        $capabilitiesField.slideDown();
+                    }
+                } else {
+                    $filterTypeField.slideUp();
+                    $rolesField.slideUp();
+                    $capabilitiesField.slideUp();
+                }
+            });
+            
+            // Handle filter type change
+            $('input[name="menu-item-filter-by[<?php echo esc_js($item_id); ?>]"]').on('change', function() {
+                var $rolesField = $(this).closest('.menu-item-settings').find('.field-roles');
+                var $capabilitiesField = $(this).closest('.menu-item-settings').find('.field-capabilities');
+                
+                if ($(this).val() === 'role') {
                     $rolesField.slideDown();
+                    $capabilitiesField.slideUp();
                 } else {
                     $rolesField.slideUp();
+                    $capabilitiesField.slideDown();
+                }
+            });
+            
+            // Handle capability search
+            $('.capability-search').on('keyup', function() {
+                var searchTerm = $(this).val().toLowerCase();
+                var $capabilityList = $(this).closest('.field-capabilities').find('.capability-item');
+                
+                if (searchTerm === '') {
+                    // Show all when search term is empty
+                    $capabilityList.show();
+                } else {
+                    // Filter capabilities based on search term
+                    $capabilityList.each(function() {
+                        var capabilityText = $(this).text().toLowerCase();
+                        if (capabilityText.indexOf(searchTerm) > -1) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
                 }
             });
         });
@@ -384,11 +494,23 @@ function distm_save_custom_visibility_field($menu_id, $menu_item_db_id) {
         update_post_meta($menu_item_db_id, '_menu_item_visibility', $visibility);
     }
 
+    // Save filter by setting
+    if (isset($_POST['menu-item-filter-by'][$menu_item_db_id])) {
+        $filter_by = sanitize_text_field(wp_unslash($_POST['menu-item-filter-by'][$menu_item_db_id]));
+        update_post_meta($menu_item_db_id, '_menu_item_filter_by', $filter_by);
+    }
+
     // Save user roles
     $roles = isset($_POST['menu-item-roles'][$menu_item_db_id]) ? 
             array_map('sanitize_text_field', wp_unslash($_POST['menu-item-roles'][$menu_item_db_id])) : 
             array();
     update_post_meta($menu_item_db_id, '_menu_item_roles', $roles);
+    
+    // Save user capabilities
+    $capabilities = isset($_POST['menu-item-capabilities'][$menu_item_db_id]) ? 
+            array_map('sanitize_text_field', wp_unslash($_POST['menu-item-capabilities'][$menu_item_db_id])) : 
+            array();
+    update_post_meta($menu_item_db_id, '_menu_item_capabilities', $capabilities);
 }
 add_action('wp_update_nav_menu_item', 'distm_save_custom_visibility_field', 10, 2);
 
@@ -400,6 +522,60 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
 
     function end_lvl(&$output, $depth = 0, $args = null) {
         return;
+    }
+    
+    // Helper function to check if a menu item should be shown based on visibility settings
+    private function check_item_visibility($item_id) {
+        $visibility = get_post_meta($item_id, '_menu_item_visibility', true);
+        if (empty($visibility)) {
+            $visibility = 'everyone';
+        }
+        
+        $roles = get_post_meta($item_id, '_menu_item_roles', true);
+        if (!is_array($roles)) {
+            $roles = array();
+        }
+        
+        $capabilities = get_post_meta($item_id, '_menu_item_capabilities', true);
+        if (!is_array($capabilities)) {
+            $capabilities = array();
+        }
+        
+        $filter_by = get_post_meta($item_id, '_menu_item_filter_by', true);
+        if (empty($filter_by)) {
+            $filter_by = 'role';
+        }
+
+        $show_item = false;
+        if ($visibility === 'everyone') {
+            $show_item = true;
+        } elseif ($visibility === 'logged_in' && is_user_logged_in()) {
+            if ($filter_by === 'role') {
+                // Check user roles
+                if (empty($roles) || array_intersect($roles, wp_get_current_user()->roles)) {
+                    $show_item = true;
+                }
+            } else {
+                // Check user capabilities
+                $current_user = wp_get_current_user();
+                if (empty($capabilities)) {
+                    // If no capabilities are selected, show to all logged-in users
+                    $show_item = true;
+                } else {
+                    // Check if user has any of the required capabilities
+                    foreach ($capabilities as $capability) {
+                        if (user_can($current_user, $capability)) {
+                            $show_item = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        } elseif ($visibility === 'logged_out' && !is_user_logged_in()) {
+            $show_item = true;
+        }
+        
+        return $show_item;
     }
 
     function start_el(&$output, $item, $depth = 0, $args = null, $id = 0) {
@@ -453,37 +629,14 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     );
                 }
             } else {
-                $icon_html = sprintf(
-                    '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                    esc_url($icon_url),
-                    esc_attr($title),
-                    esc_attr__('Icon', 'the-menu')
-                );
+                $icon_html = wp_get_attachment_image(attachment_url_to_postid($icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($title), esc_attr__('Icon', 'the-menu'))));
             }
         } else {
             $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
         }
 
-        $visibility = get_post_meta($item->ID, '_menu_item_visibility', true);
-        if (empty($visibility)) {
-            $visibility = 'everyone';
-        }
-        
-        $roles = get_post_meta($item->ID, '_menu_item_roles', true);
-        if (!is_array($roles)) {
-            $roles = array();
-        }
-
-        $show_item = false;
-        if ($visibility === 'everyone') {
-            $show_item = true;
-        } elseif ($visibility === 'logged_in' && is_user_logged_in()) {
-            if (empty($roles) || array_intersect($roles, wp_get_current_user()->roles)) {
-                $show_item = true;
-            }
-        } elseif ($visibility === 'logged_out' && !is_user_logged_in()) {
-            $show_item = true;
-        }
+        // Check if this item should be shown based on visibility settings
+        $show_item = $this->check_item_visibility($item->ID);
 
         if ($show_item) {
             // Check if this is an addon menu item with submenu items
@@ -515,6 +668,11 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 $preview_count = 0;
                 
                 foreach ($children as $child) {
+                    // Check visibility for each child item
+                    if (!$this->check_item_visibility($child->ID)) {
+                        continue; // Skip this child if it shouldn't be shown
+                    }
+                
                     if ($preview_count >= 9) break;
                     
                     $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
@@ -549,15 +707,13 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                                 );
                             }
                         } else {
-                            $child_icon_html = sprintf(
-                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                                esc_url($child_icon_url),
-                                esc_attr($child_title),
-                                esc_attr__('Icon', 'the-menu')
-                            );
+                            $child_icon_html = wp_get_attachment_image(attachment_url_to_postid($child_icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($child_title), esc_attr__('Icon', 'the-menu'))));
                         }
                     } else {
-                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            'menu'
+                        );
                     }
                     
                     $output .= '<div class="tm-folder-preview-icon">' . $child_icon_html . '</div>';
@@ -582,6 +738,11 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 
                 // Add the submenu items
                 foreach ($children as $child) {
+                    // Check visibility for each child item
+                    if (!$this->check_item_visibility($child->ID)) {
+                        continue; // Skip this child if it shouldn't be shown
+                    }
+                
                     $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
                     if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
                         $child_icon_type = 'dashicon';
@@ -615,15 +776,13 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                                 );
                             }
                         } else {
-                            $child_icon_html = sprintf(
-                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                                esc_url($child_icon_url),
-                                esc_attr($child_title),
-                                esc_attr__('Icon', 'the-menu')
-                            );
+                            $child_icon_html = wp_get_attachment_image(attachment_url_to_postid($child_icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($child_title), esc_attr__('Icon', 'the-menu'))));
                         }
                     } else {
-                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            'menu'
+                        );
                     }
                     
                     $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
@@ -664,6 +823,11 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 $preview_count = 0;
                 
                 foreach ($children as $child) {
+                    // Check visibility for each child item
+                    if (!$this->check_item_visibility($child->ID)) {
+                        continue; // Skip this child if it shouldn't be shown
+                    }
+                
                     if ($preview_count >= 9) break;
                     
                     $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
@@ -698,15 +862,13 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                                 );
                             }
                         } else {
-                            $child_icon_html = sprintf(
-                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                                esc_url($child_icon_url),
-                                esc_attr($child_title),
-                                esc_attr__('Icon', 'the-menu')
-                            );
+                            $child_icon_html = wp_get_attachment_image(attachment_url_to_postid($child_icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($child_title), esc_attr__('Icon', 'the-menu'))));
                         }
                     } else {
-                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            'menu'
+                        );
                     }
                     
                     $output .= '<div class="tm-folder-preview-icon">' . $child_icon_html . '</div>';
@@ -729,6 +891,11 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 
                 // Add the submenu items
                 foreach ($children as $child) {
+                    // Check visibility for each child item
+                    if (!$this->check_item_visibility($child->ID)) {
+                        continue; // Skip this child if it shouldn't be shown
+                    }
+                
                     $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
                     if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
                         $child_icon_type = 'dashicon';
@@ -762,15 +929,13 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                                 );
                             }
                         } else {
-                            $child_icon_html = sprintf(
-                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                                esc_url($child_icon_url),
-                                esc_attr($child_title),
-                                esc_attr__('Icon', 'the-menu')
-                            );
+                            $child_icon_html = wp_get_attachment_image(attachment_url_to_postid($child_icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($child_title), esc_attr__('Icon', 'the-menu'))));
                         }
                     } else {
-                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            'menu'
+                        );
                     }
                     
                     $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
@@ -832,12 +997,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                             );
                         }
                     } else {
-                        $icon_html = sprintf(
-                            '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                            esc_url($icon_url),
-                            esc_attr($title),
-                            esc_attr__('Icon', 'the-menu')
-                        );
+                        $icon_html = wp_get_attachment_image(attachment_url_to_postid($icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($title), esc_attr__('Icon', 'the-menu'))));
                     }
                 } else {
                     $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
@@ -863,6 +1023,11 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 
                 // Add the submenu items
                 foreach ($children as $child) {
+                    // Check visibility for each child item
+                    if (!$this->check_item_visibility($child->ID)) {
+                        continue; // Skip this child if it shouldn't be shown
+                    }
+                
                     $child_icon_type = get_post_meta($child->ID, '_menu_item_icon_type', true);
                     if (!in_array($child_icon_type, ['dashicon', 'upload'])) {
                         $child_icon_type = 'dashicon';
@@ -896,15 +1061,13 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                                 );
                             }
                         } else {
-                            $child_icon_html = sprintf(
-                                '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                                esc_url($child_icon_url),
-                                esc_attr($child_title),
-                                esc_attr__('Icon', 'the-menu')
-                            );
+                            $child_icon_html = wp_get_attachment_image(attachment_url_to_postid($child_icon_url), array(40, 40), false, array('class' => 'tm-menu-icon', 'alt' => sprintf('%s %s', esc_attr($child_title), esc_attr__('Icon', 'the-menu'))));
                         }
                     } else {
-                        $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
+                        $child_icon_html = sprintf(
+                            '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                            'menu'
+                        );
                     }
                     
                     $output .= '<a href="' . esc_url($child_url) . '" class="tm-accordion-item-link">';

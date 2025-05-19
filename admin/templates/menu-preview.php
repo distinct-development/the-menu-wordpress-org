@@ -91,7 +91,15 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                                         if (substr($icon_url, -4) === '.svg') {
                                             echo wp_kses(distm_get_svg_content($icon_url), distm_get_allowed_svg_tags());
                                         } else {
-                                            echo '<img src="' . esc_url($icon_url) . '" alt="Featured Icon" />';
+                                            $attachment_id = attachment_url_to_postid($icon_url);
+                                            if ($attachment_id) {
+                                                echo wp_get_attachment_image($attachment_id, 'thumbnail', false, array(
+                                                    'class' => 'tm-menu-icon',
+                                                    'alt' => sprintf('%s %s', esc_attr__('Featured', 'the-menu'), esc_attr__('Icon', 'the-menu'))
+                                                ));
+                                            } else {
+                                                echo '<span class="dashicons dashicons-menu"></span>';
+                                            }
                                         }
                                     } else {
                                         echo '<span class="dashicons dashicons-menu"></span>';
@@ -342,12 +350,18 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
                     );
                 }
             } else {
-                $icon_html = sprintf(
-                    '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                    esc_url($icon_url),
-                    esc_attr($title),
-                    esc_attr__('Icon', 'the-menu')
-                );
+                $attachment_id = attachment_url_to_postid($icon_url);
+                if ($attachment_id) {
+                    $icon_html = wp_get_attachment_image($attachment_id, 'thumbnail', false, array(
+                        'class' => 'tm-menu-icon',
+                        'alt' => sprintf('%s %s', esc_attr($title), esc_attr__('Icon', 'the-menu'))
+                    ));
+                } else {
+                    $icon_html = sprintf(
+                        '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                        'menu'
+                    );
+                }
             }
         } else {
             $icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';
@@ -415,12 +429,18 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
                             );
                         }
                     } else {
-                        $child_icon_html = sprintf(
-                            '<img src="%s" alt="%s %s" class="tm-menu-icon" />',
-                            esc_url($child_icon_url),
-                            esc_attr($child_title),
-                            esc_attr__('Icon', 'the-menu')
-                        );
+                        $attachment_id = attachment_url_to_postid($child_icon_url);
+                        if ($attachment_id) {
+                            $child_icon_html = wp_get_attachment_image($attachment_id, 'thumbnail', false, array(
+                                'class' => 'tm-menu-icon',
+                                'alt' => sprintf('%s %s', esc_attr($child_title), esc_attr__('Icon', 'the-menu'))
+                            ));
+                        } else {
+                            $child_icon_html = sprintf(
+                                '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
+                                'menu'
+                            );
+                        }
                     }
                 } else {
                     $child_icon_html = '<span class="dashicons dashicons-menu" aria-hidden="true"></span>';

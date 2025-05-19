@@ -1,6 +1,4 @@
 jQuery(document).ready(function($) {
-    let mediaUploader;
-    
     function updateImagePreview(container) {
         const iconType = container.find('.icon-type-radio:checked').val();
         const iconUrl = container.find('.edit-menu-item-icon').val();
@@ -46,14 +44,8 @@ jQuery(document).ready(function($) {
         const iconInput = container.find('.edit-menu-item-icon');
         const menuItemId = button.data('item-id');
         
-        // If the uploader object has already been created, reopen it
-        if (mediaUploader) {
-            mediaUploader.open();
-            return;
-        }
-        
-        // Create the media uploader
-        mediaUploader = wp.media({
+        // Create a new media uploader for each menu item
+        const mediaUploader = wp.media({
             title: 'Select or Upload Menu Icon',
             button: {
                 text: 'Use this icon'

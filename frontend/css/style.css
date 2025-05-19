@@ -447,6 +447,7 @@ body{
     object-fit: cover;
     height: 70px;
     width: 70px;
+    max-width: 100%;
     box-shadow:inset -5px -5px 10px rgba(0,0,0,0.3), inset 5px 5px 10px rgba(255,255,255,0.3), 0 5px 10px rgba(0,0,0,0.3)
 }
 .tm-featured .tm-icon-wrapper svg{
