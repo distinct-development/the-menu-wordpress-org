@@ -153,6 +153,19 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.17 - 19/05/2025
+
+- Added submenu capability for App icon, Icon, and List styles in the addon menu, check this out its pretty cool.
+- As well as being able to adjust visibility of menu items by role, I have added being able to changes visibility by capability.
+- Improved SVG handling.
+
+### 1.2.15 - 17/02/2025
+
+- WP version check.
+- ADDED: If you add custom classes to a menu item they will now display for the menu item.
+- ADDED: If you add a WooCommerce cart menu item a cart count now displays.
+
+
 ### 1.2.14 - 20/11/2024
 
 - The preview on the settings page is now sticky so it always remains in view when editing settings.
