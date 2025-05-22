@@ -854,6 +854,12 @@ input[type=checkbox]:checked, input[type=radio]:checked{
     justify-content: center;
 }
 
+.preview-frame .app-icon #tm-addon-menu svg, .preview-frame .app-icon #tm-addon-menu img, .preview-frame .app-icon #tm-addon-menu .dashicons{
+
+    width: 70px;
+    height: 70px;
+}
+
 .tm-menu-item-default {
     display: flex;
     justify-content: center;

@@ -153,7 +153,12 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
-### 1.2.17 - 19/05/2025
+### 1.2.19 - 22/05/2025
+
+- FIXED: There were a couple misalignments with css on subfolders, this has been fixed.
+
+
+### 1.2.18 - 20/05/2025
 
 - Added submenu capability for App icon, Icon, and List styles in the addon menu, check this out its pretty cool.
 - As well as being able to adjust visibility of menu items by role, I have added being able to changes visibility by capability.

@@ -315,6 +315,7 @@ body{
     text-decoration: none;
     margin: 0 auto 10px auto;
     padding-bottom: 0;
+    padding-top: 0;
 
 }
 
@@ -353,6 +354,9 @@ body{
 }
 .app-icon #tm-addon-menu svg, .app-icon #tm-addon-menu img, .app-icon #tm-addon-menu .dashicons{ 
     border-radius: 25%;
+    width: 90px;
+    height: 90px;
+    box-sizing: border-box;
 }
 .app-icon #tm-addon-menu img{
     object-fit: cover;
@@ -423,6 +427,12 @@ body{
     #tm-addon-menu .tm-menu-item-title{
         margin-top: 10px;
     }
+    .app-icon #tm-addon-menu svg, .app-icon #tm-addon-menu img, .app-icon #tm-addon-menu .dashicons {
+        border-radius: 25%;
+        width: 70px;
+        height: 70px;
+    }
+
 }
 
 /*FEATURED ICON*/
@@ -698,6 +708,16 @@ body{
     z-index: 1;
     margin-bottom: 20px;
 }
+
+.pill .tm-left-menu .tm-menu-item-title, .pill .tm-right-menu .tm-menu-item-title {
+    margin-bottom: 0;
+}
+.rounded .tm-left-menu .tm-menu-item-title, .rounded .tm-right-menu .tm-menu-item-title,
+.flat .tm-left-menu .tm-menu-item-title, .flat .tm-right-menu .tm-menu-item-title {
+    margin-bottom: 10px;
+}
+
+
 .preview-content .menu-item-type-cart .tm-menu-item-title:before {
     position: absolute;
     top: 2px;
@@ -780,8 +800,8 @@ body{
 }
 
 .tm-folder-preview-icon img{
-    width: 100%!important;
-    height: 100%!important;
+    width: 15px!important;
+    height: 15px!important;
 }
 
 .tm-folder-preview-icon svg{
@@ -792,11 +812,11 @@ body{
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px!important;
-    line-height: 15px!important;
-    width: 15px!important;
-    height: 15px!important;
-    padding: 5px!important;
+    font-size: 1em !important;
+    line-height: 20px !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0!important;
 }
 
 .tm-folder-title {
@@ -918,7 +938,7 @@ body{
 }
 
 .tm-folder-items {
-    width: 10%;
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
@@ -980,15 +1000,15 @@ body{
     .tm-folder-preview-icon img,
     .tm-folder-preview-icon svg,
     .tm-folder-preview-icon .dashicons {
-        width: 8px;
-        height: 8px;
         min-width: 8px;
         min-height: 8px;
         font-size: 8px!important;
+        line-height: 15px!important;
     }
     .tm-folder-preview-icon img{
         width: 15px!important;
         height: 15px!important;
+        padding: 0!important;
     }
     .tm-folder-items {
         grid-template-columns: repeat(3, 1fr)!important;

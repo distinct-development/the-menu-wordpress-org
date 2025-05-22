@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.2.17
+Stable tag: 1.2.19
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -155,7 +155,11 @@ Yes, The Menu is optimised for touch devices with:
 
 == Changelog ==
 
-= 1.2.17 - 19/05/2024 =
+= 1.2.19 - 22/05/2025 =
+
+- FIXED: There were a couple misalignments with css on subfolders, this has been fixed.
+
+= 1.2.18 - 20/05/2025 =
 
 - Added submenu capability for App icon, Icon, and List styles in the addon menu, check this out its pretty cool.
 - As well as being able to adjust visibility of menu items by role, I have added being able to changes visibility by capability.
