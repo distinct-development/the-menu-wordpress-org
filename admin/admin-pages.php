@@ -199,6 +199,7 @@ $GLOBALS['distm_general_fields'] = [
     ['id' => 'distm_only_on_mobile', 'title' => __('Only on mobile', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Only on mobile', 'the-menu')]],
     ['id' => 'distm_enable_transparency', 'title' => __('Enable transparency on scroll', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Enable transparency on scroll', 'the-menu')]],
     ['id' => 'distm_enable_loader_animation', 'title' => __('Enable loader animation', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Display a loader animation to prevent \'double-clicks\'', 'the-menu')]],
+    ['id' => 'distm_loader_style', 'title' => __('Loader style', 'the-menu'), 'callback' => 'distm_loader_style_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Choose a loader animation style', 'the-menu')]],
     ['id' => 'distm_enable_addon_menu', 'title' => __('Enable addon menu', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Enable addon menu menu to display more links', 'the-menu')]],
     ['id' => 'distm_disable_menu_text', 'title' => __('Disable menu text', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('Display only icons in the menu, no text', 'the-menu')]],
     ['id' => 'distm_delete_data', 'title' => __('Delete data on uninstall', 'the-menu'), 'callback' => 'distm_checkbox_field_callback', 'section' => 'distm_general_section', 'args' => ['description' => __('If checked, all plugin data and settings will be removed when deleting or uninstalling the plugin from the plugins page', 'the-menu')]]
@@ -263,6 +264,7 @@ function distm_get_settings() {
         'distm_addon_icon_color' => '#FFFFFF',
         'distm_enable_transparency' => false,
         'distm_enable_loader_animation' => false,
+        'distm_loader_style' => 'wave',
         'distm_enable_addon_menu' => false,
         'distm_disable_menu_text' => false,
         'distm_only_on_mobile' => false,
@@ -441,7 +443,8 @@ function distm_settings_sanitize($input) {
         // Select/dropdown fields with valid options
         'selects' => array(
             'distm_menu_style' => array('pill', 'rounded', 'flat'),
-            'distm_addon_menu_style' => array('app-icon', 'icon', 'list')
+            'distm_addon_menu_style' => array('app-icon', 'icon', 'list'),
+            'distm_loader_style' => array('wave', 'pulse', 'dots', 'circle')
         )
     );
 
@@ -547,6 +550,55 @@ function distm_color_picker_callback($args) {
         <?php if (!empty($args['description'])): ?>
             <p class='description' style='opacity: 0.5;font-style:italic;'><small><span class='dashicons dashicons-info'></span> <?php echo esc_html($args['description']); ?></small></p>
         <?php endif; ?>
+    </div>
+    <?php
+}
+
+// Add loader style callback function after the existing callback functions
+function distm_loader_style_callback($args) {
+    $settings = distm_get_settings();
+    $value = $settings[$args['label_for']] ?? 'wave';
+    $loader_enabled = isset($settings['distm_enable_loader_animation']) && $settings['distm_enable_loader_animation'];
+    
+    $loader_styles = [
+        'wave' => __('Wave', 'the-menu'),
+        'pulse' => __('Pulse', 'the-menu'),
+        'dots' => __('Dots', 'the-menu'),
+        'circle' => __('Circle', 'the-menu')
+    ];
+    
+    ?>
+    <div class="setting-field-input loader-style-selector" style="display: <?php echo $loader_enabled ? 'block' : 'none'; ?>">
+        <div class="loader-preview-container">
+            <div class="loader-preview" id="loader-preview">
+                <span class="custom-loader <?php echo esc_attr($value); ?>"></span>
+            </div>
+        </div>
+        <select name="distm_settings[<?php echo esc_attr($args['label_for']); ?>]" class="loader-style-select">
+            <?php foreach ($loader_styles as $style => $label): ?>
+                <option value="<?php echo esc_attr($style); ?>" <?php selected($value, $style); ?>>
+                    <?php echo esc_html($label); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <?php if (!empty($args['description'])): ?>
+            <p class='description' style='opacity: 0.5;font-style:italic;margin-top:10px;'><small><?php echo esc_html($args['description']); ?></small></p>
+        <?php endif; ?>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            // Update the preview when select changes
+            $('.loader-style-select').on('change', function() {
+                const selectedStyle = $(this).val();
+                $('#loader-preview span').attr('class', 'custom-loader ' + selectedStyle);
+            });
+
+            // Show/hide loader options when enable loader checkbox changes
+            $('input[name="distm_settings[distm_enable_loader_animation]"]').on('change', function() {
+                $('.loader-style-selector').toggle(this.checked);
+            });
+        });
+        </script>
     </div>
     <?php
 }

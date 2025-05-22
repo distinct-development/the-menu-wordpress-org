@@ -570,8 +570,10 @@ body{
     overflow: hidden;
     display:block;
 }
-.custom-loader:before,
-.custom-loader:after {
+
+/* Wave Loader (Default) */
+.custom-loader.wave:before,
+.custom-loader.wave:after {
     content: "";
     position: absolute;
     width: 100%;
@@ -580,13 +582,69 @@ body{
     top: -40%;
     background-color: #fff;
     animation: wave 5s linear infinite;
-        
-            
 }
-.custom-loader:before {
+.custom-loader.wave:before {
     border-radius: 30%;
     background: rgba(255, 255, 255, 0.4);
     animation: wave 5s linear infinite;
+}
+
+/* Spinner Loader */
+.custom-loader.spinner {
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 5px solid #fff;
+    animation: spin 1s linear infinite;
+}
+
+/* Pulse Loader */
+.custom-loader.pulse {
+    background: rgba(255, 255, 255, 0.1);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Dots Loader */
+.custom-loader.dots {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.custom-loader.dots:before,
+.custom-loader.dots:after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    animation: dots 1.5s infinite ease-in-out;
+}
+.custom-loader.dots:before {
+    left: 25%;
+    animation-delay: 0s;
+}
+.custom-loader.dots:after {
+    right: 25%;
+    animation-delay: 0.5s;
+}
+.custom-loader.dots::before,
+.custom-loader.dots::after {
+    content: '';
+}
+.custom-loader.dots::after {
+    animation-delay: 0.3s;
+}
+
+/* Circle Loader */
+.custom-loader.circle {
+    border: 5px solid transparent;
+    border-radius: 50%;
+    border-top: 5px solid #fff;
+    border-bottom: 5px solid #fff;
+    animation: circle 2s ease infinite;
 }
 
 #tm-pageLoader {
@@ -607,6 +665,8 @@ body{
     left:50%; 
     transform:translate(-50%, -50%);
 }
+
+/* Animations for loaders */
 @keyframes wave {
     0% {
         transform: rotate(0);
@@ -614,6 +674,28 @@ body{
     100% {
         transform: rotate(360deg);
     }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+@keyframes dots {
+    0%, 100% { transform: scale(0.2); opacity: 0.2; }
+    50% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes circle {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Page loader */

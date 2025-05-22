@@ -214,10 +214,13 @@ function distm_add_fixed_menu() {
     $link_url = !empty($options['distm_enable_addon_menu']) ? '#' : esc_url(home_url('/'));
 
     // Start output with loader if enabled
-    if (!empty($options['distm_enable_loader_animation'])) : ?>
+    if (!empty($options['distm_enable_loader_animation'])) : 
+        // Get the selected loader style
+        $loader_style = isset($options['distm_loader_style']) ? $options['distm_loader_style'] : 'wave';
+    ?>
         <div id="tm-pageLoader">
             <div>
-                <span class="custom-loader"></span>
+                <span class="custom-loader <?php echo esc_attr($loader_style); ?>"></span>
             </div>
         </div>
     <?php endif; ?>
