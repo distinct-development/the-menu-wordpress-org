@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.2.20
+Stable tag: 1.2.21
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -154,6 +154,11 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.21 - 14/10/2025 =
+
+- FIXED: Links inside folder sub-menus on the addon overlay are now clickable and navigate correctly
+- Improvement: Enhanced event handling to prevent interference with link navigation in folder overlays
 
 = 1.2.20 - 13/10/2025 =
 

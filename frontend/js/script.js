@@ -111,6 +111,14 @@ document.addEventListener("DOMContentLoaded", function() {
         addonMenu.addEventListener('click', function(e) {
             const folderItem = e.target.closest('.tm-folder-item');
             if (folderItem) {
+                // Check if the click is inside an already-open folder content wrapper
+                // If so, don't trigger the folder open logic (let links work normally)
+                const insideFolderContent = e.target.closest('.tm-folder-content-wrapper');
+                if (insideFolderContent && insideFolderContent.classList.contains('active')) {
+                    // Don't prevent default - let links work normally
+                    return;
+                }
+                
                 e.preventDefault();
                 e.stopPropagation();
                 
@@ -130,11 +138,17 @@ document.addEventListener("DOMContentLoaded", function() {
             // Handle folder content wrapper clicks
             const contentWrapper = e.target.closest('.tm-folder-content-wrapper');
             if (contentWrapper && contentWrapper.classList.contains('active')) {
-                e.preventDefault();
-                e.stopPropagation();
+                // Check if clicking on a link - if so, allow it to work
+                const clickedLink = e.target.closest('a, .tm-folder-item-link, .tm-accordion-item-link');
+                if (clickedLink) {
+                    // Allow links to work normally
+                    return;
+                }
                 
                 // Only close if clicking directly on the wrapper or header
                 if (e.target === contentWrapper || e.target.closest('.tm-folder-header')) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     contentWrapper.classList.remove('active');
                     document.body.style.overflow = ''; // Restore scrolling
                     
