@@ -2,17 +2,8 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Register the plugin settings
-function distm_register_my_menus() {
-    register_nav_menus(
-        array(
-            'left-menu' => '[THE MENU] Left menu',
-            'right-menu' => '[THE MENU] Right menu',
-            'addon-menu' => '[THE MENU] Add-on menu'
-        )
-    );
-}
-add_action('init', 'distm_register_my_menus');
+// Note: distm_register_my_menus() is registered in the main plugin file (the-menu.php)
+// to ensure menu locations are available early in the WordPress init process
 
 // Add custom fields to the menu items
 function distm_add_custom_menu_fields($item_id, $item, $depth, $args) {
@@ -578,6 +569,99 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         return $show_item;
     }
 
+    /**
+     * Sanitize SVG content for safe output
+     * 
+     * @param string $svg_content The raw SVG content
+     * @return string Sanitized SVG content safe for output
+     */
+    private function sanitize_svg_output($svg_content) {
+        if (empty($svg_content)) {
+            return '';
+        }
+        
+        // Use the same allowed tags as the frontend
+        $allowed_svg_tags = array(
+            'svg' => array(
+                'xmlns' => true,
+                'viewbox' => true,
+                'width' => true,
+                'height' => true,
+                'preserveaspectratio' => true,
+                'class' => true,
+                'version' => true,
+                'transform' => true,
+                'fill' => true,
+                'aria-hidden' => true,
+                'role' => true
+            ),
+            'path' => array(
+                'd' => true,
+                'fill' => true,
+                'stroke' => true,
+                'stroke-width' => true,
+                'transform' => true,
+                'opacity' => true
+            ),
+            'circle' => array(
+                'cx' => true,
+                'cy' => true,
+                'r' => true,
+                'fill' => true,
+                'transform' => true,
+                'stroke' => true,
+                'stroke-width' => true
+            ),
+            'rect' => array(
+                'x' => true,
+                'y' => true,
+                'width' => true,
+                'height' => true,
+                'fill' => true,
+                'transform' => true,
+                'rx' => true,
+                'ry' => true
+            ),
+            'g' => array(
+                'fill' => true,
+                'transform' => true,
+                'stroke' => true,
+                'opacity' => true
+            ),
+            'polygon' => array(
+                'points' => true,
+                'fill' => true,
+                'transform' => true
+            ),
+            'polyline' => array(
+                'points' => true,
+                'fill' => true,
+                'stroke' => true,
+                'transform' => true
+            ),
+            'line' => array(
+                'x1' => true,
+                'y1' => true,
+                'x2' => true,
+                'y2' => true,
+                'stroke' => true,
+                'stroke-width' => true
+            ),
+            'ellipse' => array(
+                'cx' => true,
+                'cy' => true,
+                'rx' => true,
+                'ry' => true,
+                'fill' => true,
+                'transform' => true
+            ),
+            'title' => array(),
+            'desc' => array()
+        );
+        
+        return wp_kses($svg_content, $allowed_svg_tags);
+    }
+
     function start_el(&$output, $item, $depth = 0, $args = null, $id = 0) {
         if ($depth !== 0) {
             return;
@@ -602,7 +686,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         $classes = empty($item->classes) ? array() : (array) $item->classes;
         
         // Add cart class if this is the cart page
-        if (distm_is_woocommerce_loaded() && is_object($item) && isset($item->object_id)) {
+        if (distm_is_woocommerce_loaded() && is_object($item) && isset($item->object_id) && function_exists('wc_get_page_id') && function_exists('wc_get_cart_url')) {
             $cart_page_id = wc_get_page_id('cart');
             if ($item->object_id == $cart_page_id || (isset($item->url) && trailingslashit($item->url) === trailingslashit(wc_get_cart_url()))) {
                 $classes[] = 'menu-item-type-cart';
@@ -621,7 +705,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
             if (substr($icon_url, -4) === '.svg') {
                 $svg_content = distm_get_svg_content($icon_url);
                 if ($svg_content !== false) {
-                    $icon_html = $svg_content;
+                    $icon_html = $this->sanitize_svg_output($svg_content);
                 } else {
                     $icon_html = sprintf(
                         '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -699,7 +783,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         if (substr($child_icon_url, -4) === '.svg') {
                             $svg_content = distm_get_svg_content($child_icon_url);
                             if ($svg_content !== false) {
-                                $child_icon_html = $svg_content;
+                                $child_icon_html = $this->sanitize_svg_output($svg_content);
                             } else {
                                 $child_icon_html = sprintf(
                                     '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -768,7 +852,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         if (substr($child_icon_url, -4) === '.svg') {
                             $svg_content = distm_get_svg_content($child_icon_url);
                             if ($svg_content !== false) {
-                                $child_icon_html = $svg_content;
+                                $child_icon_html = $this->sanitize_svg_output($svg_content);
                             } else {
                                 $child_icon_html = sprintf(
                                     '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -785,7 +869,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         );
                     }
                     
-                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
+                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link">';
                     $output .= '<div class="tm-folder-item-icon">' . $child_icon_html . '</div>';
                     if (!$hide_text) {
                         $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
@@ -854,7 +938,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         if (substr($child_icon_url, -4) === '.svg') {
                             $svg_content = distm_get_svg_content($child_icon_url);
                             if ($svg_content !== false) {
-                                $child_icon_html = $svg_content;
+                                $child_icon_html = $this->sanitize_svg_output($svg_content);
                             } else {
                                 $child_icon_html = sprintf(
                                     '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -921,7 +1005,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         if (substr($child_icon_url, -4) === '.svg') {
                             $svg_content = distm_get_svg_content($child_icon_url);
                             if ($svg_content !== false) {
-                                $child_icon_html = $svg_content;
+                                $child_icon_html = $this->sanitize_svg_output($svg_content);
                             } else {
                                 $child_icon_html = sprintf(
                                     '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -938,7 +1022,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         );
                     }
                     
-                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link" onclick="window.location.href=\'' . esc_url($child_url) . '\';">';
+                    $output .= '<a href="' . esc_url($child_url) . '" class="tm-folder-item-link">';
                     $output .= '<div class="tm-folder-item-icon">' . $child_icon_html . '</div>';
                     if (!$hide_text) {
                         $output .= '<div class="tm-folder-item-title">' . esc_html($child_title) . '</div>';
@@ -989,7 +1073,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     if (substr($icon_url, -4) === '.svg') {
                         $svg_content = distm_get_svg_content($icon_url);
                         if ($svg_content !== false) {
-                            $icon_html = $svg_content;
+                            $icon_html = $this->sanitize_svg_output($svg_content);
                         } else {
                             $icon_html = sprintf(
                                 '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -1053,7 +1137,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                         if (substr($child_icon_url, -4) === '.svg') {
                             $svg_content = distm_get_svg_content($child_icon_url);
                             if ($svg_content !== false) {
-                                $child_icon_html = $svg_content;
+                                $child_icon_html = $this->sanitize_svg_output($svg_content);
                             } else {
                                 $child_icon_html = sprintf(
                                     '<span class="dashicons dashicons-%s" aria-hidden="true"></span>',
@@ -1249,10 +1333,15 @@ function distm_verify_license() {
         exit;
     }
 
-    // Your existing license verification logic here
-    $result = distm_validate_license($license_key);
+    // Use the existing license validator class
+    $validator = DISTM_Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
+    $is_valid = $validator->validate_license();
     
-    wp_send_json_success($result);
+    if ($is_valid) {
+        wp_send_json_success(array('status' => 'valid', 'message' => 'License is valid'));
+    } else {
+        wp_send_json_error(array('status' => 'invalid', 'message' => 'License is invalid or not registered'));
+    }
 }
 add_action('wp_ajax_distm_verify_license', 'distm_verify_license');
 

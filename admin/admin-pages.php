@@ -822,131 +822,170 @@ function distm_upload_field_callback($args) {
     }
 }
 
-function distm_page_exclusion_section_callback() {
-    $options = get_option('distm_settings');
-    $selected_pages = isset($options['distm_exclude_pages']) ? (array)$options['distm_exclude_pages'] : array();
-
-    // Get all pages
-    $pages = get_pages(array(
-        'sort_column' => 'menu_order,post_title',
-        'hierarchical' => true
-    ));
-
-    // Group pages by parent
-    $page_tree = array();
-    foreach ($pages as $page) {
-        if ($page->post_parent == 0) {
-            $page_tree[$page->ID] = array(
-                'page' => $page,
-                'children' => array()
-            );
-        } else {
-            if (isset($page_tree[$page->post_parent])) {
-                $page_tree[$page->post_parent]['children'][] = $page;
-            } else {
-                // If parent isn't found (rare case), add to top level
-                $page_tree[$page->ID] = array(
-                    'page' => $page,
-                    'children' => array()
-                );
-            }
-        }
-    }
-
-    echo '<div class="page-exclusion-grid">';
-    
-    // Render parent pages and their children
-    foreach ($page_tree as $parent_id => $data) {
-        $parent = $data['page'];
-        $children = $data['children'];
-        
-        echo '<div class="page-exclusion-item parent-item">';
-        echo '<label class="page-checkbox-label">';
-        printf(
-            '<input type="checkbox" name="distm_settings[distm_exclude_pages][]" value="%d" %s>',
-            esc_attr($parent->ID),
-            checked(in_array($parent->ID, $selected_pages), true, false)
-        );
-        echo '<span class="page-title">' . esc_html($parent->post_title) . '</span>';
-        echo '</label>';
-
-        // Render child pages if any exist
-        if (!empty($children)) {
-            echo '<div class="child-pages">';
-            foreach ($children as $child) {
-                echo '<label class="page-checkbox-label child-label">';
-                printf(
-                    '<input type="checkbox" name="distm_settings[distm_exclude_pages][]" value="%d" %s>',
-                    esc_attr($child->ID),
-                    checked(in_array($child->ID, $selected_pages), true, false)
-                );
-                echo '<p class="page-title">' . esc_html($child->post_title) . '</p>';
-                echo '</label>';
-            }
-            echo '</div>';
-        }
-        
-        echo '</div>';
-    }
-    
-    echo '</div>';
-
-    if (!empty($args['description'])) {
-        echo '<p class="description" style="margin-top: 15px;"><span class="dashicons dashicons-info"></span> ' . 
-             esc_html($args['description']) . '</p>';
-    }
-    ?>
-    <?php
-}
-
 function distm_allow_svg_upload($mimes) {
     $mimes['svg'] = 'image/svg+xml';
     return $mimes;
 }
 add_filter('upload_mimes', 'distm_allow_svg_upload');
 
+/**
+ * Verify SVG file type on upload
+ * Ensures files with .svg extension actually contain SVG content
+ * 
+ * @param array $data File data array
+ * @param string $file Full path to the file
+ * @param string $filename File name
+ * @param array $mimes Allowed MIME types
+ * @return array Modified file data
+ */
+function distm_check_svg_filetype($data, $file, $filename, $mimes) {
+    $filetype = wp_check_filetype($filename, $mimes);
+
+    if ($filetype['ext'] === 'svg') {
+        // Verify it's actually an SVG by checking file content
+        $file_content = file_get_contents($file);
+        
+        if ($file_content === false) {
+            // Unable to read file
+            $data['ext'] = false;
+            $data['type'] = false;
+            return $data;
+        }
+        
+        // Check if file contains SVG tag
+        if (stripos($file_content, '<svg') === false) {
+            // Not a valid SVG file
+            $data['ext'] = false;
+            $data['type'] = false;
+        }
+    }
+
+    return $data;
+}
+add_filter('wp_check_filetype_and_ext', 'distm_check_svg_filetype', 10, 4);
+
 
 // Sanitize SVG uploads
 function distm_sanitize_svg($file) {
+    // Validate file size using defined constant
+    if ($file['size'] > DISTM_MAX_SVG_SIZE) {
+        $file['error'] = 'SVG file too large. Maximum size is 1MB.';
+        return $file;
+    }
+
     // Check if the file is an SVG
-    if ($file['type'] === 'image/svg+xml') {
-        $response = wp_remote_get($file['tmp_name']);
+    if ($file['type'] !== 'image/svg+xml') {
+        return $file;
+    }
+
+    // Read the file content from the temporary file
+    $file_content = file_get_contents($file['tmp_name']);
+    
+    if ($file_content === false) {
+        $file['error'] = 'Unable to read SVG file';
+        return $file;
+    }
+    $previous_internal_errors = libxml_use_internal_errors(true);
+
+    try {
+        $dom = new DOMDocument();
+        $dom->strictErrorChecking = true;
         
-        if (is_wp_error($response)) {
-            return $file; 
+        // LIBXML_DTDLOAD and LIBXML_NONET prevent loading external entities
+        if (!$dom->loadXML($file_content, LIBXML_DTDLOAD | LIBXML_NONET)) {
+            libxml_use_internal_errors($previous_internal_errors);
+            $file['error'] = 'Invalid or malformed SVG file';
+            return $file;
+        }
+    } catch (Exception $e) {
+        libxml_use_internal_errors($previous_internal_errors);
+        $file['error'] = 'Error processing SVG file: ' . esc_html($e->getMessage());
+        return $file;
+    }
+
+    try {
+        // Create XPath for more efficient querying
+        $xpath = new DOMXPath($dom);
+
+        // Remove potentially harmful elements including style tags
+        $scripting_elements = array('script', 'use', 'foreignObject', 'embed', 'iframe', 'object', 'applet', 'style');
+        foreach ($scripting_elements as $tag) {
+            $elements = $xpath->query("//{$tag}");
+            if ($elements) {
+                foreach ($elements as $element) {
+                    if ($element->parentNode) {
+                        $element->parentNode->removeChild($element);
+                    }
+                }
+            }
         }
 
-        $file_content = wp_remote_retrieve_body($response);
-
-        $dom = new DOMDocument();
-        $dom->loadXML($file_content);
-
-        // Remove potentially harmful elements and attributes
-        $scripting_elements = array('script', 'use', 'foreignObject');
-        $elements = $dom->getElementsByTagName('*');
-
-        foreach ($elements as $element) {
-            if (in_array($element->tagName, $scripting_elements)) {
-                $element->parentNode->removeChild($element);
-            }
-            // Remove on* attributes
+        // Remove dangerous attributes from all elements
+        $all_elements = $dom->getElementsByTagName('*');
+        foreach ($all_elements as $element) {
             $attributes = $element->attributes;
-            for ($i = $attributes->length - 1; $i >= 0; $i--) {
+            $attrs_to_remove = array();
+            
+            // Collect attributes to remove
+            for ($i = 0; $i < $attributes->length; $i++) {
                 $attribute = $attributes->item($i);
-                if (strpos($attribute->name, 'on') === 0) {
-                    $element->removeAttribute($attribute->name);
+                if (!$attribute instanceof DOMAttr) {
+                    continue;
                 }
+                
+                $attr_name = $attribute->nodeName;
+                $attr_value = $attribute->nodeValue;
+                
+                // Remove style attributes that can contain JavaScript
+                if ($attr_name === 'style') {
+                    $attrs_to_remove[] = $attr_name;
+                }
+                
+                // Remove on* event handlers
+                if (strpos($attr_name, 'on') === 0) {
+                    $attrs_to_remove[] = $attr_name;
+                }
+                
+                // Remove potentially dangerous xlink attributes
+                if (strpos($attr_name, 'xlink:') === 0 && $attr_name !== 'xlink:href') {
+                    $attrs_to_remove[] = $attr_name;
+                }
+                
+                // Check for dangerous protocols in href attributes
+                if (in_array($attr_name, array('href', 'xlink:href'))) {
+                    if (preg_match('/^\s*(javascript|data|vbscript):/i', $attr_value)) {
+                        $attrs_to_remove[] = $attr_name;
+                    }
+                }
+            }
+            
+            // Remove collected attributes
+            foreach ($attrs_to_remove as $attr_name) {
+                $element->removeAttribute($attr_name);
             }
         }
 
         // Save sanitized SVG back to the temp file using WP_Filesystem
         global $wp_filesystem;
         if (empty($wp_filesystem)) {
-            require_once (ABSPATH . '/wp-admin/includes/file.php');
+            require_once(ABSPATH . '/wp-admin/includes/file.php');
             WP_Filesystem();
         }
-        $wp_filesystem->put_contents($file['tmp_name'], $dom->saveXML());
+        
+        $sanitized_content = $dom->saveXML();
+        if (!$wp_filesystem->put_contents($file['tmp_name'], $sanitized_content)) {
+            libxml_use_internal_errors($previous_internal_errors);
+            $file['error'] = 'Unable to save sanitized SVG file';
+            return $file;
+        }
+    } catch (Exception $e) {
+        libxml_use_internal_errors($previous_internal_errors);
+        $file['error'] = 'Error sanitizing SVG file: ' . esc_html($e->getMessage());
+        return $file;
     }
+
+    // Restore previous libxml settings
+    libxml_use_internal_errors($previous_internal_errors);
 
     return $file;
 }

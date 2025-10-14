@@ -16,15 +16,32 @@ function distm_should_delete_data() {
 if (distm_should_delete_data()) {
     // Remove all plugin options
     delete_option('distm_settings');
+    delete_option('the-menu_license_key');
     
-    // Remove any transients
-    delete_transient('the-menu_license_status');
+    // Remove all license status transients (for all users)
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+    global $wpdb;
+    // Prepare patterns with wildcards properly
+    $pattern1 = $wpdb->esc_like('_transient_the-menu_license_status') . '%';
+    $pattern2 = $wpdb->esc_like('_transient_timeout_the-menu_license_status') . '%';
+    $wpdb->query(
+        $wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+            $pattern1,
+            $pattern2
+        )
+    );
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
     // Meta keys to remove
     $meta_keys = array(
         '_menu_item_icon',
+        '_menu_item_icon_type',
+        '_menu_item_dashicon',
         '_menu_item_visibility',
-        '_menu_item_roles'
+        '_menu_item_roles',
+        '_menu_item_capabilities',
+        '_menu_item_filter_by'
     );
 
     // Get all menu items
@@ -44,13 +61,15 @@ if (distm_should_delete_data()) {
     // Clear any cached data
     wp_cache_flush();
 
-    // Clean up wp_options
+    // Clean up wp_options (removing duplicates from earlier deletion)
     $option_keys = array(
-        'distm_settings',
-        'the-menu_license_status'
+        'distm_plugin_version'
     );
 
     foreach ($option_keys as $option) {
         delete_option($option);
     }
+    
+    // Final cache flush to ensure everything is clean
+    wp_cache_flush();
 }

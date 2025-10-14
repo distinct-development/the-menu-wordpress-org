@@ -1,18 +1,15 @@
 <?php
-
-namespace Distinct\TheMenu;
-
 /*
 Plugin Name: The Menu: Custom mobile navigation with icons
 Plugin URI: https://github.com/distinct-development/the-menu-wordpress-org
 Description: Create beautiful mobile navigation menus with custom icons, role-based visibility, and extensive style options for your WordPress site.
-Version: 1.2.19
+Version: 1.2.20
 Author: Distinct
 License: GPL-2.0-or-later
 Author URI: https://plugins.distinct.africa
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.2.19
+Stable tag: 1.2.20
 Requires PHP: 7.0
 */
 
@@ -22,13 +19,18 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 define('DISTM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DISTM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+// Define security and performance constants
+define('DISTM_MAX_SVG_SIZE', 1048576); // 1MB maximum SVG file size
+define('DISTM_LICENSE_CHECK_RATE_LIMIT', 5); // Maximum license checks per hour per user
+define('DISTM_CACHE_DURATION', 12 * HOUR_IN_SECONDS); // Cache duration for license status and SVGs
+
 // =============================================
 // CORE PLUGIN INITIALIZATION - NO TRANSLATIONS
 // =============================================
 
 // Register the activation/deactivation hooks
-register_activation_hook(__FILE__, __NAMESPACE__ . '\\distm_activate_plugin');
-register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\distm_deactivate_plugin');
+register_activation_hook(__FILE__, 'distm_activate_plugin');
+register_deactivation_hook(__FILE__, 'distm_deactivate_plugin');
 
 function distm_activate_plugin() {
     if (!current_user_can('activate_plugins')) {
@@ -65,43 +67,7 @@ function distm_check_languages_directory() {
     }
 }
 
-// Check for required files on plugin activation
-function distm_check_required_files() {
-    // Verify requirements
-    $requirements_met = true;
-    $errors = array();
-
-    // Check required files
-    $required_files = array(
-        'admin/admin-init.php',
-        'admin/admin-pages.php',
-        'admin/admin-menus.php',
-        'admin/admin-help.php',
-        'frontend/frontend-init.php',
-        'admin/assets/menu-logo.svg'
-    );
-
-    foreach ($required_files as $file) {
-        $file_path = plugin_dir_path(__FILE__) . $file;
-        if (!file_exists($file_path)) {
-            $requirements_met = false;
-            $errors[] = sprintf('Required file missing: %s', $file);
-        }
-    }
-
-    // If requirements aren't met, deactivate the plugin and show error
-    if (!$requirements_met) {
-        deactivate_plugins(plugin_basename(__FILE__));
-        wp_die(
-            '<p>' . wp_kses_post(implode('</p><p>', array_map('esc_html', $errors))) . '</p>' .
-            '<p>' . esc_html__('The Menu plugin cannot be activated. Please fix the issues above and try again.', 'the-menu') . '</p>',
-            esc_html__('Plugin Activation Error', 'the-menu'),
-            array('back_link' => true)
-        );
-    }
-    
-    return $requirements_met;
-}
+// Note: distm_check_required_files() is defined in admin/admin-init.php
 
 function distm_deactivate_plugin() {
     if (!current_user_can('activate_plugins')) {
@@ -112,7 +78,10 @@ function distm_deactivate_plugin() {
         return;
     }
 
-    delete_transient('the-menu_license_status');
+    // Clear license status transient for current user
+    // Note: Other user transients will expire naturally after 12 hours
+    // Full cleanup of all data happens in uninstall.php if user opts in
+    delete_transient('the-menu_license_status_' . get_current_user_id());
 }
 
 function distm_migrate_menu_item_icon_types() {
@@ -134,7 +103,7 @@ function distm_migrate_menu_item_icon_types() {
     }
 
     // Update plugin version in options to track migration
-    update_option('distm_plugin_version', '1.2.16');
+    update_option('distm_plugin_version', '1.2.21');
 }
 
 // Add a function to handle plugin updates - NO translations here
@@ -147,9 +116,9 @@ function distm_check_for_updates() {
     }
     
     // Update to current version
-    update_option('distm_plugin_version', '1.2.16');
+    update_option('distm_plugin_version', '1.2.21');
 }
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_check_for_updates');
+add_action('plugins_loaded', 'distm_check_for_updates');
 
 // Load required WordPress files
 if (!function_exists('get_plugin_data')) {
@@ -160,23 +129,13 @@ if (!function_exists('get_plugin_data')) {
 function distm_include_essential_files() {
     require_once(DISTM_PLUGIN_DIR . 'admin/admin-init.php');
 }
-add_action('plugins_loaded', __NAMESPACE__ . '\\distm_include_essential_files', 5);
+add_action('plugins_loaded', 'distm_include_essential_files', 5);
 
 // =========================================
-// TEXT DOMAIN LOADING - INIT HOOK PRIORITY 1
+// MAIN PLUGIN LOADING
 // =========================================
-function the_menu_load_textdomain() {
-    load_plugin_textdomain(
-        'the-menu',
-        false,
-        dirname(plugin_basename(__FILE__)) . '/languages'
-    );
-}
-add_action('init', __NAMESPACE__ . '\\the_menu_load_textdomain', 1);
-
-// =========================================
-// MAIN PLUGIN LOADING - AFTER TRANSLATIONS
-// =========================================
+// Note: WordPress automatically loads plugin translations since WP 4.6
+// No manual load_plugin_textdomain() call is needed
 function distm_plugin_init() {
     // Now that translations are loaded, we can include files with translatable strings
     require_once(DISTM_PLUGIN_DIR . 'admin/admin-pages.php');
@@ -185,11 +144,11 @@ function distm_plugin_init() {
     require_once(DISTM_PLUGIN_DIR . 'frontend/frontend-init.php');
     
     // Initialize license validator
-    Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
+    DISTM_Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
 }
-add_action('init', __NAMESPACE__ . '\\distm_plugin_init', 5);
+add_action('init', 'distm_plugin_init', 5);
 
-// Register menus without translations - must happen on init but before translation files are needed
+// Register menus without translations - must happen on init
 function distm_register_my_menus() {
     register_nav_menus(
         array(
@@ -199,14 +158,14 @@ function distm_register_my_menus() {
         )
     );
 }
-add_action('init', __NAMESPACE__ . '\\distm_register_my_menus', 2); // Priority 2 to run right after textdomain loading
+add_action('init', 'distm_register_my_menus', 2);
 
 // ===========================
 // LICENSE VALIDATOR CLASS
 // ===========================
 
 // Only define the class, but don't instantiate until init runs
-class Plugin_License_Validator {
+class DISTM_Plugin_License_Validator {
     private static $instance = null;
     private $plugin_slug;
     private $plugin_name;
@@ -244,11 +203,28 @@ class Plugin_License_Validator {
 
     // Validate the license
     public function validate_license() {
-        $cache_key = $this->plugin_slug . '_license_status';
+        // Add user context to cache key to prevent privilege escalation
+        $cache_key = $this->plugin_slug . '_license_status_' . get_current_user_id();
         $cached = get_transient($cache_key);
         if ($cached !== false) {
             return $cached === 'valid';
         }
+    
+        // Rate limiting: Allow max license checks per hour per user
+        $rate_limit_key = $this->plugin_slug . '_license_check_count_' . get_current_user_id();
+        $check_count = (int) get_transient($rate_limit_key);
+        
+        if ($check_count >= DISTM_LICENSE_CHECK_RATE_LIMIT) {
+            // Log rate limit exceeded (anonymized for privacy)
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional security logging for rate limit violations
+                error_log('The Menu: License validation rate limit exceeded for user hash: ' . md5('distm_' . get_current_user_id()));
+            }
+            return false;
+        }
+        
+        // Increment rate limit counter
+        set_transient($rate_limit_key, $check_count + 1, HOUR_IN_SECONDS);
     
         $license_key = sanitize_text_field(get_option($this->license_option_key, ''));
         $site_url = esc_url_raw(get_site_url());
@@ -276,7 +252,7 @@ class Plugin_License_Validator {
         $response_body = wp_remote_retrieve_body($response);
         $data = json_decode($response_body);
         $is_valid = isset($data->status) && $data->status === 'success';
-        set_transient($cache_key, $is_valid ? 'valid' : 'invalid', 12 * HOUR_IN_SECONDS);
+        set_transient($cache_key, $is_valid ? 'valid' : 'invalid', DISTM_CACHE_DURATION);
         return $is_valid;
     }
 
@@ -335,7 +311,8 @@ class Plugin_License_Validator {
         ) {
             $result = sanitize_text_field(wp_unslash($_GET['license_check_result']));
             if (in_array($result, array('valid', 'invalid'), true)) {
-                delete_transient($this->plugin_slug . '_license_status');
+                // Clear cache for current user
+                delete_transient($this->plugin_slug . '_license_status_' . get_current_user_id());
             }
         }
     }
@@ -348,7 +325,20 @@ class Plugin_License_Validator {
         $status_class = $status === 'valid' ? 'tm-status-pill-active' : 'tm-status-pill-inactive';
         
         ?>
-        <input type="text" id="<?php echo esc_attr($this->license_option_key); ?>" name="<?php echo esc_attr($this->license_option_key); ?>" value="<?php echo esc_attr($license_key); ?>" class="regular-text" />
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <input type="password" 
+                   id="<?php echo esc_attr($this->license_option_key); ?>" 
+                   name="<?php echo esc_attr($this->license_option_key); ?>" 
+                   value="<?php echo esc_attr($license_key); ?>" 
+                   class="regular-text"
+                   autocomplete="off" />
+            <button type="button" 
+                    class="button" 
+                    onclick="const input = document.getElementById('<?php echo esc_js($this->license_option_key); ?>'); input.type = input.type === 'password' ? 'text' : 'password'; this.querySelector('.dashicons').classList.toggle('dashicons-visibility'); this.querySelector('.dashicons').classList.toggle('dashicons-hidden');"
+                    title="<?php esc_attr_e('Toggle visibility', 'the-menu'); ?>">
+                <span class="dashicons dashicons-visibility"></span>
+            </button>
+        </div>
         <div class="tm-license-zone">
             <span class="tm-status-pill <?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_text); ?></span>
             <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=the_menu_check_license'), 'the_menu_check_license_nonce')); ?>" style="text-decoration:none;">

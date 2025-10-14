@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.2.19
+Stable tag: 1.2.20
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -154,6 +154,18 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.20 - 13/10/2025 =
+
+- WP version check
+- Added: more loader animation options
+- Security: Fixed possible SQL injection vulnerability in uninstall process
+- Security: Enhanced SVG sanitization to prevent XSS attacks
+- Security: Improved file path validation and SVG content validation
+- Security: Added security event logging when WP_DEBUG is enabled
+- Improvement: Enhanced error handling, validation, and documentation
+- Code Quality: Added security constants, fixed naming consistency, and improved code structure
+- Privacy: Anonymized user IDs in debug logs for GDPR compliance
 
 = 1.2.19 - 22/05/2025 =
 

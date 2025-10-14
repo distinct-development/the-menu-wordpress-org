@@ -9,7 +9,7 @@ function distm_check_required_files() {
     // Check PHP version
     if (version_compare(PHP_VERSION, '7.0', '<')) {
         $requirements_met = false;
-        $errors[] = 'PHP 7.0 or higher is required. Current version is ' . PHP_VERSION;
+        $errors[] = 'PHP 7.0 or higher is required';
     }
 
     // Check required files
@@ -148,24 +148,63 @@ function distm_get_svg_content($url) {
     $attachment_id = attachment_url_to_postid($url);
     if ($attachment_id) {
         $file_path = get_attached_file($attachment_id);
-        if ($file_path && file_exists($file_path)) {
+        $upload_dir = wp_upload_dir();
+        
+        // Verify the file is in the uploads directory to prevent directory traversal
+        if ($file_path && 
+            file_exists($file_path) && 
+            strpos(realpath($file_path), realpath($upload_dir['basedir'])) === 0) {
             $svg_content = file_get_contents($file_path);
         } else {
+            // Log security warning
+            if (defined('WP_DEBUG') && WP_DEBUG && $file_path) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional security logging for directory traversal attempts
+                error_log('The Menu: Attempted to access file outside uploads directory: ' . $file_path);
+            }
             return false;
         }
     } else {
-        // Handle remote URLs
+        // Handle remote URLs with enhanced security
         $response = wp_remote_get($url, array(
-            'timeout' => 15, // Increased timeout
-            'sslverify' => true // Enable SSL verification
+            'timeout' => 15,
+            'sslverify' => true,
+            'headers' => array(
+                'Accept' => 'image/svg+xml'
+            )
         ));
         
         if (is_wp_error($response)) {
             return false;
         }
 
+        // Verify content-type to ensure we're getting an SVG
+        $content_type = wp_remote_retrieve_header($response, 'content-type');
+        if ($content_type && strpos($content_type, 'svg') === false) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional security logging for invalid content types
+                error_log('The Menu: Invalid content-type for SVG: ' . $content_type);
+            }
+            return false;
+        }
+
+        // Check response size before loading
+        $content_length = wp_remote_retrieve_header($response, 'content-length');
+        if ($content_length && $content_length > DISTM_MAX_SVG_SIZE) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional security logging for oversized files
+                error_log('The Menu: Remote SVG too large: ' . $url . ' (' . $content_length . ' bytes)');
+            }
+            return false;
+        }
+
         $svg_content = wp_remote_retrieve_body($response);
-        if (empty($svg_content)) {
+        
+        // Double-check size after loading
+        if (empty($svg_content) || strlen($svg_content) > DISTM_MAX_SVG_SIZE) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Intentional security logging for file size violations
+                error_log('The Menu: SVG content exceeds size limit: ' . $url);
+            }
             return false;
         }
     }
