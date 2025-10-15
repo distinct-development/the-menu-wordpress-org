@@ -3,7 +3,7 @@ Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.2.21
+Stable tag: 1.2.22
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -154,6 +154,11 @@ Yes, The Menu is optimised for touch devices with:
 6. Easy-to-use customisation options
 
 == Changelog ==
+
+= 1.2.22 - 14/10/2025 =
+
+- FIXED: SVG file size limit was incorrectly being applied to all media uploads, now only applies to SVG files
+- Security: 1MB size limit now correctly restricts only SVG uploads, not other media types
 
 = 1.2.21 - 14/10/2025 =
 

@@ -867,14 +867,14 @@ add_filter('wp_check_filetype_and_ext', 'distm_check_svg_filetype', 10, 4);
 
 // Sanitize SVG uploads
 function distm_sanitize_svg($file) {
-    // Validate file size using defined constant
-    if ($file['size'] > DISTM_MAX_SVG_SIZE) {
-        $file['error'] = 'SVG file too large. Maximum size is 1MB.';
+    // Check if the file is an SVG
+    if ($file['type'] !== 'image/svg+xml') {
         return $file;
     }
 
-    // Check if the file is an SVG
-    if ($file['type'] !== 'image/svg+xml') {
+    // Validate file size using defined constant (only for SVG files)
+    if ($file['size'] > DISTM_MAX_SVG_SIZE) {
+        $file['error'] = 'SVG file too large. Maximum size is 1MB.';
         return $file;
     }
 
