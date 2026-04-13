@@ -153,6 +153,11 @@ For support, please visit our [support forum](https://wordpress.org/support/plug
 
 ## Changelog
 
+### 1.2.23 - 13/04/2026
+
+- Improvement: WooCommerce cart count in the menu updates dynamically when the cart changes (classic AJAX fragments and WooCommerce Blocks)
+- FIXED: Subfolder (folder overlay) menu behaviour and interaction
+
 ### 1.2.19 - 22/05/2025
 
 - FIXED: There were a couple misalignments with css on subfolders, this has been fixed.

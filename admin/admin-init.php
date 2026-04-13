@@ -45,7 +45,7 @@ function distm_enqueue_admin_scripts($hook_suffix) {
     // Get plugin version for cache busting
     $plugin_version = get_plugin_data(__DIR__ . '/../the-menu.php')['Version'];
     
-    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'the-menu_page_distm-help') {
+    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_distm-help') {
         wp_enqueue_media();
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script(
@@ -77,7 +77,7 @@ function distm_enqueue_admin_scripts($hook_suffix) {
         }
     }
 
-    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_the-menu-license-settings' || $hook_suffix == 'the-menu_page_distm-help') {
+    if ($hook_suffix == 'toplevel_page_the-menu' || $hook_suffix == 'the-menu_page_distm-help') {
         wp_enqueue_style(
             'distm-admin-style', 
             plugin_dir_url(__FILE__) . 'css/style.css', 

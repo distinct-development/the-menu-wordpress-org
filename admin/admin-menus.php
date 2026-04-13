@@ -1176,10 +1176,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                 // Check if this is a WooCommerce cart menu item
                 $wc_cart = distm_get_wc_cart();
                 if (distm_is_woocommerce_loaded() && $wc_cart && in_array('menu-item-type-cart', $classes)) {
-                    $cart_count = $wc_cart->get_cart_contents_count();
-                    if ($cart_count > 0) {
-                        $output .= '<span class="tm-cart-count">' . esc_html($cart_count) . '</span>';
-                    }
+                    $output .= distm_get_wc_cart_count_markup($wc_cart->get_cart_contents_count());
                 }
                 
                 // Add the title if not hidden
@@ -1305,46 +1302,6 @@ function distm_update_menu_item() {
 }
 add_action('wp_ajax_distm_update_menu_item', 'distm_update_menu_item');
 
-/**
- * Verify license key via AJAX
- * 
- * @return void
- */
-function distm_verify_license() {
-    // Verify nonce with proper sanitization
-    if (!isset($_POST['nonce']) || 
-        !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'distm_ajax_nonce')) {
-        wp_send_json_error('Invalid nonce');
-        exit;
-    }
-
-    // Verify user capabilities
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Insufficient permissions');
-        exit;
-    }
-
-    // Sanitize and validate license key
-    $license_key = isset($_POST['license_key']) ? 
-        sanitize_text_field(wp_unslash($_POST['license_key'])) : '';
-    
-    if (empty($license_key)) {
-        wp_send_json_error('Invalid license key');
-        exit;
-    }
-
-    // Use the existing license validator class
-    $validator = DISTM_Plugin_License_Validator::get_instance('the-menu', 'The Menu', 'the_menu');
-    $is_valid = $validator->validate_license();
-    
-    if ($is_valid) {
-        wp_send_json_success(array('status' => 'valid', 'message' => 'License is valid'));
-    } else {
-        wp_send_json_error(array('status' => 'invalid', 'message' => 'License is invalid or not registered'));
-    }
-}
-add_action('wp_ajax_distm_verify_license', 'distm_verify_license');
-
 // Add a helper function to check if WooCommerce is fully loaded
 function distm_is_woocommerce_loaded() {
     return class_exists('WooCommerce') && function_exists('WC') && function_exists('wc_get_page_id') && function_exists('wc_get_cart_url');
@@ -1360,4 +1317,31 @@ function distm_get_wc_cart() {
     }
     return null;
 }
+
+/**
+ * Markup for the mobile menu cart count badge (always present for cart items so WooCommerce fragments can replace it).
+ *
+ * @param int $count Cart contents count.
+ * @return string
+ */
+function distm_get_wc_cart_count_markup($count) {
+    $count = absint($count);
+    $hidden = $count < 1 ? ' hidden' : '';
+    return '<span class="tm-cart-count"' . $hidden . '>' . esc_html((string) $count) . '</span>';
+}
+
+/**
+ * Refresh the cart badge via WooCommerce AJAX cart fragments (add/remove/update cart without full page load).
+ *
+ * @param array $fragments Fragments keyed by jQuery selector.
+ * @return array
+ */
+function distm_wc_cart_menu_fragments($fragments) {
+    if (!distm_is_woocommerce_loaded() || !function_exists('WC') || !WC()->cart) {
+        return $fragments;
+    }
+    $fragments['.the-menu .menu-item-type-cart .tm-cart-count'] = distm_get_wc_cart_count_markup(WC()->cart->get_cart_contents_count());
+    return $fragments;
+}
+add_filter('woocommerce_add_to_cart_fragments', 'distm_wc_cart_menu_fragments', 10);
 

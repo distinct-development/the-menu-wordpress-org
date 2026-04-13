@@ -783,6 +783,9 @@ body{
     justify-content: center;
     z-index: 999;
 }
+.tm-cart-count[hidden] {
+    display: none !important;
+}
 .tm-menu-item a {
     position: relative;
 }

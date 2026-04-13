@@ -40,31 +40,6 @@ ul#adminmenu a.wp-has-current-submenu:after, ul#adminmenu>li.current>a.current:a
     
 }
 
-.tm-status-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-.tm-status-pill-active {
-    background-color: #25a041;
-    color: #fff;
-}
-.tm-status-pill-inactive {
-    background-color: #d00;
-    color: #fff;
-}
-
-.tm-license-zone{
-    margin-top: 10px;
-    display: flex;
-    justify-content: start;
-    align-items: center;
-    gap: 10px;
-}
-
 .tm-banner { 
     max-width: 100%;
     min-height: 400px;

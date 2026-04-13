@@ -470,10 +470,7 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
             // Check if this is a WooCommerce cart menu item
             $wc_cart = distm_get_wc_cart();
             if (distm_is_woocommerce_loaded() && $wc_cart && in_array('menu-item-type-cart', $classes)) {
-                $cart_count = $wc_cart->get_cart_contents_count();
-                if ($cart_count > 0) {
-                    $output .= '<span class="tm-cart-count">' . esc_html($cart_count) . '</span>';
-                }
+                $output .= distm_get_wc_cart_count_markup($wc_cart->get_cart_contents_count());
             }
 
             $options = get_option('distm_settings');

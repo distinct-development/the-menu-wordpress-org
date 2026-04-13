@@ -77,7 +77,12 @@ function distm_enqueue_frontend_scripts() {
                 ";
                 
                 wp_add_inline_style('distm-style', $custom_css);
-                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), array('jquery'), $plugin_version, true);
+                $script_deps = array('jquery');
+                if (function_exists('distm_is_woocommerce_loaded') && distm_is_woocommerce_loaded() && wp_script_is('wc-cart-fragments', 'registered')) {
+                    wp_enqueue_script('wc-cart-fragments');
+                    $script_deps[] = 'wc-cart-fragments';
+                }
+                wp_enqueue_script('distm-frontend', plugins_url('frontend/js/script.js', dirname(__FILE__)), $script_deps, $plugin_version, true);
                 wp_enqueue_style('dashicons');
                 
                 // Get SVG URLs for preloading
@@ -87,6 +92,16 @@ function distm_enqueue_frontend_scripts() {
                 wp_localize_script('distm-frontend', 'distmSvgData', array(
                     'svgUrls' => $svg_urls
                 ));
+
+                if (function_exists('distm_is_woocommerce_loaded') && distm_is_woocommerce_loaded() && class_exists('WC_AJAX')) {
+                    wp_localize_script(
+                        'distm-frontend',
+                        'distmWcCart',
+                        array(
+                            'fragmentsEndpoint' => WC_AJAX::get_endpoint('get_refreshed_fragments'),
+                        )
+                    );
+                }
                 
                 // Preload SVGs
                 distm_preload_common_svgs();

@@ -2,8 +2,8 @@
 Contributors: ryanwiggilldistinct
 Tags: mobile-navigation, navigation-menu, mobile-menu, menu-icons, custom-menu
 Requires at least: 6.0
-Tested up to: 6.8
-Stable tag: 1.2.22
+Tested up to: 6.9
+Stable tag: 1.2.23
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -155,6 +155,11 @@ Yes, The Menu is optimised for touch devices with:
 
 == Changelog ==
 
+= 1.2.23 - 13/04/2026 =
+
+- Improvement: WooCommerce cart count in the menu updates dynamically when the cart changes (classic AJAX fragments and WooCommerce Blocks)
+- FIXED: Subfolder (folder overlay) menu behaviour and interaction
+
 = 1.2.22 - 14/10/2025 =
 
 - FIXED: SVG file size limit was incorrectly being applied to all media uploads, now only applies to SVG files
@@ -283,42 +288,25 @@ By installing and activating The Menu plugin, you agree to the following terms:
 
 2. Third-party services
 
-   This plugin communicates with https://plugins.distinct.africa for the following purposes:
+   This plugin does not send your site URL, version, or licence details to external servers for registration or validation. If you install the plugin from WordPress.org, WordPress handles plugin updates through its normal update system.
 
-   a. Licence validation: To verify the authenticity of your licence key.
-   b. Usage statistics: To count the number of active installations of our plugin.
-   c. Version checking: To ensure your plugin is up-to-date.
+3. Data usage and privacy
 
-   Data transmitted:
-   - Your website's domain name
-   - The plugin version you're using
-   - Your licence key if you have one
+   We are committed to protecting your privacy. The plugin does not transmit site or personal data to the plugin author for the features described in these terms.
 
-   No personal data (such as email addresses or user information) is collected or transmitted.
-
-   This check occurs once every 12 hours to minimise server load.
-
-3. Future use
-
-   In upcoming versions, this service may be used to unlock premium features for licensed users.
-
-4. Data usage and privacy
-
-   We are committed to protecting your privacy. The data collected is used solely for the purposes stated above and is not shared with any third parties.
-
-5. Disclaimer of warranty
+4. Disclaimer of warranty
 
    The Menu plugin is provided "as is" without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose.
 
-6. Limitation of liability
+5. Limitation of liability
 
    In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the plugin or the use or other dealings in the plugin.
 
-7. Support and updates
+6. Support and updates
 
    While we strive to provide regular updates and support, we reserve the right to discontinue or modify any part of the service at any time.
 
-8. Changes to terms
+7. Changes to terms
 
    We reserve the right to modify these terms at any time. Continued use of the plugin after any such changes shall constitute your consent to such changes.
 

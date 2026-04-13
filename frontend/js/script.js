@@ -111,82 +111,72 @@ document.addEventListener("DOMContentLoaded", function() {
         addonMenu.addEventListener('click', function(e) {
             const folderItem = e.target.closest('.tm-folder-item');
             if (folderItem) {
-                // Check if the click is inside an already-open folder content wrapper
-                // If so, don't trigger the folder open logic (let links work normally)
-                const insideFolderContent = e.target.closest('.tm-folder-content-wrapper');
-                if (insideFolderContent && insideFolderContent.classList.contains('active')) {
-                    // Don't prevent default - let links work normally
-                    return;
-                }
-                
-                e.preventDefault();
-                e.stopPropagation();
-                
                 const folderContent = folderItem.querySelector('.tm-folder-content-wrapper');
                 if (folderContent) {
+                    const folderItems = folderContent.querySelector('.tm-folder-items');
+
+                    // Close when clicking anywhere outside the open folder's item list (header, padding, preview, title, etc.)
+                    if (folderContent.classList.contains('active') && (!folderItems || !folderItems.contains(e.target))) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        folderContent.classList.remove('active');
+                        document.body.style.overflow = '';
+                        const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
+                        if (menuWrapper) {
+                            menuWrapper.style.backdropFilter = '';
+                        }
+                        return;
+                    }
+
+                    // Inside an open folder's item list — let links and empty space in the list behave normally
+                    const activeWrapper = e.target.closest('.tm-folder-content-wrapper');
+                    if (activeWrapper && activeWrapper.classList.contains('active')) {
+                        const activeItems = activeWrapper.querySelector('.tm-folder-items');
+                        if (activeItems && activeItems.contains(e.target)) {
+                            return;
+                        }
+                    }
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    document.querySelectorAll('.tm-folder-content-wrapper.active').forEach(function(fc) {
+                        fc.classList.remove('active');
+                    });
+
                     folderContent.classList.add('active');
-                    document.body.style.overflow = 'hidden'; // Prevent scrolling when folder is open
-                    
-                    // Remove backdrop filter blur from main menu wrapper when submenu is active
+                    document.body.style.overflow = 'hidden';
                     const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
                     if (menuWrapper) {
                         menuWrapper.style.backdropFilter = 'none';
                     }
                 }
             }
-            
-            // Handle folder content wrapper clicks
-            const contentWrapper = e.target.closest('.tm-folder-content-wrapper');
-            if (contentWrapper && contentWrapper.classList.contains('active')) {
-                // Check if clicking on a link - if so, allow it to work
-                const clickedLink = e.target.closest('a, .tm-folder-item-link, .tm-accordion-item-link');
-                if (clickedLink) {
-                    // Allow links to work normally
-                    return;
-                }
-                
-                // Only close if clicking directly on the wrapper or header
-                if (e.target === contentWrapper || e.target.closest('.tm-folder-header')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    contentWrapper.classList.remove('active');
-                    document.body.style.overflow = ''; // Restore scrolling
-                    
-                    // Restore backdrop filter blur on main menu wrapper when submenu is closed
-                    const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
-                    if (menuWrapper) {
-                        menuWrapper.style.backdropFilter = ''; // Reset to default value
-                    }
-                }
-            }
         });
     }
 
-    // Optimize document click handler for closing folders
+    // Close open subfolders when clicking outside their .tm-folder-items (e.g. page backdrop)
     document.addEventListener('click', function(e) {
-        // Only process if there are active folders
         const activeFolders = document.querySelectorAll('.tm-folder-content-wrapper.active');
         if (activeFolders.length === 0) return;
-        
-        // Check if click is outside any active folder
-        let clickedOutside = true;
+
+        let clickInsideOpenFolderItems = false;
         activeFolders.forEach(function(folderContent) {
-            if (folderContent.contains(e.target) || e.target.closest('.tm-folder-item')) {
-                clickedOutside = false;
+            const items = folderContent.querySelector('.tm-folder-items');
+            if (items && items.contains(e.target)) {
+                clickInsideOpenFolderItems = true;
             }
         });
-        
-        // Only update DOM if we need to close folders
-        if (clickedOutside) {
+
+        if (!clickInsideOpenFolderItems) {
             activeFolders.forEach(function(folderContent) {
                 folderContent.classList.remove('active');
             });
-            document.body.style.overflow = ''; // Restore scrolling
-            
-            // Restore backdrop filter blur on main menu wrapper when submenu is closed
+            document.body.style.overflow = '';
+
             const menuWrapper = document.querySelector('.tm-addon-menu-wrapper');
             if (menuWrapper) {
-                menuWrapper.style.backdropFilter = ''; // Reset to default value
+                menuWrapper.style.backdropFilter = '';
             }
         }
     });
@@ -347,5 +337,53 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize accordion menu if it exists
     if (document.querySelector('.tm-accordion-item')) {
         initAccordionMenu();
+    }
+
+    // WooCommerce: keep menu cart badge in sync (classic AJAX + Blocks / shop "quick add" REST).
+    if (typeof distmWcCart !== 'undefined' && distmWcCart.fragmentsEndpoint && typeof jQuery !== 'undefined') {
+        function distmApplyWcFragments(fragments) {
+            if (!fragments || typeof fragments !== 'object') {
+                return false;
+            }
+            var applied = false;
+            jQuery.each(fragments, function (selector, html) {
+                if (typeof html !== 'string') {
+                    return;
+                }
+                var $targets = jQuery(selector);
+                if ($targets.length) {
+                    $targets.replaceWith(html);
+                    applied = true;
+                }
+            });
+            return applied;
+        }
+
+        function distmFetchWcFragments() {
+            jQuery.post(distmWcCart.fragmentsEndpoint, { time: new Date().getTime() }).done(function (response) {
+                if (response && response.fragments) {
+                    distmApplyWcFragments(response.fragments);
+                }
+            });
+        }
+
+        // Classic add-to-cart (single product, etc.): jQuery events + optional fragment payload.
+        jQuery(document.body).on('added_to_cart removed_from_cart', function (event, fragments) {
+            if (typeof wc_cart_fragments_params !== 'undefined') {
+                return;
+            }
+            if (fragments && distmApplyWcFragments(fragments)) {
+                return;
+            }
+            distmFetchWcFragments();
+        });
+
+        // WooCommerce Blocks / Interactivity (product collection, shop archive quick add): Store API only — no jQuery added_to_cart.
+        document.body.addEventListener('wc-blocks_added_to_cart', function () {
+            distmFetchWcFragments();
+        });
+        document.body.addEventListener('wc-blocks_removed_from_cart', function () {
+            distmFetchWcFragments();
+        });
     }
 });
