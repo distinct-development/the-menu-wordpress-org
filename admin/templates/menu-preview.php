@@ -54,11 +54,11 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                         </div>
                     </div>
                 </div>
-                <?php 
-                    $settings = get_option('distm_settings', array());
-                    $addon_menu_style = isset($settings['distm_addon_menu_style']) ? $settings['distm_addon_menu_style'] : 'app-icon';
+                <?php
+                    $distm_menu_preview_settings = get_option('distm_settings', array());
+                    $distm_addon_menu_style = isset($distm_menu_preview_settings['distm_addon_menu_style']) ? $distm_menu_preview_settings['distm_addon_menu_style'] : 'app-icon';
                     ?>
-                <div class="tm-addon-menu-wrapper <?php echo esc_attr($addon_menu_style); ?>">
+                <div class="tm-addon-menu-wrapper <?php echo esc_attr($distm_addon_menu_style); ?>">
                     <div id="tm-addon-menu">
                         <?php 
                             wp_nav_menu(array(
@@ -79,21 +79,20 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                     <a href="#" class="tm-menu-item">
                         <div class="tm-icon-wrapper">
                             <div class="tm-featured-icon">
-                                <?php 
-                                    $settings = get_option('distm_settings');
-                                    $icon_type = $settings['distm_featured_icon_type'] ?? 'dashicon';
-                                    $dashicon = $settings['distm_featured_dashicon'] ?? 'menu';
-                                    $icon_url = $settings['distm_featured_icon'] ?? '';
-                                    
-                                    if ($icon_type === 'dashicon') {
-                                        echo '<span class="dashicons dashicons-' . esc_attr($dashicon) . '"></span>';
-                                    } elseif ($icon_type === 'upload' && !empty($icon_url)) {
-                                        if (substr($icon_url, -4) === '.svg') {
-                                            echo wp_kses(distm_get_svg_content($icon_url), distm_get_allowed_svg_tags());
+                                <?php
+                                    $distm_icon_type = $distm_menu_preview_settings['distm_featured_icon_type'] ?? 'dashicon';
+                                    $distm_dashicon = $distm_menu_preview_settings['distm_featured_dashicon'] ?? 'menu';
+                                    $distm_icon_url = $distm_menu_preview_settings['distm_featured_icon'] ?? '';
+
+                                    if ($distm_icon_type === 'dashicon') {
+                                        echo '<span class="dashicons dashicons-' . esc_attr($distm_dashicon) . '"></span>';
+                                    } elseif ($distm_icon_type === 'upload' && !empty($distm_icon_url)) {
+                                        if (substr($distm_icon_url, -4) === '.svg') {
+                                            echo wp_kses(distm_get_svg_content($distm_icon_url), distm_get_allowed_svg_tags());
                                         } else {
-                                            $attachment_id = attachment_url_to_postid($icon_url);
-                                            if ($attachment_id) {
-                                                echo wp_get_attachment_image($attachment_id, 'thumbnail', false, array(
+                                            $distm_attachment_id = attachment_url_to_postid($distm_icon_url);
+                                            if ($distm_attachment_id) {
+                                                echo wp_get_attachment_image($distm_attachment_id, 'thumbnail', false, array(
                                                     'class' => 'tm-menu-icon',
                                                     'alt' => sprintf('%s %s', esc_attr__('Featured', 'the-menu'), esc_attr__('Icon', 'the-menu'))
                                                 ));
@@ -325,6 +324,7 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
         }
         
         $icon_url = get_post_meta($item->ID, '_menu_item_icon', true);
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
         $title = apply_filters('the_title', $item->title, $item->ID);
         
         $edit_url = add_query_arg(
@@ -413,6 +413,7 @@ class DISTM_Preview_Walker extends Walker_Nav_Menu {
                 }
                 
                 $child_icon_url = get_post_meta($child->ID, '_menu_item_icon', true);
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
                 $child_title = apply_filters('the_title', $child->title, $child->ID);
                 $child_url = $child->url;
                 $child_icon_html = '';

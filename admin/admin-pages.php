@@ -65,7 +65,7 @@ function distm_the_menu_page() {
 
     settings_errors('distm_messages');
 
-    function echo_plugin_name() {
+    function distm_echo_plugin_name() {
         $plugin_file = plugin_dir_path(__DIR__) . 'the-menu.php';
         $plugin_data = get_plugin_data($plugin_file);
         if (!isset($plugin_data['Name'])) {
@@ -75,7 +75,7 @@ function distm_the_menu_page() {
         echo esc_html($plugin_data['Name']);
     }
 
-    function echo_plugin_description() {
+    function distm_echo_plugin_description() {
         $plugin_file = plugin_dir_path(__DIR__) . 'the-menu.php';
         $plugin_data = get_plugin_data($plugin_file);
         if (!isset($plugin_data['Description'])) {
@@ -85,7 +85,7 @@ function distm_the_menu_page() {
         echo wp_kses_post($plugin_data['Description']);
     }
 
-    function echo_plugin_version() {
+    function distm_echo_plugin_version() {
         $plugin_file = plugin_dir_path(__DIR__) . 'the-menu.php';
         $plugin_data = get_plugin_data($plugin_file);
         if (!isset($plugin_data['Version'])) {
@@ -97,9 +97,9 @@ function distm_the_menu_page() {
     ?>
     <div class="tm-banner">
         <div class="tm-banner-bg">
-            <h1><span><?php echo_plugin_name(); ?></span></h1>
-            <p class="version"><?php esc_html_e('Version', 'the-menu'); ?> <?php echo_plugin_version(); ?></p>
-            <p><?php echo_plugin_description(); ?></p>
+            <h1><span><?php distm_echo_plugin_name(); ?></span></h1>
+            <p class="version"><?php esc_html_e('Version', 'the-menu'); ?> <?php distm_echo_plugin_version(); ?></p>
+            <p><?php distm_echo_plugin_description(); ?></p>
             <br>
             <a href="<?php echo esc_url(admin_url('nav-menus.php')); ?>" class="btn">
                 <span class="dashicons dashicons-edit-large"></span> 

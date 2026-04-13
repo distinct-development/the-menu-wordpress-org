@@ -2,6 +2,14 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+// Validate stored hex colors against defaults.
+function distm_get_valid_color( $color_value, $default_color ) {
+    if ( empty( $color_value ) || 'null' === $color_value || ! preg_match( '/^#[a-f0-9]{6}$/i', $color_value ) ) {
+        return $default_color;
+    }
+    return $color_value;
+}
+
 // Enqueue the plugin styles
 function distm_enqueue_frontend_scripts() {
     $options = get_option('distm_settings', array());
@@ -24,19 +32,11 @@ function distm_enqueue_frontend_scripts() {
         'distm_addon_icon_bg' => '#446084'
     );
     
-    // Helper function to validate and get color value
-    function get_valid_color($color_value, $default_color) {
-        if (empty($color_value) || $color_value === 'null' || !preg_match('/^#[a-f0-9]{6}$/i', $color_value)) {
-            return $default_color;
-        }
-        return $color_value;
-    }
-    
     $options = wp_parse_args($options, $defaults);
     
     foreach ($defaults as $key => $default_value) {
         if (strpos($key, 'color') !== false || strpos($key, 'bg') !== false) {
-            $options[$key] = get_valid_color($options[$key], $default_value);
+            $options[$key] = distm_get_valid_color($options[$key], $default_value);
         }
     }
     

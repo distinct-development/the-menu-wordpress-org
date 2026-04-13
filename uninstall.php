@@ -22,19 +22,19 @@ if (distm_should_delete_data()) {
     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
     global $wpdb;
     // Prepare patterns with wildcards properly
-    $pattern1 = $wpdb->esc_like('_transient_the-menu_license_status') . '%';
-    $pattern2 = $wpdb->esc_like('_transient_timeout_the-menu_license_status') . '%';
+    $distm_pattern1 = $wpdb->esc_like('_transient_the-menu_license_status') . '%';
+    $distm_pattern2 = $wpdb->esc_like('_transient_timeout_the-menu_license_status') . '%';
     $wpdb->query(
         $wpdb->prepare(
             "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-            $pattern1,
-            $pattern2
+            $distm_pattern1,
+            $distm_pattern2
         )
     );
     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
     // Meta keys to remove
-    $meta_keys = array(
+    $distm_meta_keys = array(
         '_menu_item_icon',
         '_menu_item_icon_type',
         '_menu_item_dashicon',
@@ -45,16 +45,16 @@ if (distm_should_delete_data()) {
     );
 
     // Get all menu items
-    $menu_items = get_posts(array(
+    $distm_menu_items = get_posts(array(
         'post_type' => 'nav_menu_item',
         'posts_per_page' => -1,
         'fields' => 'ids'
     ));
 
     // Delete meta for each menu item
-    foreach ($menu_items as $menu_item_id) {
-        foreach ($meta_keys as $meta_key) {
-            delete_post_meta($menu_item_id, $meta_key);
+    foreach ($distm_menu_items as $distm_menu_item_id) {
+        foreach ($distm_meta_keys as $distm_meta_key) {
+            delete_post_meta($distm_menu_item_id, $distm_meta_key);
         }
     }
 
@@ -62,12 +62,12 @@ if (distm_should_delete_data()) {
     wp_cache_flush();
 
     // Clean up wp_options (removing duplicates from earlier deletion)
-    $option_keys = array(
+    $distm_option_keys = array(
         'distm_plugin_version'
     );
 
-    foreach ($option_keys as $option) {
-        delete_option($option);
+    foreach ($distm_option_keys as $distm_option) {
+        delete_option($distm_option);
     }
     
     // Final cache flush to ensure everything is clean

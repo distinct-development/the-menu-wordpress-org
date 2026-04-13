@@ -678,6 +678,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
         }
         
         $icon_url = esc_url(get_post_meta($item->ID, '_menu_item_icon', true));
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
         $title = apply_filters('the_title', $item->title, $item->ID);
         $url = $item->url;
         $icon_html = '';
@@ -770,6 +771,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     }
                     
                     $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
                     $child_title = apply_filters('the_title', $child->title, $child->ID);
                     
                     $child_icon_html = '';
@@ -838,6 +840,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     }
                     
                     $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
                     $child_title = apply_filters('the_title', $child->title, $child->ID);
                     $child_url = $child->url;
                     
@@ -925,6 +928,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     }
                     
                     $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
                     $child_title = apply_filters('the_title', $child->title, $child->ID);
                     
                     $child_icon_html = '';
@@ -991,6 +995,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     }
                     
                     $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
                     $child_title = apply_filters('the_title', $child->title, $child->ID);
                     $child_url = $child->url;
                     
@@ -1123,6 +1128,7 @@ class DISTM_Icon_Walker extends Walker_Nav_Menu {
                     }
                     
                     $child_icon_url = esc_url(get_post_meta($child->ID, '_menu_item_icon', true));
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Core filter.
                     $child_title = apply_filters('the_title', $child->title, $child->ID);
                     $child_url = $child->url;
                     
